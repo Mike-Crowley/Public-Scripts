@@ -1,9 +1,9 @@
 <#
 
 .SYNOPSIS 
-    This function queries the AlternateMailboxes node within a user's AutoDiscover response. See the link for details.
+    This function queries the AlternateMailboxes node within a user's AutoDiscover response. Does not support Modern Auth. See the link for details.
 
-    Version: December 8a, 2017
+    Version: Jul 29, 2021
 
 
 .DESCRIPTION
@@ -25,9 +25,9 @@
 Function Get-AlternateMailboxes {
 
     Param(
-        [parameter(Mandatory=$true)]
+        [parameter(Mandatory=$true)][string]
         $SMTPAddress,
-        [parameter(Mandatory=$true)]
+        [parameter(Mandatory=$true)][pscredential]
         $Credential
         )
 
@@ -63,7 +63,11 @@ Function Get-AlternateMailboxes {
 "@
     #Other attributes available here: https://msdn.microsoft.com/en-us/library/microsoft.exchange.webservices.autodiscover.usersettingname(v=exchg.80).aspx
 
-    $WebResponse = Invoke-WebRequest https://autodiscover-s.outlook.com/autodiscover/autodiscover.svc -Credential $Credential -Method Post -Body $AutoDiscoverRequest -ContentType 'text/xml; charset=utf-8'
+    $Headers = @{
+        ‘X-AnchorMailbox’ = $Credential.UserName
+    }
+
+    $WebResponse = Invoke-WebRequest https://autodiscover-s.outlook.com/autodiscover/autodiscover.svc -Credential $Credential -Method Post -Body $AutoDiscoverRequest -ContentType 'text/xml; charset=utf-8' -Headers $Headers
     [System.Xml.XmlDocument]$XMLResponse = $WebResponse.Content
     $RequestedSettings = $XMLResponse.Envelope.Body.GetUserSettingsResponseMessage.Response.UserResponses.UserResponse.UserSettings.UserSetting
     return $RequestedSettings.AlternateMailboxes.AlternateMailbox
