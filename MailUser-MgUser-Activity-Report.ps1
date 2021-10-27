@@ -9,7 +9,7 @@ $ReportUsers = $MailUsers | foreach {
     $MailUser = $_   
     
     $percentComplete = (($Counter / $MailUsers.count) * 100)
-    Write-Progress -Activity "Getting MG Onjects" -PercentComplete $percentComplete -Status "$percentComplete% Complete:"
+    Write-Progress -Activity "Getting MG Objects" -PercentComplete $percentComplete -Status "$percentComplete% Complete:"
     $Counter ++
        
        #to do - organize properties better
