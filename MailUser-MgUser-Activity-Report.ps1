@@ -2,15 +2,13 @@
 Connect-MgGraph -TenantId <tenant>
 Select-MgProfile beta
 
-$Counter = 1
-
 $MailUsers = Get-MailUser -filter {recipienttypedetails -eq 'MailUser'} -ResultSize unlimited
-$ReportUsers = $MailUsers | foreach {
+$ReportUsers = $MailUsers | ForEach-Object {
     $MailUser = $_   
     
-    $percentComplete = (($Counter / $MailUsers.count) * 100)
-    Write-Progress -Activity "Getting MG Objects" -PercentComplete $percentComplete -Status "$percentComplete% Complete:"
     $Counter ++
+    $percentComplete = (($Counter / $MailUsers.count) * 100)
+    Write-Progress -Activity "Getting MG Objects" -PercentComplete $percentComplete -Status "$percentComplete% Complete:"    
        
        #to do - organize properties better
     Get-MgUser -UserId $MailUser.ExternalDirectoryObjectId -ConsistencyLevel eventual -Property @(
@@ -25,7 +23,7 @@ $ReportUsers = $MailUsers | foreach {
         'SignInSessionsValidFromDateTime'
         'RefreshTokensValidFromDateTime'
         'id'
-    ) | select @(
+    ) | Select-Object @(
         'UserPrincipalName'        
         'CreatedDateTime'        
         'DisplayName'
@@ -53,7 +51,4 @@ $Common_ExportExcelParams = @{
 
 $FileDate = Get-Date -Format yyyyMMddTHHmmss
 
-$ReportUsers | sort DisplayName_Agency, UserPrincipalName | Export-Excel @Common_ExportExcelParams -Path ("c:\tmp\" + $filedate + "_report.xlsx") -WorksheetName report
-
-
-
+$ReportUsers | Sort-Object UserPrincipalName | Export-Excel @Common_ExportExcelParams -Path ("c:\tmp\" + $filedate + "_report.xlsx") -WorksheetName report
