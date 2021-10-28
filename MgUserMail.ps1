@@ -40,7 +40,7 @@
     Function ConvertTo-IMicrosoftGraphAttachment {
         [cmdletbinding()]
         Param(
-            [array]$UploadDirectory        
+            [string]$UploadDirectory        
         )
         $directoryContents = Get-ChildItem $UploadDirectory -Attributes !Directory -Recurse
         foreach ($file in $directoryContents) {
