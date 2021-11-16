@@ -58,7 +58,7 @@
 
 #region 2: Run
 
-    $toRecipients = ConvertTo-IMicrosoftGraphRecipient -SmtpAddresses $emailRecipients 
+    [array]$toRecipients = ConvertTo-IMicrosoftGraphRecipient -SmtpAddresses $emailRecipients 
 
     $attachments = ConvertTo-IMicrosoftGraphAttachment -UploadDirectory C:\tmp
 
