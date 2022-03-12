@@ -17,7 +17,7 @@ Requirements:
 April 4 2015
 Mike Crowley
  
-http://BaselineTechnologies.com
+https://BaselineTechnologies.com
  
 #>
 
@@ -31,7 +31,7 @@ if ($host.version.major -le 2) {
     Write-Host "Note: Exchange 2010's EMC always runs as version 2.  Perhaps try launching PowerShell normally." -ForegroundColor Red
     Write-Host ""
     Write-Host "Exiting..." -ForegroundColor Red
-    Sleep 3
+    Start-Sleep 3
     Exit
     }
 
@@ -41,13 +41,13 @@ if ((Test-Connection $ExchangeFQDN -Count 1 -Quiet) -ne $true) {
     Write-Host ("Cannot connect to: " + $ExchangeFQDN) -ForegroundColor Red
     Write-Host ""
     Write-Host "Exiting..." -ForegroundColor Red
-    Sleep 3
+    Start-Sleep 3
     Exit
     }
 
-cls
+Clear-Host
 
- 
+
 #Misc variables
 #$ExchangeFQDN = "exchserv1.domain1.local"
 $ReportTimeStamp = (Get-Date -Format s) -replace ":", "."
@@ -75,19 +75,19 @@ $InScopeRecipients = @(
     'MailNonUniversalGroup'
     'PublicFolder'
     )
-$AllRecipients = Get-Recipient -recipienttype $InScopeRecipients -ResultSize unlimited | select name, emailaddresses, RecipientType
-$UniqueRecipientDomains = ($AllRecipients.emailaddresses | Where {$_ -like 'smtp*'}) -split '@' | where {$_ -NotLike 'smtp:*'} | select -Unique
+$AllRecipients = Get-Recipient -recipienttype $InScopeRecipients -ResultSize unlimited | Select-Object name, emailaddresses, RecipientType
+$UniqueRecipientDomains = ($AllRecipients.emailaddresses | Where-Object {$_ -like 'smtp*'}) -split '@' | Where-Object {$_ -NotLike 'smtp:*'} | Select-Object -Unique
 
 Write-Host "Preparing Output 1 of 2..." -ForegroundColor Cyan
 #Output address stats
 $TextBlock = @(
     "Total Number of Recipients: " + $AllRecipients.Count
-    "Number of Dynamic Distribution Groups: " +         ($AllRecipients | Where {$_.RecipientType -eq 'DynamicDistributionGroup'}).Count
-    "Number of User Mailboxes: " + 	                    ($AllRecipients | Where {$_.RecipientType -eq 'UserMailbox'}).Count
-    "Number of Mail-Universal Distribution Groups: " + 	($AllRecipients | Where {$_.RecipientType -eq 'MailUniversalDistributionGroup'}).Count
-    "Number of Mail-UniversalSecurity Groups: " + 	    ($AllRecipients | Where {$_.RecipientType -eq 'MailUniversalSecurityGroup'}).Count
-    "Number of Mail-NonUniversal Groups: " + 	        ($AllRecipients | Where {$_.RecipientType -eq 'MailNonUniversalGroup'}).Count
-    "Number of Public Folders: " + 	                    ($AllRecipients | Where {$_.RecipientType -eq 'PublicFolder'}).Count
+    "Number of Dynamic Distribution Groups: "        +  ($AllRecipients | Where-Object {$_.RecipientType -eq 'DynamicDistributionGroup'}).Count
+    "Number of User Mailboxes: "                     +  ($AllRecipients | Where-Object {$_.RecipientType -eq 'UserMailbox'}).Count
+    "Number of Mail-Universal Distribution Groups: " + 	($AllRecipients | Where-Object {$_.RecipientType -eq 'MailUniversalDistributionGroup'}).Count
+    "Number of Mail-UniversalSecurity Groups: "      +  ($AllRecipients | Where-Object {$_.RecipientType -eq 'MailUniversalSecurityGroup'}).Count
+    "Number of Mail-NonUniversal Groups: "           +  ($AllRecipients | Where-Object {$_.RecipientType -eq 'MailNonUniversalGroup'}).Count
+    "Number of Public Folders: "                     +  ($AllRecipients | Where-Object {$_.RecipientType -eq 'PublicFolder'}).Count
     ""
     "Number of Accepted Domains: " + $AcceptedDomains.count 
     ""
@@ -95,10 +95,10 @@ $TextBlock = @(
     ""
     $DomainComparrison = Compare-Object $AcceptedDomains.DomainName $UniqueRecipientDomains
     "These domains have been assigned to recipients, but are not Accepted Domains in the Exchange Organization:"
-    ($DomainComparrison | Where {$_.SideIndicator -eq '=>'}).InputObject 
+    ($DomainComparrison | Where-Object {$_.SideIndicator -eq '=>'}).InputObject 
     ""
     "These Accepted Domains are not assigned to any recipients:" 
-    ($DomainComparrison | Where {$_.SideIndicator -eq '<='}).InputObject
+    ($DomainComparrison | Where-Object {$_.SideIndicator -eq '<='}).InputObject
     ""
     "See this CSV for a complete listing of all addresses: " + $CsvFile
     )
@@ -114,13 +114,13 @@ $AllRecipients | ForEach-Object {
     $RecipientOutputObject = New-Object PSObject -Property @{
         Name = $_.Name
         RecipientType = $_.RecipientType
-        SMTPAddress0 =  ($_.emailaddresses | Where {$_ -clike 'SMTP:*'} ) -replace "SMTP:"
+        SMTPAddress0 =  ($_.emailaddresses | Where-Object {$_ -clike 'SMTP:*'} ) -replace "SMTP:"
         }    
     
     #If applicable, get a list of other addresses for the recipient
     if (($_.emailaddresses).count -gt '1') {       
         $OtherAddresses = @()
-        $OtherAddresses = ($_.emailaddresses | Where {$_ -clike 'smtp:*'} ) -replace "smtp:"
+        $OtherAddresses = ($_.emailaddresses | Where-Object {$_ -clike 'smtp:*'} ) -replace "smtp:"
         
         $Counter = $OtherAddresses.count
         if ($Counter -gt $CounterWatermark) {$CounterWatermark = $Counter}
@@ -132,10 +132,9 @@ $AllRecipients | ForEach-Object {
         $RecipientsAndSMTPProxies += $RecipientOutputObject
     }
   
- 
-$AttributeList = @(
-    'Name'
-    'RecipientType'
+    $AttributeList = @(
+        'Name'
+        'RecipientType'
     )
 $AttributeList += 0..$CounterWatermark | ForEach-Object {"SMTPAddress" + $_}
 
@@ -146,7 +145,7 @@ Write-Host $TxtFile -ForegroundColor Green
 Write-Host $CsvFile -ForegroundColor Green
 
 $TextBlock | Out-File $TxtFile
-$RecipientsAndSMTPProxies | Select $AttributeList | sort RecipientType, Name | Export-CSV $CsvFile -NoTypeInformation
+$RecipientsAndSMTPProxies | Select-Object $AttributeList | Sort-Object RecipientType, Name | Export-CSV $CsvFile -NoTypeInformation
 
 Write-Host ""
 Write-Host ""

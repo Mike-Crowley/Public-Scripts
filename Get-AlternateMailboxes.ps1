@@ -64,7 +64,7 @@ Function Get-AlternateMailboxes {
     #Other attributes available here: https://msdn.microsoft.com/en-us/library/microsoft.exchange.webservices.autodiscover.usersettingname(v=exchg.80).aspx
 
     $Headers = @{
-        ‘X-AnchorMailbox’ = $Credential.UserName
+        'X-AnchorMailbox' = $Credential.UserName
     }
 
     $WebResponse = Invoke-WebRequest https://autodiscover-s.outlook.com/autodiscover/autodiscover.svc -Credential $Credential -Method Post -Body $AutoDiscoverRequest -ContentType 'text/xml; charset=utf-8' -Headers $Headers

@@ -39,7 +39,7 @@ March 22 2021
 
 .LINK 
 
-    http://BaselineTechnologies.com
+    https://BaselineTechnologies.com
  
 #>
  
@@ -66,10 +66,10 @@ function Restore-FromRecycleBin
 
     $SpoConnection = Connect-PnPOnline -Url $SiteUrl -Interactive -ReturnConnection
 
-    md $LogDirectory -Force
+    mkdir $LogDirectory -Force
 
     
-    $RecycleBinFiles = Get-PnPRecycleBinItem -Connection $SpoConnection -FirstStage | Where {[datetime]$_.DeletedDateLocalFormatted -gt $RestoreDate} | Where {$_.ItemType -eq "File"}
+    $RecycleBinFiles = Get-PnPRecycleBinItem -Connection $SpoConnection -FirstStage | Where-Object {[datetime]$_.DeletedDateLocalFormatted -gt $RestoreDate} | Where-Object {$_.ItemType -eq "File"}
     Write-Verbose ("Found " + ($RecycleBinFiles.count) + " files.")
     $RecycleBinFiles | Export-Excel @ExportParams -Path ("$LogDirectory\RecycleBinFiles\" + "RecycleBinFiles--" + $ScriptDate + ".xlsx")
         
@@ -86,7 +86,7 @@ function Restore-FromRecycleBin
         try {Restore-PnpRecycleBinItem -Force -Identity $File.Id.Guid -ErrorAction Stop}
         catch {$RestoreSucceeded = $false }       
  
-        $LogFile += '' | select @(
+        $LogFile += '' | Select-Object @(
             @{N="RestoreAttempt"; e={Get-Date -UFormat "%D %r"}}        
             @{N="RestoreSucceeded"; e={$RestoreSucceeded}}
             @{N="FileName"; e={$File.Title}}

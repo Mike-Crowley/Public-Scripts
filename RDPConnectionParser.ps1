@@ -20,7 +20,7 @@
     https://BaselineTechnologies.com
 
  .EXAMPLE
- 
+ï¿½
     .\RDPConnectionParser.ps1 -ServersToQuery Server1, Server2 -StartTime "November 1"
  
 .LINK
@@ -67,7 +67,7 @@ Param(
 
     $Date = (Get-Date -Format s) -replace ":", "."
     $FilePath = "$env:USERPROFILE\Desktop\$Date`_RDP_Report.csv"
-    $FilteredOutput | Sort TimeCreated | Export-Csv $FilePath -NoTypeInformation
+    $FilteredOutput | Sort TimeCreated | Export-Csv $FilePath -NoTypeInformation -Encoding utf8
 
 Write-host "Writing File: $FilePath" -ForegroundColor Cyan
 Write-host "Done!" -ForegroundColor Cyan

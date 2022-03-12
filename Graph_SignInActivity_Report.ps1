@@ -10,7 +10,7 @@
     lastSignInDateTime lastNonInteractiveSignInDateTime skuName @odata.id userPrincipalName displayName id licenseAssignmentStates assignedLicenses signInActivity 
 
     Needs graph permissions:
-    AuditLogs.Read.All
+    AuditLog.Read.All
     Organization.Read.All
 
     
@@ -67,7 +67,6 @@ if ((get-date).AddMinutes(5) -lt $myToken.ExpiresOn.LocalDateTime) {
     Write-Output ("Users downloaded: " + $queryResults.Count)
 }
 until ($uri -eq $null)
-
 
 #Sku lookup table for later output - not 100%
 $SKUs = @{
@@ -153,38 +152,38 @@ $SKUs = @{
     '98709c2e-96b5-4244-95f5-a0ebe139fb8a' = 'ONEDRIVE_BASIC_GOV'
     '8a9ecb07-cfc0-48ab-866c-f83c4d911576' = 'VISIOONLINE_GOV'
     'a420f25f-a7b3-4ff5-a9d0-5d58f73b537d' = 'WINDOWS_STORE'
-   'e4fa3838-3d01-42df-aa28-5e0a4c68604b' = 'Office 365 Education E3 for Faculty'
-   '94763226-9b3c-4e75-a931-5c89701abe66' = 'Office 365 Education for Faculty'
-   '78e66a63-337a-4a9a-8959-41c6654dfb56' = 'Office 365 Education for Faculty'
-   'a4585165-0533-458a-97e3-c400570268c4' = 'Office 365 Education E5 for Faculty'
-   '9a320620-ca3d-4705-a79d-27c135c96e05' = 'Office 365 Education E5 without PSTN Conferencing for Faculty'
-   'a19037fc-48b4-4d57-b079-ce44b7832473' = 'Office 365 Education E1 for Faculty'
-   'f5a9147f-b4f8-4924-a9f0-8fadaac4982f' = 'Office 365 Education E3 for Faculty'
-   '16732e85-c0e3-438e-a82f-71f39cbe2acb' = 'Office 365 Education E4 for Faculty'
-   '4b590615-0888-425a-a965-b3bf7789848d' = 'Microsoft 365 Education A3 for Faculty'
-   'e97c048c-37a4-45fb-ab50-922fbf07a370' = 'Microsoft 365 Education A5 for Faculty'
-   'e578b273-6db4-4691-bba0-8d691f4da603' = 'Microsoft 365 A5 without Audio Conferencing for Faculty'
-   '43e691ad-1491-4e8c-8dc9-da6b8262c03b' = 'Office 365 Education for Home school for Faculty'
-   'af4e28de-6b52-4fd3-a5f4-6bf708a304d3' = 'Office 365 A1 for Faculty (for Device)'
-   '8fc2205d-4e51-4401-97f0-5c89ef1aafbb' = 'Office 365 Education E3 for Students'
-   '314c4481-f395-4525-be8b-2ec4bb1e9d91' = 'Office 365 Education for Students'
-   'ee656612-49fa-43e5-b67e-cb1fdf7699df' = 'Office 365 Education E5 for Students'
-   '1164451b-e2e5-4c9e-8fa6-e5122d90dbdc' = 'Office 365 Education E5 without PSTN Conferencing for Students'
-   'd37ba356-38c5-4c82-90da-3d714f72a382' = 'Office 365 Education E1 for Students'
-   '05e8cabf-68b5-480f-a930-2143d472d959' = 'Office 365 Education E4 for Students'
-   '7cfd9a2b-e110-4c39-bf20-c6a3f36a3121' = 'Microsoft 365 Education A3 for Students'
-   '18250162-5d87-4436-a834-d795c15c80f3' = 'Microsoft 365 Education A3 for Students use benefits'
-   '46c119d4-0379-4a9d-85e4-97c66d3f909e' = 'Microsoft 365 Education A5 for Students'
-   '31d57bc7-3a05-4867-ab53-97a17835a411' = 'Microsoft 365 A5 Student use benefits'
-   'a25c01ce-bab1-47e9-a6d0-ebe939b99ff9' = 'Microsoft 365 A5 without Audio Conferencing for Students'
-   '81441ae1-0b31-4185-a6c0-32b6b84d419f' = 'Microsoft 365 A5 without Audio Conferencing for Students use benefit'
-   '98b6e773-24d4-4c0d-a968-6e787a1f8204' = 'Office 365 A3 for Students'
-   '476aad1e-7a7f-473c-9d20-35665a5cbd4f' = 'Office 365 A3 Student use benefit'
-   'f6e603f1-1a6d-4d32-a730-34b809cb9731' = 'Office 365 A5 Student use benefit'
-   'bc86c9cd-3058-43ba-9972-141678675ac1' = 'Office 365 A5 without Audio Conferencing for Students use benefit'
-   'afbb89a7-db5f-45fb-8af0-1bc5c5015709' = 'Office 365 Education forHomeschool for Students'
-   '160d609e-ab08-4fce-bc1c-ea13321942ac' = 'Office 365 A1 for Students (forDevice)'
-   'e82ae690-a2d5-4d76-8d30-7c6e01e6022e' = 'Office 365 A1 Plus for Students'  
+    'e4fa3838-3d01-42df-aa28-5e0a4c68604b' = 'Office 365 Education E3 for Faculty'
+    '94763226-9b3c-4e75-a931-5c89701abe66' = 'Office 365 Education for Faculty'
+    '78e66a63-337a-4a9a-8959-41c6654dfb56' = 'Office 365 Education for Faculty'
+    'a4585165-0533-458a-97e3-c400570268c4' = 'Office 365 Education E5 for Faculty'
+    '9a320620-ca3d-4705-a79d-27c135c96e05' = 'Office 365 Education E5 without PSTN Conferencing for Faculty'
+    'a19037fc-48b4-4d57-b079-ce44b7832473' = 'Office 365 Education E1 for Faculty'
+    'f5a9147f-b4f8-4924-a9f0-8fadaac4982f' = 'Office 365 Education E3 for Faculty'
+    '16732e85-c0e3-438e-a82f-71f39cbe2acb' = 'Office 365 Education E4 for Faculty'
+    '4b590615-0888-425a-a965-b3bf7789848d' = 'Microsoft 365 Education A3 for Faculty'
+    'e97c048c-37a4-45fb-ab50-922fbf07a370' = 'Microsoft 365 Education A5 for Faculty'
+    'e578b273-6db4-4691-bba0-8d691f4da603' = 'Microsoft 365 A5 without Audio Conferencing for Faculty'
+    '43e691ad-1491-4e8c-8dc9-da6b8262c03b' = 'Office 365 Education for Home school for Faculty'
+    'af4e28de-6b52-4fd3-a5f4-6bf708a304d3' = 'Office 365 A1 for Faculty (for Device)'
+    '8fc2205d-4e51-4401-97f0-5c89ef1aafbb' = 'Office 365 Education E3 for Students'
+    '314c4481-f395-4525-be8b-2ec4bb1e9d91' = 'Office 365 Education for Students'
+    'ee656612-49fa-43e5-b67e-cb1fdf7699df' = 'Office 365 Education E5 for Students'
+    '1164451b-e2e5-4c9e-8fa6-e5122d90dbdc' = 'Office 365 Education E5 without PSTN Conferencing for Students'
+    'd37ba356-38c5-4c82-90da-3d714f72a382' = 'Office 365 Education E1 for Students'
+    '05e8cabf-68b5-480f-a930-2143d472d959' = 'Office 365 Education E4 for Students'
+    '7cfd9a2b-e110-4c39-bf20-c6a3f36a3121' = 'Microsoft 365 Education A3 for Students'
+    '18250162-5d87-4436-a834-d795c15c80f3' = 'Microsoft 365 Education A3 for Students use benefits'
+    '46c119d4-0379-4a9d-85e4-97c66d3f909e' = 'Microsoft 365 Education A5 for Students'
+    '31d57bc7-3a05-4867-ab53-97a17835a411' = 'Microsoft 365 A5 Student use benefits'
+    'a25c01ce-bab1-47e9-a6d0-ebe939b99ff9' = 'Microsoft 365 A5 without Audio Conferencing for Students'
+    '81441ae1-0b31-4185-a6c0-32b6b84d419f' = 'Microsoft 365 A5 without Audio Conferencing for Students use benefit'
+    '98b6e773-24d4-4c0d-a968-6e787a1f8204' = 'Office 365 A3 for Students'
+    '476aad1e-7a7f-473c-9d20-35665a5cbd4f' = 'Office 365 A3 Student use benefit'
+    'f6e603f1-1a6d-4d32-a730-34b809cb9731' = 'Office 365 A5 Student use benefit'
+    'bc86c9cd-3058-43ba-9972-141678675ac1' = 'Office 365 A5 without Audio Conferencing for Students use benefit'
+    'afbb89a7-db5f-45fb-8af0-1bc5c5015709' = 'Office 365 Education forHomeschool for Students'
+    '160d609e-ab08-4fce-bc1c-ea13321942ac' = 'Office 365 A1 for Students (forDevice)'
+    'e82ae690-a2d5-4d76-8d30-7c6e01e6022e' = 'Office 365 A1 Plus for Students'  
 }
 
 
@@ -192,16 +191,16 @@ $SKUs = @{
 $SelectFilter = @(
     @{n="lastSignInDateTime";                e={[datetime]($_.signInActivity.lastSignInDateTime)}}    
     @{n="lastNonInteractiveSignInDateTime";  e={[datetime]($_.signInActivity.lastNonInteractiveSignInDateTime)}}    
-    @{n='skuName';                           e={( $_.assignedlicenses.skuid | foreach {$SKUs.get_item($_) }) -join ';'}} 
+    @{n='skuName';                           e={( $_.assignedlicenses.skuid | ForEach-Object {$SKUs.get_item($_) }) -join ';'}} 
     '*'        
 )
-$finalOutput = $queryResults | select $SelectFilter | sort lastSignInDateTime -Descending
+$finalOutput = $queryResults | Select-Object $SelectFilter | Sort-Object lastSignInDateTime -Descending
 
 
 #Write to file
 $ReportDate = Get-Date -format ddMMMyyyy_HHmm
 $DesktopPath = ([Environment]::GetFolderPath("Desktop") + '\Graph_Reporting\Graph_Reporting_'+ $ReportDate + '\')
-md $DesktopPath -Force
+mkdir $DesktopPath -Force
 
 $Common_ExportExcelParams = @{
     #PassThru     = $true
