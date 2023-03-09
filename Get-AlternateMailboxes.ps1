@@ -13,8 +13,7 @@
     c) Click Add permission
     d) Click "APIs my organization uses" (NOT GRAPH!)
     e) Type "Office 365 Exchange Online" in the search box
-    f) Select the following permissions    
-        MailboxSettings.Read        
+    f) Select the following permission:        
         User.Read.All
   4) Optionally: Use a certificate for application-based authentication, which is what the example below uses. Otherwise, you can use the different auth mentioned by Microsoft in the links below.
 
