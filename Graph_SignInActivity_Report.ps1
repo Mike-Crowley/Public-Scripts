@@ -12,7 +12,7 @@
     Organization.Read.All
     
     #to do
-    #Promote licenseAssignmentStates	assignedLicenses columns, if
+    #Promote licenseAssignmentStatesassignedLicenses columns, if
     desired (there is already a skuName column)
 
 #>
@@ -204,8 +204,10 @@ $Skus = @{
     '9f431833-0334-42de-a7dc-70aa40db46db' = 'LOCKBOX_ENTERPRISE'
     '89b5d3b1-3855-49fe-b46c-87c66dbc1526' = 'LOCKBOX_ENTERPRISE_GOV'
     '2f442157-a11c-46b9-ae5b-6e39ff4e5849' = 'M365_ADVANCED_AUDITING'
+    'f6de4823-28fa-440b-b886-4783fa86ddba' = 'M365_AUDIT_PLATFORM'
     '6f23d6a9-adbf-481c-8538-b4c095654487' = 'M365_LIGHTHOUSE_CUSTOMER_PLAN1'
     'd55411c9-cfff-40a9-87c7-240f14df7da5' = 'M365_LIGHTHOUSE_PARTNER_PLAN1'
+    '711413d0-b36e-4cd4-93db-0a50a4ab7ea3' = 'MCO_VIRTUAL_APPT'
     '4828c8ec-dc2e-4779-b502-87ac9ce28ab7' = 'MCOEV'
     'db23fce2-a974-42ef-9002-d78dd42a0f22' = 'MCOEV_GOV'
     'f47330e9-c134-43b3-9993-e7f004506889' = 'MCOEV_VIRTUALUSER'
@@ -222,6 +224,7 @@ $Skus = @{
     '8a256a2b-b617-496d-b51b-e76466e88db0' = 'MFA_PREMIUM'
     'acffdce6-c30f-4dc2-81c0-372e33c515ec' = 'Microsoft Stream'
     'a413a9ff-720c-4822-98ef-2f37c2a21f4c' = 'MICROSOFT_COMMUNICATION_COMPLIANCE'
+    '85704d55-2e73-47ee-93b4-4b8ea14db92b' = 'MICROSOFT_ECDN'
     '94065c59-bc8e-4e8b-89e5-5138d471eaff' = 'MICROSOFT_SEARCH'
     '199a5c09-e0ca-4e37-8f7c-b05d533e1ea2' = 'MICROSOFTBOOKINGS'
     '64bfac92-2b17-4482-b5e5-a0304429de3e' = 'MICROSOFTENDPOINTDLP'
@@ -325,6 +328,11 @@ $Skus = @{
     '304767db-7d23-49e8-a945-4a7eb65f9f28' = 'TEAMS_GOV'
     '92c6b761-01de-457a-9dd9-793a975238f7' = 'Teams_Room_Standard'
     '57ff2da0-773e-42df-b2af-ffb7a2317929' = 'TEAMS1'
+    'cc8c0802-a325-43df-8cba-995d0c6cb373' = 'TEAMSPRO_CUST'
+    '0504111f-feb8-4a3c-992a-70280f9a2869' = 'TEAMSPRO_MGMT'
+    'f8b44f54-18bb-46a3-9658-44ab58712968' = 'TEAMSPRO_PROTECTION'
+    '9104f592-f2a7-4f77-904c-ca5a5715883f' = 'TEAMSPRO_VIRTUALAPPT'
+    '78b58230-ec7e-4309-913c-93a45cc4735b' = 'TEAMSPRO_WEBINAR'
     '8e0c0a52-6a6c-4d40-8370-dd62790dcd70' = 'THREAT_INTELLIGENCE'
     '900018f1-0cdb-4ecb-94d4-90281760fdc6' = 'THREAT_INTELLIGENCE_GOV'
     '795f6fe0-cc4d-4773-b050-5dde4dc704c9' = 'UNIVERSAL_PRINT_01'
@@ -349,6 +357,15 @@ $Skus = @{
     '2078e8df-cff6-4290-98cb-5408261a760a' = 'YAMMER_EDU'
     '7547a3fe-08ee-4ccb-b430-5077c5041653' = 'YAMMER_ENTERPRISE'
 }
+
+<# learn the above via:
+    Connect-AzureAD
+    $Skus = [ordered]@{}
+    foreach ($plan in (Get-AzureADSubscribedSku).ServicePlans | sort ServicePlanName -Unique) {
+        $Skus.Add($plan.ServicePlanId, $plan.ServicePlanName)
+    }
+    $Skus | ft -AutoSize
+#>
 
 #Format Output
 $SelectFilter = @(
