@@ -13,7 +13,7 @@ Microsoft [retired the TechNet Gallery](https://docs.microsoft.com/en-us/teamblo
 
 + [Graph_SignInActivity_Report.ps1](https://github.com/Mike-Crowley/Public-Scripts/blob/main/Graph_SignInActivity_Report.ps1)
 
-  - Report on SignInActivity from Microsoft Graph.
+  - Report on user SignInActivity and license detail via Invoke-RestMethod from Microsoft Graph.
 
 + [LowerCaseUPNs.ps1](https://github.com/Mike-Crowley/Public-Scripts/blob/main/LowerCaseUPNs.ps1)
 
