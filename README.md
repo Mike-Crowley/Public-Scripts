@@ -3,6 +3,7 @@
 Microsoft [retired the TechNet Gallery](https://docs.microsoft.com/en-us/teamblog/technet-gallery-retirement), so I've re-uploaded a few scripts that were formally posted here: https://social.msdn.microsoft.com/Profile/mike%20crowley
 
 
+
 + [Get-AlternateMailboxes.ps1](https://github.com/Mike-Crowley/Public-Scripts/blob/main/Get-AlternateMailboxes.ps1)
 
   - Query Exchange Online AutoDiscover to enumerate mailbox delegates with modern auth.
@@ -79,3 +80,4 @@ There are also a few things over here: https://gist.github.com/Mike-Crowley
 
 
 #### Be sure to read the comments in the scripts themselves for more detail!
+### Visit https://mikecrowley.us/tag/powershell/ for additional functions and scripts.
