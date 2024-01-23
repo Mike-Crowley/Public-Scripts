@@ -1,9 +1,9 @@
-<span style="font-size:larger;">Author: Mike Crowley</span>
+<span style="font-size:large;">Author: Mike Crowley</span>
 
 <p align="left">
 <a href="https://mikecrowley.us"><img alt="Mike's Blog" src="https://img.shields.io/badge/Mike's-Blog-darkgreen?link=https%3A%2F%2Fmikecrowley.us">
 <a href="https://www.baselinetechnologies.com"><img alt="Baseline Technologies" src="https://img.shields.io/badge/Baseline-Technologies-darkorange?link=https%3A%2F%2Fwww.baselinetechnologies.com">
-<a href="https://img.shields.io/badge/Microsoft_MVP-2010--2018-blue"><img alt="Microsoft MVP" src="https://img.shields.io/badge/Microsoft_MVP-2010--2018-blue">
+<a href="https://github.com/Mike-Crowley/Public-Scripts"><img alt="Microsoft MVP" src="https://img.shields.io/badge/Microsoft_MVP-2010--2018-blue">
 <a href="https://mikecrowley.files.wordpress.com/2020/06/8f158f9484a5cee37192077e0979564af679d0bb.asc"><img alt="Public PGP Key" src="https://img.shields.io/badge/PGP%2FGPG-Key-darkred?link=https%3A%2F%2Fmikecrowley.files.wordpress.com%2F2020%2F06%2F8f158f9484a5cee37192077e0979564af679d0bb.asc">
 <a href="http://www.linkedin.com/in/mikecrowley"><img src="https://img.shields.io/badge/LinkedIn-mikecrowley-0077B5.svg?logo=LinkedIn"></a>
 </p>
@@ -21,43 +21,43 @@
 
 Microsoft [retired the TechNet Gallery](https://learn.microsoft.com/en-us/teamblog/technet-gallery-retirement), so I've re-uploaded a few scripts that were formally posted here: https://social.msdn.microsoft.com/Profile/mike%20crowley
 
-+ [Get-AlternateMailboxes.ps1](https://github.com/Mike-Crowley/Public-Scripts/blob/main/Get-AlternateMailboxes.ps1)
++ [Get-AlternateMailboxes.ps1](./Get-AlternateMailboxes.ps1)
 
   + Query Exchange Online AutoDiscover to enumerate mailbox delegates with modern auth.
 
-+ [Get-AlternateMailboxes_BasicAuth.ps1](https://github.com/Mike-Crowley/Public-Scripts/blob/main/Get-AlternateMailboxes_BasicAuth.ps1)
++ [Get-AlternateMailboxes_BasicAuth.ps1](./Get-AlternateMailboxes_BasicAuth.ps1)
 
   + Query Exchange Online AutoDiscover to enumerate mailbox delegates. The old basic auth version.
 
-+ [Graph_SignInActivity_Report.ps1](https://github.com/Mike-Crowley/Public-Scripts/blob/main/Graph_SignInActivity_Report.ps1)
++ [Graph_SignInActivity_Report.ps1](./Graph_SignInActivity_Report.ps1)
 
   + Report on user SignInActivity and license detail via Invoke-RestMethod from Microsoft Graph.
 
-+ [LowerCaseUPNs.ps1](https://github.com/Mike-Crowley/Public-Scripts/blob/main/LowerCaseUPNs.ps1)
++ [LowerCaseUPNs.ps1](./LowerCaseUPNs.ps1)
 
   + Change Exchange user's email addresses to lowercase.
 
-+ [MailUser-MgUser-Activity-Report.ps1](https://github.com/Mike-Crowley/Public-Scripts/blob/main/MailUser-MgUser-Activity-Report.ps1)
++ [MailUser-MgUser-Activity-Report.ps1](./MailUser-MgUser-Activity-Report.ps1)
 
   + Get Export login information for mail users via Microsoft Graph.
 
-+ [MgUserMail.ps1](https://github.com/Mike-Crowley/Public-Scripts/blob/main/MgUserMail.ps1)
++ [MgUserMail.ps1](./MgUserMail.ps1)
 
   + Send email via Microsoft Graph.
 
-+ [RDPConnectionParser.ps1](https://github.com/Mike-Crowley/Public-Scripts/blob/main/RDPConnectionParser.ps1)
++ [RDPConnectionParser.ps1](./RDPConnectionParser.ps1)
 
   + Extract interactive (local and remote desktop) login information and save to CSV.
 
-+ [RecipientReportv5.ps1](https://github.com/Mike-Crowley/Public-Scripts/blob/main/RecipientReportv5.ps1)
++ [RecipientReportv5.ps1](./RecipientReportv5.ps1)
 
   + Dump all recipients and their email addresses (proxy addresses) to CSV.
 
-+ [Request-AdfsCerts.ps1](https://github.com/Mike-Crowley/Public-Scripts/blob/main/Request-AdfsCerts.ps1)
++ [Request-AdfsCerts.ps1](./Request-AdfsCerts.ps1)
 
   + Remotley query ADFS to see information about the certificates it is using.
 
-+ [Restore-FromRecycleBin.ps1](https://github.com/Mike-Crowley/Public-Scripts/blob/main/Restore-FromRecycleBin.ps1)
++ [Restore-FromRecycleBin.ps1](./Restore-FromRecycleBin.ps1)
 
   + Restore files from SPO in bulk.
 
@@ -100,6 +100,6 @@ There are also a few things over here: https://gist.github.com/Mike-Crowley
 
 #
 
-<span style="font-size:larger;">Be sure to read the comments in the scripts themselves for more detail!</span>
+<span style="font-size:large;">Be sure to read the comments in the scripts themselves for more detail!</span>
 
-<span style="font-size:larger;">Visit https://mikecrowley.us/tag/powershell for additional functions and scripts.</span>
+<span style="font-size:large;">Visit https://mikecrowley.us/tag/powershell for additional functions and scripts.</span>
