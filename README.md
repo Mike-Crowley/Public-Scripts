@@ -42,6 +42,8 @@
 
 Microsoft [retired the TechNet Gallery](https://learn.microsoft.com/en-us/teamblog/technet-gallery-retirement), so I've re-uploaded a few scripts that were formally posted here: https://social.msdn.microsoft.com/Profile/mike%20crowley
 
+## Miscellaneous
+
 + [Get-AlternateMailboxes.ps1](./Get-AlternateMailboxes.ps1)
 
   + Query Exchange Online AutoDiscover to enumerate mailbox delegates with modern auth.
@@ -74,13 +76,31 @@ Microsoft [retired the TechNet Gallery](https://learn.microsoft.com/en-us/teambl
 
   + Dump all recipients and their email addresses (proxy addresses) to CSV.
 
-+ [Request-AdfsCerts.ps1](./Request-AdfsCerts.ps1)
-
-  + Remotley query ADFS to see information about the certificates it is using.
-
 + [Restore-FromRecycleBin.ps1](./Restore-FromRecycleBin.ps1)
 
   + Restore files from SPO in bulk.
+
+## OSINT
+
++ [Get-EntraCredentialType.ps1](./OSINT/Get-EntraCredentialType.ps1)
+
+  + Query Entra for the CredentialType
+
++ [Get-EntraCredentialInfo.ps1](./OSINT/Get-EntraCredentialInfo.ps1)
+
+  + Query Entra for the CredentialType and openid-configuration for a combined output.
+
++ [Request-AdfsCerts.ps1](./OSINT/Request-AdfsCerts.ps1)
+
+  + Remotley query ADFS to see information about the certificates it is using.
+
++ [Get-AutoDetect.ps1](./OSINT/AutoDetect-AutoDiscover-v2)
+
+  + Query AutoDiscover v2 / and the AutoDetect service (two files).
+
++ [Get-ExODomains.ps1](./OSINT/Get-ExODomains.ps1)
+
+  + Query the domains in a tenant from the Exchange AutoDiscover service.
 
 # Gists
 
@@ -94,14 +114,6 @@ There are also a few things over here: https://gist.github.com/Mike-Crowley
 + [Get-ADSiteByIp.ps1](https://gist.github.com/Mike-Crowley/3ad9472a2ab365c723f2272da197eabf)
 
   + Enter an IP address and this will lookup the AD site to which it belongs.
-
-+ [Get-AutoDetect.ps1](https://gist.github.com/Mike-Crowley/521680c3f84105378d2eb2358bd539cf)
-
-  + Query AutoDiscover v2 / and the AutoDetect service (two files).
-
-+ [Get-ExODomains.ps1](https://gist.github.com/Mike-Crowley/5da3f3fd69519f06866d580ebbd5b5b7)
-
-  + Query the domains in a tenant from the Exchange AutoDiscover service.
 
 + [Test-AdPassword.ps1](https://gist.github.com/Mike-Crowley/0cfaf1a8733b530e8f00acb59dec771f)
 

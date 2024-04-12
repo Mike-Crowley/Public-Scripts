@@ -1,6 +1,7 @@
 <#
 .SYNOPSIS
     Misc OSINT
+    Superseded by Get-EntraCredentialInfo 12 Apr 2024
 
 .EXAMPLE
 
