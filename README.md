@@ -84,11 +84,11 @@ Microsoft [retired the TechNet Gallery](https://learn.microsoft.com/en-us/teambl
 
 + [Get-EntraCredentialType.ps1](./OSINT/Get-EntraCredentialType.ps1)
 
-  + Query Entra for the CredentialType
+  + Query Entra for the CredentialType of a user.
 
 + [Get-EntraCredentialInfo.ps1](./OSINT/Get-EntraCredentialInfo.ps1)
 
-  + Query Entra for the CredentialType and openid-configuration for a combined output.
+  + Query Entra for the CredentialType and openid-configuration of a user for a combined output.
 
 + [Request-AdfsCerts.ps1](./OSINT/Request-AdfsCerts.ps1)
 
