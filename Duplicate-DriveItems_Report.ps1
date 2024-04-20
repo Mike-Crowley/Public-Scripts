@@ -2,8 +2,10 @@
 .DESCRIPTION
     This script finds duplicate files via Microsoft Graph by comparing their hashes.
     -It requires the manual modification of the $upn variable, which defines who's OneDrive will be searched.
-    -It also requires a modification to the /Desktop/DupesDirectory text, if another directory path is to be searched.
+    -It also requires a modification to the Desktop/DupesDirectory text, if another directory path is to be searched.
     -If using the test files, wait for them to sync before attempting to detect them.
+
+    To do: Convert to a function
 
 .LINK
 
@@ -11,26 +13,40 @@
 #>
 
 
-# Create some duplicate files
-$Desktop = [Environment]::GetFolderPath("Desktop")
-$TestDir = mkdir $Desktop\DupesDirectory -Force
-$TestLogFile = (Invoke-WebRequest "https://gist.githubusercontent.com/Mike-Crowley/d4275d6abd78ad8d19a6f1bcf9671ec4/raw/66fe537cfe8e58b1a5eb1c1336c4fdf6a9f05145/log.log.log").content
-1..25 | ForEach-Object { $TestLogFile | Out-File "$TestDir\$(Get-Random).log" }
+<#
+    Create some duplicate files for testing
 
-# Create some non-duplicate files
-1..25  | ForEach-Object { Get-Random | Out-File "$TestDir\$(Get-Random).log" }
+    $Desktop = [Environment]::GetFolderPath("Desktop")
+    $TestDir = mkdir $Desktop\DupesDirectory -Force
+    $TestLogFile = (Invoke-WebRequest "https://gist.githubusercontent.com/Mike-Crowley/d4275d6abd78ad8d19a6f1bcf9671ec4/raw/66fe537cfe8e58b1a5eb1c1336c4fdf6a9f05145/log.log.log").content
+    1..25 | ForEach-Object { $TestLogFile | Out-File "$TestDir\$(Get-Random).log" }
 
-#
-# WAIT for the files to sync via KFM
-#
+    Create more, if you'd like:
+
+    1..25 | ForEach-Object { "Hello World 1" | Out-File "$TestDir\$(Get-Random).log" }
+    1..25 | ForEach-Object { "Hello World 2" | Out-File "$TestDir\$(Get-Random).log" }
+
+    # Create some non-duplicate files
+    1..25  | ForEach-Object { Get-Random | Out-File "$TestDir\$(Get-Random).log" }
+
+    !! Wait for the files to sync via KFM !!
+#>
+
+# Which User's OneDrive we're searching:
+$Upn = "mike@mikecrowley.fake"
+
+# Which folder path in the OneDrive we're searching
+$FolderPath = "Desktop/DupesDirectory"
+
+##################################################
 
 # Connect to Graph
 Connect-MgGraph -NoWelcome
-$Upn = "mike@mikecrowley.fake"
+
 $Drive = Invoke-MgGraphRequest -Uri "beta/users/$upn/drive"
 
 # Find the files
-$uri = "beta/drives/$($drive.id)/root:/Desktop/DupesDirectory:/children"
+$uri = "beta/drives/$($Drive.id)/root:/$($FolderPath):/children"
 $AllChildren = [Collections.Generic.List[Object]]::new()
 do {
     $PageResults = Invoke-MgGraphRequest -Uri $uri
@@ -61,8 +77,8 @@ $GroupsOfDupes = $FilesCustom | Where-Object { $null -ne $_.quickXorHash } | Gro
 $Report = foreach ($Group in $GroupsOfDupes) {
     [pscustomobject] @{
         QuickXorHash  = $Group.Name
-        SizeKB        = $Group.Group.size[0] / 1KB
-        NumberOfDupes = $Group.Count
+        FileSizeKB    = $Group.Group.size[0] / 1KB
+        NumberOfFiles = $Group.Count
         FileNames     = ($Group.Group.name | Sort-Object -Unique) -join ';'
         WebLocalPaths = ($Group.Group.webUrl | ForEach-Object { ([uri]$_).LocalPath }) -join ";"
     }
@@ -70,5 +86,6 @@ $Report = foreach ($Group in $GroupsOfDupes) {
 
 # Create report
 Write-Host "Found $(($GroupsOfDupes | Measure-Object).count) group(s) of duplicate files. See desktop reports for details." -ForegroundColor Cyan
+$Desktop = [Environment]::GetFolderPath("Desktop")
 $Report | Export-Csv $Desktop\DupeReport_csv.csv -NoTypeInformation
-$Report | ConvertTo-Json | Out-File $Desktop\DupeReport_json.json # possibly easier to read
+$Report | ConvertTo-Json | Out-File $Desktop\DupeReport_json.json # Possibly easier to read
