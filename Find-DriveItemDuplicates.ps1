@@ -1,0 +1,235 @@
+<#
+.DESCRIPTION
+    Find-DriveItemDuplicates examines the hash values of OneDrive files to determine if there are duplicates.
+    Duplicates are reported to the desktop, the pipeline, or both.
+
+    Connect to Graph prior to running Find-DriveItemDuplicates.
+    e.g.
+        Connect-MgGraph -Scopes Files.Read
+
+    If you are checking files outside of your own OneDrive, you'll want to register an app with the appropriate permissions.
+    Reference:
+        https://learn.microsoft.com/en-us/powershell/microsoftgraph/app-only?view=graph-powershell-1.0
+
+.EXAMPLE
+
+    Find-DriveItemDuplicates
+
+    # Runs with parameter defaults:
+        # UPN:         Current user
+        # RootPath:    Root of drive
+        # NoRecursion: False (It will recurse through folders)
+        # OutputStyle: ReportAndPassThru
+        # ResultSize:  32767
+        # Silent:      False (It will write comments to the screen)
+
+.EXAMPLE
+
+    Find-DriveItemDuplicates -RootPath "Desktop" -OutputStyle Report -ResultSize 500
+
+    # Searches the current user's desktop folder at the root of the drive and its subfolders.
+    # Checks up to 500 files and generates the desktop report only (good for testing).
+
+.EXAMPLE
+
+    Find-DriveItemDuplicates -Upn user1@example.com -RootPath "Desktop/DupesDirectory" -OutputStyle Report -NoRecursion
+
+    # Searches the user1's Desktop/DupesDirectory folder at the root of the drive.
+    # Does not check subfolders. Creates the reports but does not return the items to the pipeline.
+
+.NOTES
+
+    Create some duplicate files for testing if needed.
+
+        $Desktop = [Environment]::GetFolderPath("Desktop")
+        $TestDir = mkdir $Desktop\DupesDirectory -Force
+        $TestLogFile = (Invoke-WebRequest "https://gist.githubusercontent.com/Mike-Crowley/d4275d6abd78ad8d19a6f1bcf9671ec4/raw/66fe537cfe8e58b1a5eb1c1336c4fdf6a9f05145/log.log.log").content
+        1..25 | ForEach-Object { $TestLogFile | Out-File "$TestDir\$(Get-Random).log" }
+
+    Create more, if you'd like.
+
+        1..25 | ForEach-Object { "Hello World 1" | Out-File "$TestDir\$(Get-Random).log" }
+        1..25 | ForEach-Object { "Hello World 2" | Out-File "$TestDir\$(Get-Random).log" }
+
+    # Create some non-duplicate files.
+
+        1..25  | ForEach-Object { Get-Random | Out-File "$TestDir\$(Get-Random).log" }
+
+    !! Wait for the files to sync via OneDrive's sync client (If using Known Folder Move - KFM) !!
+
+.LINK
+
+    https://mikecrowley.us/2024/04/20/onedrive-and-sharepoint-online-file-deduplication-report-microsoft-graph-api
+#>
+
+function Find-DriveItemDuplicates {
+    param(
+        [ValidateScript(
+            {
+                if ($_ -match "^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$") { $true } else { throw "Invalid UPN." }
+            }
+        )]
+        [string]$Upn = (whoami /upn),
+        [string]$RootPath = "/",
+        [switch]$NoRecursion = $false,
+        [ValidateSet(
+            "Report", "PassThru", "ReportAndPassThru"
+        )]
+        [string]$OutputStyle = "ReportAndPassThru",
+        [int32]$ResultSize = [int16]::MaxValue,
+        [switch]$Silent = $false
+    )
+
+    # Some pre-run checks
+    if ($null -eq (Get-Command Invoke-MgGraphRequest) ) { Throw "Invoke-MgGraphRequest cmdlet not found. Install the Microsoft.Graph.Authentication PowerShell module. `nhttps://learn.microsoft.com/en-us/graph/sdks/sdk-installation#install-the-microsoft-graph-powershell-sdk" }
+    if ($null -eq (Get-MgContext)) { Throw "No Graph context found. Please call Connect-MgGraph." }
+    if (((Get-MgContext).Scopes | Out-String ) -notlike '*Files.read*') { Write-Warning "Files.Read* permission scope may be missing. `nhttps://learn.microsoft.com/en-us/graph/api/driveitem-list-children?view=graph-rest-beta&tabs=http#permissions" }
+
+    #Find the user's drive
+    $Drive = Invoke-MgGraphRequest -Uri "beta/users/$upn/drive"
+    if ($Drive.webUrl -notlike 'https*') { Throw "Drive not found." }
+
+    if (-not $silent) { Write-Host "`nFound Drive: " -ForegroundColor Cyan -NoNewline }
+    if (-not $silent) { Write-Host $Drive.webUrl -ForegroundColor DarkCyan }
+    if (-not $silent) { Write-Host "" }
+
+    $baseUri = "beta/drives/$($Drive.id)/root"
+
+    # Create a new list to hold all file objects
+    $FileList = [Collections.Generic.List[Object]]::new()
+
+    # To do:
+    # Normalize if/else - move shared components above if/else
+    # Implement better graph error handling
+    if ($NoRecursion) {
+        $uri = "beta/drives/$($Drive.id)/root:/$($RootPath):/children"
+
+        do {
+            if (-not $silent) { Write-Host "Searching: " -ForegroundColor Cyan -NoNewline }
+            if (-not $silent) { Write-Host $uri  -ForegroundColor DarkCyan }
+            $PageResults = Invoke-MgGraphRequest -Uri $uri
+            if ($PageResults.value) {
+                $FileList.AddRange($PageResults.value)
+            }
+            else {
+                $FileList.Add($PageResults)
+            }
+            $uri = $PageResults.'@odata.nextlink'
+        } until (-not $uri)
+        $FileList = $FileList | Where-Object { $null -ne $_.file } # remove non-files such as folders
+
+        $FileList = foreach ($DriveItem in $FileList) {
+            [pscustomobject] @{
+                name                 = $DriveItem.name
+                lastModifiedDateTime = $DriveItem.lastModifiedDateTime
+                quickXorHash         = $DriveItem.file.hashes.quickXorHash
+                size                 = $DriveItem.size
+                webUrl               = $DriveItem.webUrl
+            }
+        }
+    }
+    else {
+        # Internal function to recursively get files
+        function Get-FolderItemsRecursively {
+            param(
+                [string]$Path,
+                [Collections.Generic.List[Object]]$AllFiles
+            )
+
+            if ($path -eq "/") {
+                $uri = "$baseUri/children"
+            }
+            else {
+                $uri = "$baseUri`:/$path`:/children"
+            }
+
+            if ($AllFiles.Count -lt $ResultSize) {
+                do {
+                    if (-not $silent) { Write-Host "Searching: " -ForegroundColor Cyan -NoNewline }
+                    if (-not $silent) { Write-Host $path  -ForegroundColor DarkCyan }
+
+                    if ($AllFiles.count -gt 1) {
+                        if (-not $silent) { Write-Host "Files Evaluated: " -ForegroundColor Cyan -NoNewline }
+                        if (-not $silent) { Write-Host  $AllFiles.count -ForegroundColor DarkCyan }
+                    }
+
+                    $Response = Invoke-MgGraphRequest -Uri $Uri
+
+                    foreach ($Item in $Response.value) {
+                        if ($null -ne $Item.folder) {
+                            # Recursive call if the item is a folder
+                            $FolderPath = "$Path/$($Item.name)"
+                            Get-FolderItemsRecursively -Path $FolderPath -AllFiles $AllFiles
+                        }
+                        elseif ($null -ne $Item.file) {
+                            # Add to the list if the item is a file
+                            $AllFiles.Add(
+                                [pscustomobject]@{
+                                    Name                 = $Item.name
+                                    LastModifiedDateTime = $Item.lastModifiedDateTime
+                                    QuickXorHash         = $Item.file.hashes.quickXorHash
+                                    Size                 = $Item.size
+                                    WebUrl               = $Item.webUrl
+                                }
+                            )
+                        }
+                    }
+                    # Pagination handling
+                    $Uri = $Response.'@odata.nextLink'
+                } until ((-not $Uri) -or ($AllFiles.Count -ge $ResultSize))
+            }
+        }
+        # Start recursion from the root Path
+        Get-FolderItemsRecursively -Path $RootPath -AllFiles $FileList
+    }
+
+    # Create the groups of dupes. The last graph page may have returned more than the $ResultSize, so limit output as needed.
+    $GroupsOfDupes = $FileList[0..($ResultSize - 1)] | Where-Object { $null -ne $_.quickXorHash } | Group-Object quickXorHash | Where-Object count -ge 2
+
+    # Select final columns for output
+    $Output = foreach ($Group in $GroupsOfDupes) {
+        [pscustomobject] @{
+            QuickXorHash  = $Group.Name
+            FileSizeKB    = $Group.Group.size[0] / 1KB
+            NumberOfFiles = $Group.Count
+            FileNames     = ($Group.Group.name | Sort-Object -Unique) -join ';'
+            WebLocalPaths = ($Group.Group.webUrl | ForEach-Object { ([uri]$_).LocalPath }) -join ";"
+        }
+    }
+
+    # Report status to console
+    if (-not $silent) { Write-Host "`nJob Parameters: " -ForegroundColor Cyan }
+    if (-not $silent) { Write-Host " ResultSize: " -ForegroundColor Cyan -NoNewline }
+    if (-not $silent) { Write-Host $ResultSize -ForegroundColor DarkCyan }
+
+    if (-not $silent) { Write-Host " Recurse: " -ForegroundColor Cyan -NoNewline }
+    if (-not $silent) { Write-Host $NoRecursion -ForegroundColor DarkCyan }
+
+    if (-not $silent) { Write-Host " OutputStyle: " -ForegroundColor Cyan -NoNewline }
+    if (-not $silent) { Write-Host $OutputStyle -ForegroundColor DarkCyan }
+
+    if (-not $silent) { Write-Host "`nTotal Files Evaluated: " -ForegroundColor Cyan -NoNewline }
+    if (-not $silent) { Write-Host "$(($FileList[0..($ResultSize - 1)] ).count)" -ForegroundColor DarkCyan }
+
+    if (-not $silent) { Write-Host "`nFound "  -ForegroundColor Cyan -NoNewline }
+    if (-not $silent) { Write-Host "$($($GroupsOfDupes | Measure-Object).count)" -ForegroundColor DarkCyan -NoNewline }
+    if (-not $silent) { Write-Host " group(s) of duplicate files." -ForegroundColor Cyan }
+
+    # Create reports if requested
+    if (($OutputStyle -eq "Report") -or ($OutputStyle -eq "ReportAndPassThru")) {
+        $FileDate = Get-Date -format ddMMMyyyy_HHmm.s
+        $Desktop = [Environment]::Getfolderpath("Desktop")
+        $CsvOutputPath = "$Desktop\$UPN-DupeReport-$FileDate.csv"
+        $JsonOutputPath = $CsvOutputPath -replace ".csv", ".json"
+
+        if (-not $silent) { Write-Host "`nSee desktop reports for details." -ForegroundColor Cyan }
+
+        $Output | Export-Csv $CsvOutputPath -NoTypeInformation
+        $Output | ConvertTo-Json | Out-File $JsonOutputPath
+    }
+
+    # Create pipeline output if requested
+    if (($OutputStyle -eq "PassThru") -or ($OutputStyle -eq "ReportAndPassThru")) {
+        $Output
+    }
+}
