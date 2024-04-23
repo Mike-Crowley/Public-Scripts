@@ -79,6 +79,10 @@ Microsoft [retired the TechNet Gallery](https://learn.microsoft.com/en-us/teambl
 + [Restore-FromRecycleBin.ps1](./Restore-FromRecycleBin.ps1)
 
   + Restore files from SPO in bulk.
+  
++ [Find-DriveItemDuplicates.ps1](./Find-DriveItemDuplicates.ps1)
+
+  + A utility to find duplicate files on OneDrive for Business or SharePoint Online.
 
 ## OSINT
 
