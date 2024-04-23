@@ -89,9 +89,9 @@ function Find-DriveItemDuplicates {
     $Drive = Invoke-MgGraphRequest -Uri "beta/users/$upn/drive"
     if ($Drive.webUrl -notlike 'https*') { Throw "Drive not found." }
 
-    if (-not $silent) { Write-Host "`nFound Drive: " -ForegroundColor Cyan -NoNewline }
-    if (-not $silent) { Write-Host $Drive.webUrl -ForegroundColor DarkCyan }
-    if (-not $silent) { Write-Host "" }
+    if (-not $Silent) { Write-Host "`nFound Drive: " -ForegroundColor Cyan -NoNewline }
+    if (-not $Silent) { Write-Host $Drive.webUrl -ForegroundColor DarkCyan }
+    if (-not $Silent) { Write-Host "" }
 
     $baseUri = "beta/drives/$($Drive.id)/root"
 
@@ -105,8 +105,8 @@ function Find-DriveItemDuplicates {
         $uri = "beta/drives/$($Drive.id)/root:/$($RootPath):/children"
 
         do {
-            if (-not $silent) { Write-Host "Searching: " -ForegroundColor Cyan -NoNewline }
-            if (-not $silent) { Write-Host $uri  -ForegroundColor DarkCyan }
+            if (-not $Silent) { Write-Host "Searching: " -ForegroundColor Cyan -NoNewline }
+            if (-not $Silent) { Write-Host $uri  -ForegroundColor DarkCyan }
             $PageResults = Invoke-MgGraphRequest -Uri $uri
             if ($PageResults.value) {
                 $FileList.AddRange($PageResults.value)
@@ -145,12 +145,12 @@ function Find-DriveItemDuplicates {
 
             if ($AllFiles.Count -lt $ResultSize) {
                 do {
-                    if (-not $silent) { Write-Host "Searching: " -ForegroundColor Cyan -NoNewline }
-                    if (-not $silent) { Write-Host $path  -ForegroundColor DarkCyan }
+                    if (-not $Silent) { Write-Host "Searching: " -ForegroundColor Cyan -NoNewline }
+                    if (-not $Silent) { Write-Host $path  -ForegroundColor DarkCyan }
 
                     if ($AllFiles.count -gt 1) {
-                        if (-not $silent) { Write-Host "Files Evaluated: " -ForegroundColor Cyan -NoNewline }
-                        if (-not $silent) { Write-Host  $AllFiles.count -ForegroundColor DarkCyan }
+                        if (-not $Silent) { Write-Host "Files Evaluated: " -ForegroundColor Cyan -NoNewline }
+                        if (-not $Silent) { Write-Host  $AllFiles.count -ForegroundColor DarkCyan }
                     }
 
                     $Response = Invoke-MgGraphRequest -Uri $Uri
@@ -198,22 +198,22 @@ function Find-DriveItemDuplicates {
     }
 
     # Report status to console
-    if (-not $silent) { Write-Host "`nJob Parameters: " -ForegroundColor Cyan }
-    if (-not $silent) { Write-Host " ResultSize: " -ForegroundColor Cyan -NoNewline }
-    if (-not $silent) { Write-Host $ResultSize -ForegroundColor DarkCyan }
+    if (-not $Silent) { Write-Host "`nJob Parameters: " -ForegroundColor Cyan }
+    if (-not $Silent) { Write-Host " ResultSize: " -ForegroundColor Cyan -NoNewline }
+    if (-not $Silent) { Write-Host $ResultSize -ForegroundColor DarkCyan }
 
-    if (-not $silent) { Write-Host " Recurse: " -ForegroundColor Cyan -NoNewline }
-    if (-not $silent) { Write-Host $NoRecursion -ForegroundColor DarkCyan }
+    if (-not $Silent) { Write-Host " Recurse: " -ForegroundColor Cyan -NoNewline }
+    if (-not $Silent) { Write-Host $NoRecursion -ForegroundColor DarkCyan }
 
-    if (-not $silent) { Write-Host " OutputStyle: " -ForegroundColor Cyan -NoNewline }
-    if (-not $silent) { Write-Host $OutputStyle -ForegroundColor DarkCyan }
+    if (-not $Silent) { Write-Host " OutputStyle: " -ForegroundColor Cyan -NoNewline }
+    if (-not $Silent) { Write-Host $OutputStyle -ForegroundColor DarkCyan }
 
-    if (-not $silent) { Write-Host "`nTotal Files Evaluated: " -ForegroundColor Cyan -NoNewline }
-    if (-not $silent) { Write-Host "$(($FileList[0..($ResultSize - 1)] ).count)" -ForegroundColor DarkCyan }
+    if (-not $Silent) { Write-Host "`nTotal Files Evaluated: " -ForegroundColor Cyan -NoNewline }
+    if (-not $Silent) { Write-Host "$(($FileList[0..($ResultSize - 1)] ).count)" -ForegroundColor DarkCyan }
 
-    if (-not $silent) { Write-Host "`nFound "  -ForegroundColor Cyan -NoNewline }
-    if (-not $silent) { Write-Host "$($($GroupsOfDupes | Measure-Object).count)" -ForegroundColor DarkCyan -NoNewline }
-    if (-not $silent) { Write-Host " group(s) of duplicate files." -ForegroundColor Cyan }
+    if (-not $Silent) { Write-Host "`nFound "  -ForegroundColor Cyan -NoNewline }
+    if (-not $Silent) { Write-Host "$($($GroupsOfDupes | Measure-Object).count)" -ForegroundColor DarkCyan -NoNewline }
+    if (-not $Silent) { Write-Host " group(s) of duplicate files." -ForegroundColor Cyan }
 
     # Create reports if requested
     if (($OutputStyle -eq "Report") -or ($OutputStyle -eq "ReportAndPassThru")) {
@@ -222,8 +222,9 @@ function Find-DriveItemDuplicates {
         $CsvOutputPath = "$Desktop\$UPN-DupeReport-$FileDate.csv"
         $JsonOutputPath = $CsvOutputPath -replace ".csv", ".json"
 
-        if (-not $silent) { Write-Host "`nSee desktop reports for details." -ForegroundColor Cyan }
-
+        if ($($GroupsOfDupes | Measure-Object).count -ge 1) {
+            if (-not $Silent) { Write-Host "`nSee desktop reports for details." -ForegroundColor Cyan }
+        }
         $Output | Export-Csv $CsvOutputPath -NoTypeInformation
         $Output | ConvertTo-Json | Out-File $JsonOutputPath
     }
