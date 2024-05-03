@@ -79,11 +79,15 @@ function Find-DriveItemDuplicates {
         [int32]$ResultSize = [int16]::MaxValue,
         [switch]$Silent = $false
     )
+    $StartTime = Get-Date
 
     # Some pre-run checks
     if ($null -eq (Get-Command Invoke-MgGraphRequest) ) { Throw "Invoke-MgGraphRequest cmdlet not found. Install the Microsoft.Graph.Authentication PowerShell module. `nhttps://learn.microsoft.com/en-us/graph/sdks/sdk-installation#install-the-microsoft-graph-powershell-sdk" }
     if ($null -eq (Get-MgContext)) { Throw "No Graph context found. Please call Connect-MgGraph." }
-    if (((Get-MgContext).Scopes | Out-String ) -notlike '*Files.read*') { Write-Warning "Files.Read* permission scope may be missing. `nhttps://learn.microsoft.com/en-us/graph/api/driveitem-list-children?view=graph-rest-beta&tabs=http#permissions" }
+    if (
+        (((Get-MgContext).Scopes | Out-String ) -notlike '*Files.Read*') -and
+        (((Get-MgContext).Scopes | Out-String ) -notlike '*Sites.Read*')
+    ) { Write-Warning "Permission scope may be missing. `nhttps://learn.microsoft.com/en-us/graph/api/driveitem-list-children?view=graph-rest-beta&tabs=http#permissions" }
 
     #Find the user's drive
     $Drive = Invoke-MgGraphRequest -Uri "beta/users/$upn/drive"
@@ -101,6 +105,7 @@ function Find-DriveItemDuplicates {
     # To do:
     # Normalize if/else - move shared components above if/else
     # Implement better graph error handling
+
     if ($NoRecursion) {
         $uri = "beta/drives/$($Drive.id)/root:/$($RootPath):/children"
 
@@ -188,22 +193,50 @@ function Find-DriveItemDuplicates {
 
     # Select final columns for output
     $Output = foreach ($Group in $GroupsOfDupes) {
+        $FileGroupSize = ($Group.Group.size | Measure-Object -Sum).Sum
         [pscustomobject] @{
-            QuickXorHash  = $Group.Name
-            FileSizeKB    = $Group.Group.size[0] / 1KB
-            NumberOfFiles = $Group.Count
-            FileNames     = ($Group.Group.name | Sort-Object -Unique) -join ';'
-            WebLocalPaths = ($Group.Group.webUrl | ForEach-Object { ([uri]$_).LocalPath }) -join ";"
+            QuickXorHash    = $Group.Name
+            NumberOfFiles   = $Group.Count
+            FileSizeKB      = $Group.Group.size[0] / 1KB
+            FileGroupSizeKB = $FileGroupSize / 1KB
+            PossibleWasteKB = ( $FileGroupSize - $Group.Group.size[0] ) / 1KB
+            FileNames       = ($Group.Group.name | Sort-Object -Unique) -join ';'
+            WebLocalPaths   = ($Group.Group.webUrl | ForEach-Object { ([uri]$_).LocalPath }) -join ";"
         }
     }
 
+    # Create pipeline output if requested
+    if (($OutputStyle -eq "PassThru") -or ($OutputStyle -eq "ReportAndPassThru")) {
+        $Output
+    }
+
+    # Create reports if requested
+    if (($OutputStyle -eq "Report") -or ($OutputStyle -eq "ReportAndPassThru")) {
+        $FileDate = Get-Date -format ddMMMyyyy_HHmm.s
+        $Desktop = [Environment]::Getfolderpath("Desktop")
+        $CsvOutputPath = "$Desktop\$UPN-DupeReport-$FileDate.csv"
+        $JsonOutputPath = $CsvOutputPath -replace ".csv", ".json"
+
+        $Output | Export-Csv $CsvOutputPath -NoTypeInformation
+        $Output | ConvertTo-Json | Out-File $JsonOutputPath
+    }
+
     # Report status to console
+    $EndTime = Get-Date
+    if (-not $Silent) { Write-Host "`nJob Duration: " -ForegroundColor Cyan }
+    if (-not $Silent) { Write-Host " Job Start: " -ForegroundColor Cyan -NoNewline }
+    if (-not $Silent) { Write-Host $StartTime -ForegroundColor DarkCyan }
+    if (-not $Silent) { Write-Host " Job End: " -ForegroundColor Cyan -NoNewline }
+    if (-not $Silent) { Write-Host $EndTime -ForegroundColor DarkCyan }
+    if (-not $Silent) { Write-Host " Total Seconds: " -ForegroundColor Cyan -NoNewline }
+    if (-not $Silent) { Write-Host $([math]::Ceiling(($EndTime - $StartTime).TotalSeconds)) -ForegroundColor DarkCyan }
+
     if (-not $Silent) { Write-Host "`nJob Parameters: " -ForegroundColor Cyan }
     if (-not $Silent) { Write-Host " ResultSize: " -ForegroundColor Cyan -NoNewline }
     if (-not $Silent) { Write-Host $ResultSize -ForegroundColor DarkCyan }
 
     if (-not $Silent) { Write-Host " Recurse: " -ForegroundColor Cyan -NoNewline }
-    if (-not $Silent) { Write-Host $NoRecursion -ForegroundColor DarkCyan }
+    if (-not $Silent) { Write-Host (-not $NoRecursion) -ForegroundColor DarkCyan }
 
     if (-not $Silent) { Write-Host " OutputStyle: " -ForegroundColor Cyan -NoNewline }
     if (-not $Silent) { Write-Host $OutputStyle -ForegroundColor DarkCyan }
@@ -213,24 +246,13 @@ function Find-DriveItemDuplicates {
 
     if (-not $Silent) { Write-Host "`nFound "  -ForegroundColor Cyan -NoNewline }
     if (-not $Silent) { Write-Host "$($($GroupsOfDupes | Measure-Object).count)" -ForegroundColor DarkCyan -NoNewline }
-    if (-not $Silent) { Write-Host " group(s) of duplicate files." -ForegroundColor Cyan }
+    if (-not $Silent) { Write-Host " group(s) of duplicate files." -ForegroundColor Cyan  -NoNewline }
 
-    # Create reports if requested
-    if (($OutputStyle -eq "Report") -or ($OutputStyle -eq "ReportAndPassThru")) {
-        $FileDate = Get-Date -format ddMMMyyyy_HHmm.s
-        $Desktop = [Environment]::Getfolderpath("Desktop")
-        $CsvOutputPath = "$Desktop\$UPN-DupeReport-$FileDate.csv"
-        $JsonOutputPath = $CsvOutputPath -replace ".csv", ".json"
-
-        if ($($GroupsOfDupes | Measure-Object).count -ge 1) {
-            if (-not $Silent) { Write-Host "`nSee desktop reports for details." -ForegroundColor Cyan }
-        }
-        $Output | Export-Csv $CsvOutputPath -NoTypeInformation
-        $Output | ConvertTo-Json | Out-File $JsonOutputPath
+    if ($($GroupsOfDupes | Measure-Object).count -ge 1) {
+        if (-not $Silent) { Write-Host " See desktop reports for details." -ForegroundColor Cyan }
     }
 
-    # Create pipeline output if requested
-    if (($OutputStyle -eq "PassThru") -or ($OutputStyle -eq "ReportAndPassThru")) {
-        $Output
-    }
+    if (-not $Silent) { Write-Host "`nPotential Waste in MB: "  -ForegroundColor Cyan -NoNewline }
+    if (-not $Silent) { Write-Host "$( ($Output.PossibleWasteKB | Measure-Object -Sum).sum / 1MB)" -ForegroundColor DarkCyan -NoNewline }
+
 }
