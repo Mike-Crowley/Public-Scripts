@@ -84,6 +84,10 @@ Microsoft [retired the TechNet Gallery](https://learn.microsoft.com/en-us/teambl
 
   + A utility to find duplicate files on OneDrive for Business or SharePoint Online.
 
++ [Compare-ObjectsInVSCode.ps1](./Compare-ObjectsInVSCode.ps1)
+
+  + Compare two PowerShell Objects in Visual Studio Code.
+
 ## OSINT
 
 + [Get-EntraCredentialType.ps1](./OSINT/Get-EntraCredentialType.ps1)
