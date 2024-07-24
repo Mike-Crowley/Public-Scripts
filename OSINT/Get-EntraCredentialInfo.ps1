@@ -4,14 +4,14 @@
 
 .EXAMPLE
 
-    Get-EntraGetCredentialInfo -Upn user@example.com
+    Get-EntraCredentialInfo -Upn user@example.com
 
 .LINK
 
     https://mikecrowley.us
 #>
 
-function Get-EntraGetCredentialInfo {
+function Get-EntraCredentialInfo {
     param (
         [parameter(Mandatory = $true)][string]
         $Upn
@@ -41,8 +41,8 @@ function Get-EntraGetCredentialInfo {
             "1" { "INVALID_USER" }
             "2" { "THROTTLE" }
             "4" { "ERROR" }
-            "5" { "VALID_USER_DIFFERENT_IDP" }
-            "6" { "VALID_USER" }
+            "5" { "VALID_USER-DIFFERENT_IDP" }
+            "6" { "VALID_USER-ExistsBoth_IDP" } # causes pidpdisambiguation / accountpicker
             default { $CredentialResponse.IfExistsResult }
         } # https://github.com/BarrelTit0r/o365enum/blob/master/o365enum.py
 
