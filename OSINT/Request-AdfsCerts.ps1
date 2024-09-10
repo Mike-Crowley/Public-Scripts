@@ -216,17 +216,5 @@ function Request-AdfsCerts {
     else { Write-Warning "Cannot connect to: $FarmFqdn" }
 }
 
-# Run one at a time:
-
-#Prod
-Request-AdfsCerts -FarmFqdn ssoeu.blackline.com -Display $true
-Request-AdfsCerts -FarmFqdn ssona.blacklineondemand.com -Display $true
-Request-AdfsCerts -FarmFqdn ssous2.blackline.com -Display $true
-
-#Sandbox
-Request-AdfsCerts -FarmFqdn sbssous2.blackline.com -Display $true
-Request-AdfsCerts -FarmFqdn ssosbeu.blackline.com -Display $true
-Request-AdfsCerts -FarmFqdn ssosbna.blacklineondemand.com -Display $true
-
-#Test
-Request-AdfsCerts -FarmFqdn ssotest.blackline.corp -Display $true
+# Example
+Request-AdfsCerts -FarmFqdn testsso.contoso -Display $true
