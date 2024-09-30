@@ -29,7 +29,7 @@ function Get-EntraCredentialInfo {
     $OpenidResponse = Invoke-WebRequest "https://login.microsoftonline.com/$domain/.well-known/openid-configuration" | ConvertFrom-Json
     $ErrorActionPreference = "Continue"
 
-    [pscustomobject]@{
+    $Output = [pscustomobject]@{
         Username                  = $CredentialResponse.Username
         Domain                    = $Domain
         UserFound                 = $CredentialResponse.IfExistsResult -ne 1
@@ -74,5 +74,11 @@ function Get-EntraCredentialInfo {
         tenant_region_sub_scope   = if ($null -eq $OpenidResponse.tenant_region_sub_scope) { "WW" } else { $OpenidResponse.tenant_region_sub_scope }
         #CredentialResponse        = if ($null -ne $OpenidResponse) { $OpenidResponse.cloud_instance_name } else {}
         FederationRedirectUrl     = $CredentialResponse.Credentials.FederationRedirectUrl
+    }
+
+    $Output
+
+    if ($Output.DomainTypeDescription -eq "FEDERATED") {
+        Write-Warning "[$($Output.Username)] All users in a FEDERATED domain return VALID_USER by this endpoint. You must confirm with the system referenced in the FederationRedirectUrl.`n"
     }
 }
