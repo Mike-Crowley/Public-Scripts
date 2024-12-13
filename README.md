@@ -139,6 +139,10 @@ There are also a few things over here: https://gist.github.com/Mike-Crowley
 
   + Generate words for the wordscapes game so I can answer faster than my mom.
 
++ [Verify-SmbSigning.ps1](https://gist.github.com/Mike-Crowley/4aa9d0913ef0518e79034e5cdc56daf4)
+
+  + Makes an SMB connection to a remote server, captures the traffic with Wireshark (tshark), and then parses the capture to report on the use of SMB signing.
+
 #
 
 <span style="font-size:large;">Be sure to read the comments in the scripts themselves for more detail!</span>
