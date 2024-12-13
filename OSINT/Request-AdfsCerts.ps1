@@ -94,7 +94,7 @@ function Request-AdfsCerts {
         $global:UnsupportedPowerShell = $false
 
         #ignore ssl warnings
-        if ($PSVersionTable.PSEdition -eq "core") { $global:UnsupportedPowerShell -eq $true }
+        if ($PSVersionTable.PSEdition -eq "core") { $global:UnsupportedPowerShell = $true }
         else { [Net.ServicePointManager]::ServerCertificateValidationCallback = { $true } }
 
         #Make HTTPS connection and get content
