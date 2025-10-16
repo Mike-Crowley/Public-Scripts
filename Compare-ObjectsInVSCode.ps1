@@ -31,7 +31,8 @@ function Compare-ObjectsInVSCode {
     code -d $file1Path $file2Path
 }
 
-# Example
-$Process1 = Get-Process mspaint
-$Process2 = Get-Process excel
-Compare-ObjectsInVSCode $Process1 $Process2 -Depth 2
+<# Example
+    $Process1 = Get-Process mspaint
+    $Process2 = Get-Process excel
+    Compare-ObjectsInVSCode $Process1 $Process2 -Depth 2
+#>
