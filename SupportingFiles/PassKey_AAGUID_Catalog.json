@@ -1,2858 +1,4268 @@
 [
   {
-    "aaguid": "973446ca-e21c-9a9b-99f5-9b985a67af0f",
-    "description": "ACS FIDO Authenticator Card",
-    "connectivity": {
-      "bio": false,
-      "usb": false,
-      "nfc": true,
-      "ble": false
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
     },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "ACS FIDO Authenticator Card 97344..."
-  },
-  {
-    "aaguid": "5ca1ab1e-1337-fa57-f1d0-a117e71ca702",
-    "description": "Allthenticator App: roaming BLE FIDO2 Allthenticator for Windows, Mac, Linux, and Allthenticate door readers",
-    "connectivity": {
-      "bio": true,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Allthenticator App: roaming BLE FIDO2 Allthenticator for Windows, Mac, Linux, and Allthenticate door readers 5ca1a..."
-  },
-  {
-    "aaguid": "3f59672f-20aa-4afe-b6f4-7e5e916b6d98",
-    "description": "Arculus FIDO 2.1 Key Card [P71]",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Arculus FIDO 2.1 Key Card [P71] 3f596..."
-  },
-  {
-    "aaguid": "9d3df6ba-282f-11ed-a261-0242ac120002",
-    "description": "Arculus FIDO2/U2F Key Card",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Arculus FIDO2/U2F Key Card 9d3df..."
-  },
-  {
-    "aaguid": "d41f5a69-b817-4144-a13c-9ebd6d9254d6",
-    "description": "ATKey.Card CTAP2.0",
-    "connectivity": {
-      "bio": true,
-      "usb": false,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "ATKey.Card CTAP2.0 d41f5..."
-  },
-  {
-    "aaguid": "da1fa263-8b25-42b6-a820-c0036f21ba7f",
-    "description": "ATKey.Card NFC",
-    "connectivity": {
-      "bio": true,
-      "usb": true,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "ATKey.Card NFC da1fa..."
-  },
-  {
-    "aaguid": "e1a96183-5016-4f24-b55b-e3ae23614cc6",
-    "description": "ATKey.Pro CTAP2.0",
-    "connectivity": {
-      "bio": true,
-      "usb": false,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "ATKey.Pro CTAP2.0 e1a96..."
-  },
-  {
-    "aaguid": "e416201b-afeb-41ca-a03d-2281c28322aa",
-    "description": "ATKey.Pro CTAP2.1",
-    "connectivity": {
-      "bio": true,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "ATKey.Pro CTAP2.1 e4162..."
-  },
-  {
-    "aaguid": "ba76a271-6eb6-4171-874d-b6428dbe3437",
-    "description": "ATKey.ProS",
-    "connectivity": {
-      "bio": true,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "ATKey.ProS ba76a..."
-  },
-  {
-    "aaguid": "1c086528-58d5-f211-823c-356786e36140",
-    "description": "Atos CardOS FIDO2",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Atos CardOS FIDO2 1c086..."
-  },
-  {
-    "aaguid": "b267239b-954f-4041-a01b-ee4f33c145b6",
-    "description": "authenton1 - CTAP2.1",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "authenton1 - CTAP2.1 b2672..."
-  },
-  {
-    "aaguid": "175cd298-83d2-4a26-b637-313c07a6434e",
-    "description": "Chunghwa Telecom FIDO2 Smart Card Authenticator",
-    "connectivity": {
-      "bio": false,
-      "usb": false,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Chunghwa Telecom FIDO2 Smart Card Authenticator 175cd..."
-  },
-  {
-    "aaguid": "be727034-574a-f799-5c76-0929e0430973",
-    "description": "Crayonic KeyVault K1 (USB-NFC-BLE FIDO2 Authenticator)",
-    "connectivity": {
-      "bio": true,
-      "usb": true,
-      "nfc": true,
-      "ble": true
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Crayonic KeyVault K1 (USB-NFC-BLE FIDO2 Authenticator) be727..."
-  },
-  {
-    "aaguid": "9c835346-796b-4c27-8898-d6032f515cc5",
-    "description": "Cryptnox FIDO2",
-    "connectivity": {
-      "bio": false,
-      "usb": false,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Cryptnox FIDO2 9c835..."
-  },
-  {
-    "aaguid": "1105e4ed-af1d-02ff-ffff-ffffffffffff",
-    "description": "Egomet FIDO2 Authenticator for Android",
-    "connectivity": {
-      "bio": true,
-      "usb": false,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": false,
-      "userVerificationSupported": true
-    },
-    "modelName": "Egomet FIDO2 Authenticator for Android 1105e..."
-  },
-  {
-    "aaguid": "454e5346-4944-4ffd-6c93-8e9267193e9a",
-    "description": "Ensurity ThinC",
-    "connectivity": {
-      "bio": true,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Ensurity ThinC 454e5..."
-  },
-  {
-    "aaguid": "95442b2e-f15e-4def-b270-efb106facb4e",
-    "description": "eWBM eFA310 FIDO2 Authenticator",
-    "connectivity": {
-      "bio": true,
-      "usb": false,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "eWBM eFA310 FIDO2 Authenticator 95442..."
-  },
-  {
-    "aaguid": "87dbc5a1-4c94-4dc8-8a47-97d800fd1f3c",
-    "description": "eWBM eFA320 FIDO2 Authenticator",
-    "connectivity": {
-      "bio": true,
-      "usb": false,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "eWBM eFA320 FIDO2 Authenticator 87dbc..."
-  },
-  {
-    "aaguid": "61250591-b2bc-4456-b719-0b17be90bb30",
-    "description": "eWBM eFPA FIDO2 Authenticator",
-    "connectivity": {
-      "bio": true,
-      "usb": false,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "eWBM eFPA FIDO2 Authenticator 61250..."
-  },
-  {
-    "aaguid": "6002f033-3c07-ce3e-d0f7-0ffe5ed42543",
-    "description": "Excelsecu eSecu FIDO2 Fingerprint Key",
-    "connectivity": {
-      "bio": true,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Excelsecu eSecu FIDO2 Fingerprint Key 6002f..."
-  },
-  {
-    "aaguid": "20f0be98-9af9-986a-4b42-8eca4acb28e4",
-    "description": "Excelsecu eSecu FIDO2 Fingerprint Security Key",
-    "connectivity": {
-      "bio": true,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Excelsecu eSecu FIDO2 Fingerprint Security Key 20f0b..."
-  },
-  {
-    "aaguid": "d384db22-4d50-ebde-2eac-5765cf1e2a44",
-    "description": "Excelsecu eSecu FIDO2 Fingerprint Security Key",
-    "connectivity": {
-      "bio": true,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Excelsecu eSecu FIDO2 Fingerprint Security Key d384d..."
-  },
-  {
-    "aaguid": "a3975549-b191-fd67-b8fb-017e2917fdb3",
-    "description": "Excelsecu eSecu FIDO2 NFC Security Key",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Excelsecu eSecu FIDO2 NFC Security Key a3975..."
-  },
-  {
-    "aaguid": "fbefdf68-fe86-0106-213e-4d5fa24cbe2e",
-    "description": "Excelsecu eSecu FIDO2 NFC Security Key",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Excelsecu eSecu FIDO2 NFC Security Key fbefd..."
-  },
-  {
-    "aaguid": "0d9b2e56-566b-c393-2940-f821b7f15d6d",
-    "description": "Excelsecu eSecu FIDO2 Pro Security Key",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": true,
-      "ble": true
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Excelsecu eSecu FIDO2 Pro Security Key 0d9b2..."
-  },
-  {
-    "aaguid": "bbf4b6a7-679d-f6fc-c4f2-8ac0ddf9015a",
-    "description": "Excelsecu eSecu FIDO2 PRO Security Key",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": true,
-      "ble": true
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Excelsecu eSecu FIDO2 PRO Security Key bbf4b..."
-  },
-  {
-    "aaguid": "cdbdaea2-c415-5073-50f7-c04e968640b6",
-    "description": "Excelsecu eSecu FIDO2 Security Key",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Excelsecu eSecu FIDO2 Security Key cdbda..."
-  },
-  {
-    "aaguid": "12ded745-4bed-47d4-abaa-e713f51d6393",
-    "description": "Feitian AllinOne FIDO2 Authenticator",
-    "connectivity": {
-      "bio": true,
-      "usb": true,
-      "nfc": true,
-      "ble": true
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Feitian AllinOne FIDO2 Authenticator 12ded..."
-  },
-  {
-    "aaguid": "77010bd7-212a-4fc9-b236-d2ca5e9d4084",
-    "description": "Feitian BioPass FIDO2 Authenticator",
-    "connectivity": {
-      "bio": true,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Feitian BioPass FIDO2 Authenticator 77010..."
-  },
-  {
-    "aaguid": "b6ede29c-3772-412c-8a78-539c1f4c62d2",
-    "description": "Feitian BioPass FIDO2 Plus Authenticator",
-    "connectivity": {
-      "bio": true,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Feitian BioPass FIDO2 Plus Authenticator b6ede..."
-  },
-  {
-    "aaguid": "833b721a-ff5f-4d00-bb2e-bdda3ec01e29",
-    "description": "Feitian ePass FIDO2 Authenticator",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Feitian ePass FIDO2 Authenticator 833b7..."
-  },
-  {
-    "aaguid": "ee041bce-25e5-4cdb-8f86-897fd6418464",
-    "description": "Feitian ePass FIDO2-NFC Authenticator",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Feitian ePass FIDO2-NFC Authenticator ee041..."
-  },
-  {
-    "aaguid": "234cd403-35a2-4cc2-8015-77ea280c77f5",
-    "description": "Feitian ePass FIDO2-NFC Series (CTAP2.1, CTAP2.0, U2F)",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Feitian ePass FIDO2-NFC Series (CTAP2.1, CTAP2.0, U2F) 234cd..."
-  },
-  {
-    "aaguid": "3e22415d-7fdf-4ea4-8a0c-dd60c4249b9d",
-    "description": "Feitian iePass FIDO Authenticator",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Feitian iePass FIDO Authenticator 3e224..."
-  },
-  {
-    "aaguid": "f4c63eff-d26c-4248-801c-3736c7eaa93a",
-    "description": "FIDO KeyPass S3",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": false
-    },
-    "modelName": "FIDO KeyPass S3 f4c63..."
-  },
-  {
-    "aaguid": "8c97a730-3f7b-41a6-87d6-1e9b62bda6f0",
-    "description": "FT-JCOS FIDO Fingerprint Card",
-    "connectivity": {
-      "bio": false,
-      "usb": false,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "FT-JCOS FIDO Fingerprint Card 8c97a..."
-  },
-  {
-    "aaguid": "42b4fb4a-2866-43b2-9bf7-6c6669c2e5d3",
-    "description": "Google Titan Security Key v2",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Google Titan Security Key v2 42b4f..."
-  },
-  {
-    "aaguid": "9f0d8150-baa5-4c00-9299-ad62c8bb4e87",
-    "description": "GoTrust Idem Card FIDO2 Authenticator",
-    "connectivity": {
-      "bio": false,
-      "usb": false,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "GoTrust Idem Card FIDO2 Authenticator 9f0d8..."
-  },
-  {
-    "aaguid": "3b1adb99-0dfe-46fd-90b8-7f7614a4de2a",
-    "description": "GoTrust Idem Key FIDO2 Authenticator",
-    "connectivity": {
-      "bio": false,
-      "usb": false,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "GoTrust Idem Key FIDO2 Authenticator 3b1ad..."
-  },
-  {
-    "aaguid": "aeb6569c-f8fb-4950-ac60-24ca2bbe2e52",
-    "description": "HID Crescendo C2300",
-    "connectivity": {
-      "bio": false,
-      "usb": false,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "HID Crescendo C2300 aeb65..."
-  },
-  {
-    "aaguid": "c80dbd9a-533f-4a17-b941-1a2f1c7cedff",
-    "description": "HID Crescendo C3000",
-    "connectivity": {
-      "bio": false,
-      "usb": false,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "HID Crescendo C3000 c80db..."
-  },
-  {
-    "aaguid": "54d9fee8-e621-4291-8b18-7157b99c5bec",
-    "description": "HID Crescendo Enabled",
-    "connectivity": {
-      "bio": false,
-      "usb": false,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "HID Crescendo Enabled 54d9f..."
-  },
-  {
-    "aaguid": "692db549-7ae5-44d5-a1e5-dd20a493b723",
-    "description": "HID Crescendo Key",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "HID Crescendo Key 692db..."
-  },
-  {
-    "aaguid": "2d3bec26-15ee-4f5d-88b2-53622490270b",
-    "description": "HID Crescendo Key V2",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "HID Crescendo Key V2 2d3be..."
-  },
-  {
-    "aaguid": "4e768f2c-5fab-48b3-b300-220eb487752b",
-    "description": "Hideez Key 4 FIDO2 SDK",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": true,
-      "ble": true
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Hideez Key 4 FIDO2 SDK 4e768..."
-  },
-  {
-    "aaguid": "d821a7d4-e97c-4cb6-bd82-4237731fd4be",
-    "description": "Hyper FIDO Bio Security Key",
-    "connectivity": {
-      "bio": true,
-      "usb": false,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Hyper FIDO Bio Security Key d821a..."
-  },
-  {
-    "aaguid": "9f77e279-a6e2-4d58-b700-31e5943c6a98",
-    "description": "Hyper FIDO Pro",
-    "connectivity": {
-      "bio": false,
-      "usb": false,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Hyper FIDO Pro 9f77e..."
-  },
-  {
-    "aaguid": "0076631b-d4a0-427f-5773-0ec71c9e0279",
-    "description": "HYPR FIDO2 Authenticator",
-    "connectivity": {
-      "bio": true,
-      "usb": false,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "HYPR FIDO2 Authenticator 00766..."
-  },
-  {
-    "aaguid": "e86addcd-7711-47e5-b42a-c18257b0bf61",
-    "description": "IDCore 3121 Fido",
-    "connectivity": {
-      "bio": false,
-      "usb": false,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "IDCore 3121 Fido e86ad..."
-  },
-  {
-    "aaguid": "8d1b1fcb-3c76-49a9-9129-5515b346aa02",
-    "description": "IDEMIA ID-ONE Card",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "IDEMIA ID-ONE Card 8d1b1..."
-  },
-  {
-    "aaguid": "39a5647e-1853-446c-a1f6-a79bae9f5bc7",
-    "description": "IDmelon Android Authenticator",
-    "connectivity": {
-      "bio": true,
-      "usb": false,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "IDmelon Android Authenticator 39a56..."
-  },
-  {
-    "aaguid": "820d89ed-d65a-409e-85cb-f73f0578f82a",
-    "description": "IDmelon iOS Authenticator",
-    "connectivity": {
-      "bio": true,
-      "usb": false,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "IDmelon iOS Authenticator 820d8..."
-  },
-  {
-    "aaguid": "ca4cff1b-5a81-4404-8194-59aabcf1660b",
-    "description": "IDPrime 3930 FIDO",
-    "connectivity": {
-      "bio": false,
-      "usb": false,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "IDPrime 3930 FIDO ca4cf..."
-  },
-  {
-    "aaguid": "b50d5e0a-7f81-4959-9b12-f45407407503",
-    "description": "IDPrime 3940 FIDO",
-    "connectivity": {
-      "bio": false,
-      "usb": false,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "IDPrime 3940 FIDO b50d5..."
-  },
-  {
-    "aaguid": "2194b428-9397-4046-8f39-007a1605a482",
-    "description": "IDPrime 931 Fido",
-    "connectivity": {
-      "bio": false,
-      "usb": false,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "IDPrime 931 Fido 2194b..."
-  },
-  {
-    "aaguid": "2ffd6452-01da-471f-821b-ea4bf6c8676a",
-    "description": "IDPrime 941 Fido",
-    "connectivity": {
-      "bio": false,
-      "usb": false,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "IDPrime 941 Fido 2ffd6..."
-  },
-  {
-    "aaguid": "4c50ff10-1057-4fc6-b8ed-43a529530c3c",
-    "description": "ImproveID Authenticator",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "ImproveID Authenticator 4c50f..."
-  },
-  {
-    "aaguid": "d91c5288-0ef0-49b7-b8ae-21ca0aa6b3f3",
-    "description": "KEY-ID FIDO2 Authenticator",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "KEY-ID FIDO2 Authenticator d91c5..."
-  },
-  {
-    "aaguid": "4b3f8944-d4f2-4d21-bb19-764a986ec160",
-    "description": "KeyXentic FIDO2 Secp256R1 FIDO2 CTAP2 Authenticator",
-    "connectivity": {
-      "bio": true,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "KeyXentic FIDO2 Secp256R1 FIDO2 CTAP2 Authenticator 4b3f8..."
-  },
-  {
-    "aaguid": "ec31b4cc-2acc-4b8e-9c01-bade00ccbe26",
-    "description": "KeyXentic FIDO2 Secp256R1 FIDO2 CTAP2 Authenticator",
-    "connectivity": {
-      "bio": true,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "KeyXentic FIDO2 Secp256R1 FIDO2 CTAP2 Authenticator ec31b..."
-  },
-  {
-    "aaguid": "f7c558a0-f465-11e8-b568-0800200c9a66",
-    "description": "KONAI Secp256R1 FIDO2 Conformance Testing CTAP2 Authenticator",
-    "connectivity": {
-      "bio": true,
-      "usb": true,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "KONAI Secp256R1 FIDO2 Conformance Testing CTAP2 Authenticator f7c55..."
-  },
-  {
-    "aaguid": "fec067a1-f1d0-4c5e-b4c0-cc3237475461",
-    "description": "KX701 SmartToken FIDO",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "KX701 SmartToken FIDO fec06..."
-  },
-  {
-    "aaguid": "c5703116-972b-4851-a3e7-ae1259843399",
-    "description": "NEOWAVE Badgeo FIDO2",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "NEOWAVE Badgeo FIDO2 c5703..."
-  },
-  {
-    "aaguid": "3789da91-f943-46bc-95c3-50ea2012f03a",
-    "description": "NEOWAVE Winkeo FIDO2",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": false
-    },
-    "modelName": "NEOWAVE Winkeo FIDO2 3789d..."
-  },
-  {
-    "aaguid": "07a9f89c-6407-4594-9d56-621d5f1e358b",
-    "description": "NXP Semiconductros FIDO2 Conformance Testing CTAP2 Authenticator",
-    "connectivity": {
-      "bio": false,
-      "usb": false,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": false
-    },
-    "modelName": "NXP Semiconductros FIDO2 Conformance Testing CTAP2 Authenticator 07a9f..."
-  },
-  {
-    "aaguid": "0acf3011-bc60-f375-fb53-6f05f43154e0",
-    "description": "Nymi FIDO2 Authenticator",
-    "connectivity": {
-      "bio": true,
-      "usb": false,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Nymi FIDO2 Authenticator 0acf3..."
-  },
-  {
-    "aaguid": "a1f52be5-dfab-4364-b51c-2bd496b14a56",
-    "description": "OCTATCO EzFinger2 FIDO2 AUTHENTICATOR",
-    "connectivity": {
-      "bio": true,
-      "usb": false,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "OCTATCO EzFinger2 FIDO2 AUTHENTICATOR a1f52..."
-  },
-  {
-    "aaguid": "30b5035e-d297-4ff1-b00b-addc96ba6a98",
-    "description": "OneSpan DIGIPASS FX1 BIO",
-    "connectivity": {
-      "bio": true,
-      "usb": true,
-      "nfc": true,
-      "ble": true
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "OneSpan DIGIPASS FX1 BIO 30b50..."
-  },
-  {
-    "aaguid": "30b5035e-d297-4ff1-010b-addc96ba6a98",
-    "description": "OneSpan DIGIPASS FX1a",
-    "connectivity": {
-      "bio": true,
-      "usb": true,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "OneSpan DIGIPASS FX1a 30b50..."
-  },
-  {
-    "aaguid": "30b5035e-d297-4ff7-b00b-addc96ba6a98",
-    "description": "OneSpan DIGIPASS FX7",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "OneSpan DIGIPASS FX7 30b50..."
-  },
-  {
-    "aaguid": "30b5035e-d297-4fc1-b00b-addc96ba6a97",
-    "description": "OneSpan FIDO Touch",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": false,
-      "ble": true
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "OneSpan FIDO Touch 30b50..."
-  },
-  {
-    "aaguid": "998f358b-2dd2-4cbe-a43a-e8107438dfb3",
-    "description": "OnlyKey Secp256R1 FIDO2 CTAP2 Authenticator",
-    "connectivity": {
-      "bio": false,
-      "usb": false,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "OnlyKey Secp256R1 FIDO2 CTAP2 Authenticator 998f3..."
-  },
-  {
-    "aaguid": "664d9f67-84a2-412a-9ff7-b4f7d8ee6d05",
-    "description": "OpenSK authenticator",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "OpenSK authenticator 664d9..."
-  },
-  {
-    "aaguid": "69700f79-d1fb-472e-bd9b-a3a3b9a9eda0",
-    "description": "Pone Biometrics OFFPAD Authenticator",
-    "connectivity": {
-      "bio": true,
-      "usb": false,
-      "nfc": false,
-      "ble": true
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Pone Biometrics OFFPAD Authenticator 69700..."
-  },
-  {
-    "aaguid": "88bbd2f0-342a-42e7-9729-dd158be5407a",
-    "description": "Precision InnaIT Key FIDO 2 Level 2 certified",
-    "connectivity": {
-      "bio": true,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Precision InnaIT Key FIDO 2 Level 2 certified 88bbd..."
-  },
-  {
-    "aaguid": "7e3f3d30-3557-4442-bdae-139312178b39",
-    "description": "RSA DS100",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "RSA DS100 7e3f3..."
-  },
-  {
-    "aaguid": "efb96b10-a9ee-4b6c-a4a9-d32125ccd4a4",
-    "description": "Safenet eToken FIDO",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Safenet eToken FIDO efb96..."
-  },
-  {
-    "aaguid": "74820b05-a6c9-40f9-8fb0-9f86aca93998",
-    "description": "SafeNet eToken Fusion",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "SafeNet eToken Fusion 74820..."
-  },
-  {
-    "aaguid": "23786452-f02d-4344-87ed-aaf703726881",
-    "description": "SafeNet eToken Fusion CC",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "SafeNet eToken Fusion CC 23786..."
-  },
-  {
-    "aaguid": "b92c3f9a-c014-4056-887f-140a2501163b",
-    "description": "Security Key by Yubico",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Security Key by Yubico b92c3..."
-  },
-  {
-    "aaguid": "f8a011f3-8c0a-4d15-8006-17111f9edc7d",
-    "description": "Security Key by Yubico",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Security Key by Yubico f8a01..."
-  },
-  {
-    "aaguid": "149a2021-8ef6-4133-96b8-81f8d5b7f1f5",
-    "description": "Security Key by Yubico with NFC",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Security Key by Yubico with NFC 149a2..."
-  },
-  {
-    "aaguid": "6d44ba9b-f6ec-2e49-b930-0c8fe920cb73",
-    "description": "Security Key by Yubico with NFC",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Security Key by Yubico with NFC 6d44b..."
-  },
-  {
-    "aaguid": "a4e9fc6d-4cbe-4758-b8ba-37598bb5bbaa",
-    "description": "Security Key NFC by Yubico",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Security Key NFC by Yubico a4e9f..."
-  },
-  {
-    "aaguid": "e77e3c64-05e3-428b-8824-0cbeb04b829d",
-    "description": "Security Key NFC by Yubico",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Security Key NFC by Yubico e77e3..."
-  },
-  {
-    "aaguid": "0bb43545-fd2c-4185-87dd-feb0b2916ace",
-    "description": "Security Key NFC by Yubico - Enterprise Edition",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Security Key NFC by Yubico - Enterprise Edition 0bb43..."
-  },
-  {
-    "aaguid": "47ab2fb4-66ac-4184-9ae1-86be814012d5",
-    "description": "Security Key NFC by Yubico - Enterprise Edition",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Security Key NFC by Yubico - Enterprise Edition 47ab2..."
-  },
-  {
-    "aaguid": "89b19028-256b-4025-8872-255358d950e4",
-    "description": "Sentry Enterprises CTAP2 Authenticator",
-    "connectivity": {
-      "bio": true,
-      "usb": true,
-      "nfc": false,
-      "ble": true
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Sentry Enterprises CTAP2 Authenticator 89b19..."
-  },
-  {
-    "aaguid": "516d3969-5a57-5651-5958-4e7a49434167",
-    "description": "SmartDisplayer BobeePass FIDO2 Authenticator",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": true,
-      "ble": true
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "SmartDisplayer BobeePass FIDO2 Authenticator 516d3..."
-  },
-  {
-    "aaguid": "8876631b-d4a0-427f-5773-0ec71c9e0279",
-    "description": "Solo Secp256R1 FIDO2 CTAP2 Authenticator",
-    "connectivity": {
-      "bio": false,
-      "usb": false,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Solo Secp256R1 FIDO2 CTAP2 Authenticator 88766..."
-  },
-  {
-    "aaguid": "8976631b-d4a0-427f-5773-0ec71c9e0279",
-    "description": "Solo Tap Secp256R1 FIDO2 CTAP2 Authenticator",
-    "connectivity": {
-      "bio": false,
-      "usb": false,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Solo Tap Secp256R1 FIDO2 CTAP2 Authenticator 89766..."
-  },
-  {
-    "aaguid": "9876631b-d4a0-427f-5773-0ec71c9e0279",
-    "description": "Somu Secp256R1 FIDO2 CTAP2 Authenticator",
-    "connectivity": {
-      "bio": false,
-      "usb": false,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Somu Secp256R1 FIDO2 CTAP2 Authenticator 98766..."
-  },
-  {
-    "aaguid": "931327dd-c89b-406c-a81e-ed7058ef36c6",
-    "description": "Swissbit iShield Key FIDO2",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Swissbit iShield Key FIDO2 93132..."
-  },
-  {
-    "aaguid": "5d629218-d3a5-11ed-afa1-0242ac120002",
-    "description": "Swissbit iShield Key Pro",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Swissbit iShield Key Pro 5d629..."
-  },
-  {
-    "aaguid": "092277e5-8437-46b5-b911-ea64b294acb7",
-    "description": "Taglio CTAP2.1 CS",
-    "connectivity": {
-      "bio": false,
-      "usb": false,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Taglio CTAP2.1 CS 09227..."
-  },
-  {
-    "aaguid": "7d2afadd-bf6b-44a2-a66b-e831fceb8eff",
-    "description": "Taglio CTAP2.1 EP",
-    "connectivity": {
-      "bio": false,
-      "usb": false,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Taglio CTAP2.1 EP 7d2af..."
-  },
-  {
-    "aaguid": "4d41190c-7beb-4a84-8018-adf265a6352d",
-    "description": "Thales IDPrime FIDO Bio",
-    "connectivity": {
-      "bio": true,
-      "usb": false,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Thales IDPrime FIDO Bio 4d411..."
-  },
-  {
-    "aaguid": "91ad6b93-264b-4987-8737-3a690cad6917",
-    "description": "Token Ring FIDO2 Authenticator",
-    "connectivity": {
-      "bio": true,
-      "usb": false,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Token Ring FIDO2 Authenticator 91ad6..."
-  },
-  {
-    "aaguid": "ab32f0c6-2239-afbb-c470-d2ef4e254db7",
-    "description": "TOKEN2 FIDO2 Security Key",
-    "connectivity": {
-      "bio": false,
-      "usb": false,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "TOKEN2 FIDO2 Security Key ab32f..."
-  },
-  {
-    "aaguid": "eabb46cc-e241-80bf-ae9e-96fa6d2975cf",
-    "description": "TOKEN2 PIN Plus Security Key Series",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "TOKEN2 PIN Plus Security Key Series  eabb4..."
-  },
-  {
-    "aaguid": "73402251-f2a8-4f03-873e-3cb6db604b03",
-    "description": "uTrust FIDO2 Security Key",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "uTrust FIDO2 Security Key 73402..."
-  },
-  {
-    "aaguid": "5626bed4-e756-430b-a7ff-ca78c8b12738",
-    "description": "VALMIDO PRO FIDO",
-    "connectivity": {
-      "bio": true,
-      "usb": false,
-      "nfc": false,
-      "ble": true
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "VALMIDO PRO FIDO 5626b..."
-  },
-  {
-    "aaguid": "d94a29d9-52dd-4247-9c2d-8b818b610389",
-    "description": "VeriMark Guard Fingerprint Key",
-    "connectivity": {
-      "bio": true,
-      "usb": false,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "VeriMark Guard Fingerprint Key d94a2..."
-  },
-  {
-    "aaguid": "5fdb81b8-53f0-4967-a881-f5ec26fe4d18",
-    "description": "VinCSS FIDO2 Authenticator",
-    "connectivity": {
-      "bio": false,
-      "usb": false,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "VinCSS FIDO2 Authenticator 5fdb8..."
-  },
-  {
-    "aaguid": "504d7149-4e4c-3841-4555-55445a677357",
-    "description": "WiSECURE AuthTron USB FIDO2 Authenticator",
-    "connectivity": {
-      "bio": true,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "WiSECURE AuthTron USB FIDO2 Authenticator 504d7..."
-  },
-  {
-    "aaguid": "73bb0cd4-e502-49b8-9c6f-b59445bf720b",
-    "description": "YubiKey 5 FIPS Series",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": true,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "YubiKey 5 FIPS Series 73bb0..."
-  },
-  {
-    "aaguid": "85203421-48f9-4355-9bc8-8a53846e5083",
-    "description": "YubiKey 5 FIPS Series with Lightning",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": true,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "YubiKey 5 FIPS Series with Lightning 85203..."
-  },
-  {
-    "aaguid": "c1f9a0bc-1dd2-404a-b27f-8e29047a43fd",
-    "description": "YubiKey 5 FIPS Series with NFC",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": true,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "YubiKey 5 FIPS Series with NFC c1f9a..."
-  },
-  {
-    "aaguid": "19083c3d-8383-4b18-bc03-8f1c9ab2fd1b",
-    "description": "YubiKey 5 Series",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "YubiKey 5 Series 19083..."
-  },
-  {
-    "aaguid": "cb69481e-8ff7-4039-93ec-0a2729a154a8",
-    "description": "YubiKey 5 Series",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "YubiKey 5 Series cb694..."
-  },
-  {
-    "aaguid": "ee882879-721c-4913-9775-3dfcce97072a",
-    "description": "YubiKey 5 Series",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "YubiKey 5 Series ee882..."
-  },
-  {
-    "aaguid": "a02167b9-ae71-4ac7-9a07-06432ebb6f1c",
-    "description": "YubiKey 5 Series with Lightning",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "YubiKey 5 Series with Lightning a0216..."
-  },
-  {
-    "aaguid": "c5ef55ff-ad9a-4b9f-b580-adebafe026d0",
-    "description": "YubiKey 5 Series with Lightning",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "YubiKey 5 Series with Lightning c5ef5..."
-  },
-  {
-    "aaguid": "2fc0579f-8113-47ea-b116-bb5a8db9202a",
-    "description": "YubiKey 5 Series with NFC",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "YubiKey 5 Series with NFC 2fc05..."
-  },
-  {
-    "aaguid": "a25342c0-3cdc-4414-8e46-f4807fca511c",
-    "description": "YubiKey 5 Series with NFC",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "YubiKey 5 Series with NFC a2534..."
-  },
-  {
-    "aaguid": "fa2b99dc-9e39-4257-8f92-4a30d23c4118",
-    "description": "YubiKey 5 Series with NFC",
-    "connectivity": {
-      "bio": false,
-      "usb": true,
-      "nfc": true,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "YubiKey 5 Series with NFC fa2b9..."
-  },
-  {
-    "aaguid": "dd86a2da-86a0-4cbe-b462-4bd31f57bc6f",
-    "description": "YubiKey Bio FIDO Edition",
-    "connectivity": {
-      "bio": true,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "YubiKey Bio FIDO Edition dd86a..."
-  },
-  {
-    "aaguid": "d8522d9f-575b-4866-88a9-ba99fa02f35b",
-    "description": "YubiKey Bio Series",
-    "connectivity": {
-      "bio": true,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "YubiKey Bio Series d8522..."
-  },
-  {
-    "aaguid": "7d1351a6-e097-4852-b8bf-c9ac5c9ce4a3",
-    "description": "YubiKey Bio Series - Multi-protocol Edition",
-    "connectivity": {
-      "bio": true,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "YubiKey Bio Series - Multi-protocol Edition 7d135..."
-  },
-  {
-    "aaguid": "90636e1f-ef82-43bf-bdcf-5255f139d12f",
-    "description": "YubiKey Bio Series - Multi-protocol Edition",
-    "connectivity": {
-      "bio": true,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "YubiKey Bio Series - Multi-protocol Edition 90636..."
-  },
-  {
-    "aaguid": "58276709-bb4b-4bb3-baf1-60eea99282a7",
-    "description": "YubiKey Bio Series - Multi-protocol Edition 1VDJSN",
-    "connectivity": {
-      "bio": true,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "YubiKey Bio Series - Multi-protocol Edition 1VDJSN 58276..."
-  },
-  {
-    "aaguid": "83c47309-aabb-4108-8470-8be838b573cb",
-    "description": "YubiKey Bio Series (Enterprise Profile)",
-    "connectivity": {
-      "bio": true,
-      "usb": true,
-      "nfc": false,
-      "ble": false
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "YubiKey Bio Series (Enterprise Profile) 83c47..."
-  },
-  {
-    "aaguid": "50a45b0c-80e7-f944-bf29-f552bfa2e048",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "ACS FIDO Authenticator 50a45..."
-  },
-  {
-    "aaguid": "ab32f0c6-2239-afbb-c470-d2ef4e254db6",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "TEST (DUMMY RECORD) ab32f..."
-  },
-  {
-    "aaguid": "99bf4610-ec26-4252-b31f-7380ccd59db5",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "ZTPass SmartAuth 99bf4..."
-  },
-  {
-    "aaguid": "97e6a830-c952-4740-95fc-7c78dc97ce47",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "YubiKey Bio Series - Multi-protocol Edition (Enterprise Profile) 97e6a..."
-  },
-  {
-    "aaguid": "bc2fe499-0d8e-4ffe-96f3-94a82840cf8c",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "OCTATCO EzQuant FIDO2 AUTHENTICATOR bc2fe..."
-  },
-  {
-    "aaguid": "454e5346-4944-4ffd-6c93-8e9267193e9b",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Ensurity AUTH BioPro 454e5..."
-  },
-  {
-    "aaguid": "1ac71f64-468d-4fe0-bef1-0e5f2f551f18",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "YubiKey 5 Series with NFC (Enterprise Profile) 1ac71..."
-  },
-  {
-    "aaguid": "361a3082-0278-4583-a16f-72a527f973e4",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "eWBM eFA500 FIDO2 Authenticator 361a3..."
-  },
-  {
-    "aaguid": "260e3021-482d-442d-838c-7edfbe153b7e",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Feitian ePass FIDO2-NFC Plus Authenticator 260e3..."
-  },
-  {
-    "aaguid": "34f5766d-1536-4a24-9033-0e294e510fb0",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "YubiKey 5 Series with NFC Preview 34f57..."
-  },
-  {
-    "aaguid": "de1e552d-db1d-4423-a619-566b625cdc84",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": null,
-      "fipsCompliant": null,
-      "hardwareProtected": null,
-      "userVerificationSupported": null
-    },
-    "modelName": "Microsoft Authenticator - Android"
-  },
-  {
-    "aaguid": "341e4da9-3c2e-8103-5a9f-aad887135200",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Ledger Nano S FIDO2 Authenticator 341e4..."
-  },
-  {
-    "aaguid": "08987058-cadc-4b81-b6e1-30de50dcbe96",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": true,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Windows Hello Hardware Authenticator 08987..."
-  },
-  {
-    "aaguid": "53414d53-554e-4700-0000-000000000000",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": true,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Samsung Pass 53414..."
-  },
-  {
-    "aaguid": "ca87cb70-4c1b-4579-a8e8-4efdd7c007e0",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "FIDO Alliance TruU Sample FIDO2 Authenticator ca87c..."
-  },
-  {
-    "aaguid": "760eda36-00aa-4d29-855b-4012a182cdeb",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Security Key NFC by Yubico Preview 760ed..."
-  },
-  {
-    "aaguid": "5753362b-4e6b-6345-7b2f-255438404c75",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "WiSECURE Blentity FIDO2 Authenticator 57533..."
-  },
-  {
-    "aaguid": "2772ce93-eb4b-4090-8b73-330f48477d73",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Security Key NFC by Yubico - Enterprise Edition Preview 2772c..."
-  },
-  {
     "aaguid": "fcb1bcb4-f370-078c-6993-bc24d0ae3fbe",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Ledger Nano X FIDO2 Authenticator fcb1b..."
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
   },
   {
-    "aaguid": "f56f58b3-d711-4afc-ba7d-6ac05f88cb19",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
     },
-    "characteristics": {
-      "platformAttached": true,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
     },
-    "modelName": "WinMagic FIDO Eazy - Phone f56f5..."
+    "aaguid": "4d41190c-7beb-4a84-8018-adf265a6352d",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.1"
+    }
   },
   {
-    "aaguid": "eb3b131e-59dc-536a-d176-cb7306da10f5",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
     },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
     },
-    "modelName": "ellipticSecure MIRkey USB Authenticator eb3b1..."
+    "aaguid": "2772ce93-eb4b-4090-8b73-330f48477d73",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
   },
   {
-    "aaguid": "d61d3b87-3e7c-4aea-9c50-441c371903ad",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
     },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
     },
-    "modelName": "KeyVault Secp256R1 FIDO2 CTAP2 Authenticator d61d3..."
-  },
-  {
-    "aaguid": "3e078ffd-4c54-4586-8baa-a77da113aec5",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Hideez Key 3 FIDO2 3e078..."
-  },
-  {
-    "aaguid": "3124e301-f14e-4e38-876d-fbeeb090e7bf",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "YubiKey 5 Series with Lightning Preview 3124e..."
-  },
-  {
-    "aaguid": "31c3f7ff-bf15-4327-83ec-9336abcbcd34",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": true,
-      "fipsCompliant": false,
-      "hardwareProtected": false,
-      "userVerificationSupported": true
-    },
-    "modelName": "WinMagic FIDO Eazy - Software 31c3f..."
-  },
-  {
-    "aaguid": "6028b017-b1d4-4c02-b4b3-afcdafc96bb2",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": true,
-      "fipsCompliant": false,
-      "hardwareProtected": false,
-      "userVerificationSupported": true
-    },
-    "modelName": "Windows Hello Software Authenticator 6028b..."
-  },
-  {
-    "aaguid": "b93fd961-f2e6-462f-b122-82002247de78",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": true,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Android Authenticator with SafetyNet Attestation b93fd..."
-  },
-  {
-    "aaguid": "4c0cf95d-2f40-43b5-ba42-4c83a11c04ba",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Feitian BioPass FIDO2 Pro Authenticator 4c0cf..."
-  },
-  {
-    "aaguid": "90a3ccdf-635c-4729-a248-9b709135078f",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": null,
-      "fipsCompliant": null,
-      "hardwareProtected": null,
-      "userVerificationSupported": null
-    },
-    "modelName": "Microsoft Authenticator - iOS"
-  },
-  {
-    "aaguid": "970c8d9c-19d2-46af-aa32-3f448db49e35",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": true,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "WinMagic FIDO Eazy - TPM 970c8..."
-  },
-  {
-    "aaguid": "62e54e98-c209-4df3-b692-de71bb6a8528",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": true,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "YubiKey 5 FIPS Series with NFC Preview 62e54..."
-  },
-  {
-    "aaguid": "b90e7dc1-316e-4fee-a25a-56a666a670fe",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "YubiKey 5 Series with Lightning (Enterprise Profile) b90e7..."
-  },
-  {
-    "aaguid": "95e4d58c-056e-4a65-866d-f5a69659e880",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": true,
-      "fipsCompliant": false,
-      "hardwareProtected": false,
-      "userVerificationSupported": true
-    },
-    "modelName": "TruU Windows Authenticator 95e4d..."
-  },
-  {
-    "aaguid": "9ff4cc65-6154-4fff-ba09-9e2af7882ad2",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Security Key NFC by Yubico - Enterprise Edition (Enterprise Profile) 9ff4c..."
-  },
-  {
     "aaguid": "6dae43be-af9c-417b-8b9f-1b611168ec60",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": true,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Dapple Authenticator from Dapple Security Inc. 6dae4..."
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
   },
   {
-    "aaguid": "58b44d0b-0a7c-f33a-fd48-f7153c871352",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
     },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
     },
-    "modelName": "Ledger Nano S Plus FIDO2 Authenticator 58b44..."
+    "aaguid": "5626bed4-e756-430b-a7ff-ca78c8b12738",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
   },
   {
-    "aaguid": "20ac7a17-c814-4833-93fe-539f0d5e3389",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
     },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
     },
-    "modelName": "YubiKey 5 Series (Enterprise Profile) 20ac7..."
+    "aaguid": "260e3021-482d-442d-838c-7edfbe153b7e",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
   },
   {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "95e4d58c-056e-4a65-866d-f5a69659e880",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "90636e1f-ef82-43bf-bdcf-5255f139d12f",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "9c835346-796b-4c27-8898-d6032f515cc5",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0",
+        "U2F_V2"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "c3f47802-de73-4dfc-ba22-671fe3304f90",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "0d9b2e56-566b-c393-2940-f821b7f15d6d",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "2bff89f2-323a-48fc-b7c8-9ff7fe87c07e",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "c5ef55ff-ad9a-4b9f-b580-adebafe026d0",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "2194b428-9397-4046-8f39-007a1605a482",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "39a5647e-1853-446c-a1f6-a79bae9f5bc7",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "664d9f67-84a2-412a-9ff7-b4f7d8ee6d05",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0",
+        "U2F_V2"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "3789da91-f943-46bc-95c3-50ea2012f03a",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "fa2b99dc-9e39-4257-8f92-4a30d23c4118",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "341e4da9-3c2e-8103-5a9f-aad887135200",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "69700f79-d1fb-472e-bd9b-a3a3b9a9eda0",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "8da0e4dc-164b-454e-972e-88f362b23d59",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "89b19028-256b-4025-8872-255358d950e4",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "4e768f2c-5fab-48b3-b300-220eb487752b",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "47ab2fb4-66ac-4184-9ae1-86be814012d5",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "931327dd-c89b-406c-a81e-ed7058ef36c6",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "8d1b1fcb-3c76-49a9-9129-5515b346aa02",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "454e5346-4944-4ffd-6c93-8e9267193e9a",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "e1a96183-5016-4f24-b55b-e3ae23614cc6",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "9ff4cc65-6154-4fff-ba09-9e2af7882ad2",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "9d3df6ba-282f-11ed-a261-0242ac120002",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "fbefdf68-fe86-0106-213e-4d5fa24cbe2e",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "62e54e98-c209-4df3-b692-de71bb6a8528",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "ab32f0c6-2239-afbb-c470-d2ef4e254db7",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "ce6bf97f-9f69-4ba7-9032-97adc6ca5cf1",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "99ed6c29-4573-4847-816d-78ad8f1c75ef",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "973446ca-e21c-9a9b-99f5-9b985a67af0f",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "74820b05-a6c9-40f9-8fb0-9f86aca93998",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "1105e4ed-af1d-02ff-ffff-ffffffffffff",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "08987058-cadc-4b81-b6e1-30de50dcbe96",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "a4e9fc6d-4cbe-4758-b8ba-37598bb5bbaa",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "0acf3011-bc60-f375-fb53-6f05f43154e0",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "d91c5288-0ef0-49b7-b8ae-21ca0aa6b3f3",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "4c50ff10-1057-4fc6-b8ed-43a529530c3c",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "ee041bce-25e5-4cdb-8f86-897fd6418464",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "4b89f401-464e-4745-a520-486ddfc5d80e",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "2cd2f727-f6ca-44da-8f48-5c2e5da000a2",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "10c70715-2a9a-4de1-b0aa-3cff6d496d39",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "efb96b10-a9ee-4b6c-a4a9-d32125ccd4a4",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "4b3f8944-d4f2-4d21-bb19-764a986ec160",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "4c0cf95d-2f40-43b5-ba42-4c83a11c04ba",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
     "aaguid": "5343502d-5343-5343-6172-644649444f32",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "ESS Smart Card Inc. Authenticator 53435..."
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_1",
+        "FIDO_2_0",
+        "U2F_V2"
+      ],
+      "ctapLevel": "2.1"
+    }
   },
   {
-    "aaguid": "2c0df832-92de-4be1-8412-88a8f074df4a",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
     },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
     },
-    "modelName": "Feitian FIDO Smart Card 2c0df..."
+    "aaguid": "69e7c36f-f2f6-9e0d-07a6-bcc243262e6b",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
   },
   {
-    "aaguid": "8c39ee86-7f9a-4a95-9ba3-f6b097e5c2ee",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
     },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
     },
-    "modelName": "YubiKey Bio Series (Enterprise Profile) 8c39e..."
-  },
-  {
-    "aaguid": "9ddd1817-af5a-4672-a2b9-3e3dd95000a9",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": true,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Windows Hello VBS Hardware Authenticator 9ddd1..."
-  },
-  {
-    "aaguid": "cfcb13a2-244f-4b36-9077-82b79d6a7de7",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "USB/NFC Passcode Authenticator cfcb1..."
-  },
-  {
     "aaguid": "09591fc6-9811-48f7-8f57-b9f23df6413f",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
-    },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
-    },
-    "modelName": "Pone Biometrics OFFPAD Authenticator 09591..."
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
   },
   {
-    "aaguid": "ba86dc56-635f-4141-aef6-00227b1b9af6",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
     },
-    "characteristics": {
-      "platformAttached": true,
-      "fipsCompliant": false,
-      "hardwareProtected": false,
-      "userVerificationSupported": true
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
     },
-    "modelName": "TruU Windows Authenticator ba86d..."
+    "aaguid": "7e3f3d30-3557-4442-bdae-139312178b39",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
   },
   {
-    "aaguid": "d7a423ad-3e19-4492-9200-78137dccc136",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
     },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": false,
-      "hardwareProtected": true,
-      "userVerificationSupported": false
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
     },
-    "modelName": "VivoKey Apex FIDO2 d7a42..."
+    "aaguid": "73bb0cd4-e502-49b8-9c6f-b59445bf720b",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
   },
   {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "149a2021-8ef6-4133-96b8-81f8d5b7f1f5",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "b90e7dc1-316e-4fee-a25a-56a666a670fe",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "175cd298-83d2-4a26-b637-313c07a6434e",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "3b1adb99-0dfe-46fd-90b8-7f7614a4de2a",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "998f358b-2dd2-4cbe-a43a-e8107438dfb3",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "61250591-b2bc-4456-b719-0b17be90bb30",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "8c39ee86-7f9a-4a95-9ba3-f6b097e5c2ee",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "f8a011f3-8c0a-4d15-8006-17111f9edc7d",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "8976631b-d4a0-427f-5773-0ec71c9e0279",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "516d3969-5a57-5651-5958-4e7a49434167",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "8681a073-5f50-4d52-bce4-e21658d207b3",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "a02167b9-ae71-4ac7-9a07-06432ebb6f1c",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "82b0a720-127a-4788-b56d-d1d4b2d82eac",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "2c0df832-92de-4be1-8412-88a8f074df4a",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "59f85fe7-faa5-4c92-9f52-697b9d4d5473",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "79f3c8ba-9e35-484b-8f47-53a5a0f5c630",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "970c8d9c-19d2-46af-aa32-3f448db49e35",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "c5703116-972b-4851-a3e7-ae1259843399",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "c80dbd9a-533f-4a17-b941-1a2f1c7cedff",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
     "aaguid": "5b0e46ba-db02-44ac-b979-ca9b84f5e335",
-    "description": null,
-    "connectivity": {
-      "bio": null,
-      "usb": null,
-      "nfc": null,
-      "ble": null
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
     },
-    "characteristics": {
-      "platformAttached": false,
-      "fipsCompliant": true,
-      "hardwareProtected": true,
-      "userVerificationSupported": true
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
     },
-    "modelName": "YubiKey 5 FIPS Series with Lightning Preview 5b0e4..."
+    "aaguid": "12755c32-8ad1-46eb-881c-e0b38d848b09",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "2a55aee6-27cb-42c0-bc6e-04efe999e88a",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "820d89ed-d65a-409e-85cb-f73f0578f82a",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "3124e301-f14e-4e38-876d-fbeeb090e7bf",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "b6ede29c-3772-412c-8a78-539c1f4c62d2",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "85203421-48f9-4355-9bc8-8a53846e5083",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "fcc0118f-cd45-435b-8da1-9782b2da0715",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "d821a7d4-e97c-4cb6-bd82-4237731fd4be",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "9876631b-d4a0-427f-5773-0ec71c9e0279",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "f56f58b3-d711-4afc-ba7d-6ac05f88cb19",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "f4c63eff-d26c-4248-801c-3736c7eaa93a",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0",
+        "U2F_V2"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "d384db22-4d50-ebde-2eac-5765cf1e2a44",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "b93fd961-f2e6-462f-b122-82002247de78",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "2fc0579f-8113-47ea-b116-bb5a8db9202a",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "31c3f7ff-bf15-4327-83ec-9336abcbcd34",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "9ddd1817-af5a-4672-a2b9-3e3dd95000a9",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "d8522d9f-575b-4866-88a9-ba99fa02f35b",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "050dd0bc-ff20-4265-8d5d-305c4b215192",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "50a45b0c-80e7-f944-bf29-f552bfa2e048",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "f7c558a0-f465-11e8-b568-0800200c9a66",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "3f59672f-20aa-4afe-b6f4-7e5e916b6d98",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "42b4fb4a-2866-43b2-9bf7-6c6669c2e5d3",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0",
+        "U2F_V2"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "361a3082-0278-4583-a16f-72a527f973e4",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "2ffd6452-01da-471f-821b-ea4bf6c8676a",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "30b5035e-d297-4ff7-b00b-addc96ba6a98",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "692db549-7ae5-44d5-a1e5-dd20a493b723",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "bbf4b6a7-679d-f6fc-c4f2-8ac0ddf9015a",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "3e22415d-7fdf-4ea4-8a0c-dd60c4249b9d",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "23786452-f02d-4344-87ed-aaf703726881",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "d2fbd093-ee62-488d-9dad-1e36389f8826",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "234cd403-35a2-4cc2-8015-77ea280c77f5",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "aeb6569c-f8fb-4950-ac60-24ca2bbe2e52",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "87dbc5a1-4c94-4dc8-8a47-97d800fd1f3c",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "58276709-bb4b-4bb3-baf1-60eea99282a7",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "7d2afadd-bf6b-44a2-a66b-e831fceb8eff",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_1",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "20ac7a17-c814-4833-93fe-539f0d5e3389",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "9f0d8150-baa5-4c00-9299-ad62c8bb4e87",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "12ded745-4bed-47d4-abaa-e713f51d6393",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "88bbd2f0-342a-42e7-9729-dd158be5407a",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "dd86a2da-86a0-4cbe-b462-4bd31f57bc6f",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "34f5766d-1536-4a24-9033-0e294e510fb0",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "83c47309-aabb-4108-8470-8be838b573cb",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "be727034-574a-f799-5c76-0929e0430973",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "092277e5-8437-46b5-b911-ea64b294acb7",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_1",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "ca87cb70-4c1b-4579-a8e8-4efdd7c007e0",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "9e66c661-e428-452a-a8fb-51f7ed088acf",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "58b44d0b-0a7c-f33a-fd48-f7153c871352",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "454e5346-4944-4ffd-6c93-8e9267193e9b",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_1",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "146e77ef-11eb-4423-b847-ce77864e9411",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "e77e3c64-05e3-428b-8824-0cbeb04b829d",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "7d1351a6-e097-4852-b8bf-c9ac5c9ce4a3",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "07a9f89c-6407-4594-9d56-621d5f1e358b",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0",
+        "U2F_V2"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "d61d3b87-3e7c-4aea-9c50-441c371903ad",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "c62100de-759b-4bf8-b22b-63b3e3a80401",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_1",
+        "FIDO_2_0",
+        "U2F_V2"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "5ca1ab1e-1337-fa57-f1d0-a117e71ca702",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "b92c3f9a-c014-4056-887f-140a2501163b",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "54d9fee8-e621-4291-8b18-7157b99c5bec",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "a25342c0-3cdc-4414-8e46-f4807fca511c",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "3a662962-c6d4-4023-bebb-98ae92e78e20",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "20f0be98-9af9-986a-4b42-8eca4acb28e4",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "ca4cff1b-5a81-4404-8194-59aabcf1660b",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "ab32f0c6-2239-afbb-c470-d2ef4e254db6",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "760eda36-00aa-4d29-855b-4012a182cdeb",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "6028b017-b1d4-4c02-b4b3-afcdafc96bb2",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "30b5035e-d297-4fc1-b00b-addc96ba6a97",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "1ac71f64-468d-4fe0-bef1-0e5f2f551f18",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "6d44ba9b-f6ec-2e49-b930-0c8fe920cb73",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "5ca1ab1e-fa57-1337-f1d0-a117371ca702",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "eabb46cc-e241-80bf-ae9e-96fa6d2975cf",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "53414d53-554e-4700-0000-000000000000",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "e416201b-afeb-41ca-a03d-2281c28322aa",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "905b4cb4-ed6f-4da9-92fc-45e0d4e9b5c7",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "cfcb13a2-244f-4b36-9077-82b79d6a7de7",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "91ad6b93-264b-4987-8737-3a690cad6917",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0",
+        "U2F_V2"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "a02140b7-0cbd-42e1-a9b5-a39da2545114",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "5753362b-4e6b-6345-7b2f-255438404c75",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "9f77e279-a6e2-4d58-b700-31e5943c6a98",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "0bb43545-fd2c-4185-87dd-feb0b2916ace",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "73402251-f2a8-4f03-873e-3cb6db604b03",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "c1f9a0bc-1dd2-404a-b27f-8e29047a43fd",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "70e7c36f-f2f6-9e0d-07a6-bcc243262e6b",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "504d7149-4e4c-3841-4555-55445a677357",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "f2145e86-211e-4931-b874-e22bba7d01cc",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "a3975549-b191-fd67-b8fb-017e2917fdb3",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "19083c3d-8383-4b18-bc03-8f1c9ab2fd1b",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "da1fa263-8b25-42b6-a820-c0036f21ba7f",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "6002f033-3c07-ce3e-d0f7-0ffe5ed42543",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "5fdb81b8-53f0-4967-a881-f5ec26fe4d18",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "57f7de54-c807-4eab-b1c6-1c9be7984e92",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "bb405265-40cf-4115-93e5-a332c1968d8c",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "2d3bec26-15ee-4f5d-88b2-53622490270b",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "30b5035e-d297-4ff1-010b-addc96ba6a98",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "cb69481e-8ff7-4039-93ec-0a2729a154a8",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "0076631b-d4a0-427f-5773-0ec71c9e0279",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "42df17de-06ba-4177-a2bb-6701be1380d6",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "d7a423ad-3e19-4492-9200-78137dccc136",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "ba76a271-6eb6-4171-874d-b6428dbe3437",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "97e6a830-c952-4740-95fc-7c78dc97ce47",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "ee882879-721c-4913-9775-3dfcce97072a",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "8876631b-d4a0-427f-5773-0ec71c9e0279",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "fec067a1-f1d0-4c5e-b4c0-cc3237475461",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "30b5035e-d297-4ff1-b00b-addc96ba6a98",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "b267239b-954f-4041-a01b-ee4f33c145b6",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "b50d5e0a-7f81-4959-9b12-f45407407503",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "8c97a730-3f7b-41a6-87d6-1e9b62bda6f0",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "99bf4610-ec26-4252-b31f-7380ccd59db5",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "a1f52be5-dfab-4364-b51c-2bd496b14a56",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "ba86dc56-635f-4141-aef6-00227b1b9af6",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "3e078ffd-4c54-4586-8baa-a77da113aec5",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "ec31b4cc-2acc-4b8e-9c01-bade00ccbe26",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "5d629218-d3a5-11ed-afa1-0242ac120002",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "d41f5a69-b817-4144-a13c-9ebd6d9254d6",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "e86addcd-7711-47e5-b42a-c18257b0bf61",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "95442b2e-f15e-4def-b270-efb106facb4e",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "cdbdaea2-c415-5073-50f7-c04e968640b6",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "bc2fe499-0d8e-4ffe-96f3-94a82840cf8c",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "eb3b131e-59dc-536a-d176-cb7306da10f5",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "1c086528-58d5-f211-823c-356786e36140",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "77010bd7-212a-4fc9-b236-d2ca5e9d4084",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "d94a29d9-52dd-4247-9c2d-8b818b610389",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "7b96457d-e3cd-432b-9ceb-c9fdd7ef7432",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "FIDO_2_0",
+        "FIDO_2_1_PRE",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "7991798a-a7f3-487f-98c0-3faf7a458a04",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1"
+      ],
+      "ctapLevel": "2.1"
+    }
+  },
+  {
+    "certification": {
+      "certificationDate": null,
+      "isFidoCertified": null
+    },
+    "security": {
+      "isFips": false,
+      "isEnterprise": false,
+      "hardwareProtected": true
+    },
+    "aaguid": "833b721a-ff5f-4d00-bb2e-bdda3ec01e29",
+    "name": null,
+    "connectivity": {},
+    "protocol": {
+      "versions": [
+        "U2F_V2",
+        "FIDO_2_0",
+        "FIDO_2_1_PRE"
+      ],
+      "ctapLevel": "2.0"
+    }
   }
 ]
