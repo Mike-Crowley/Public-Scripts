@@ -51,7 +51,7 @@ if ((Test-Connection $ExchangeFQDN -Count 1 -Quiet) -ne $true) {
 Clear-Host
 
 # Misc variables
-$ReportTimeStamp = (Get-Date -Format s) -replace ":", "."
+$ReportTimeStamp = Get-Date -Format 'yyyyMMdd_HHmmss'
 $TxtFile = "$env:USERPROFILE\Desktop\" + $ReportTimeStamp + "_RecipientAddressReport_Part_1of2.txt"
 $CsvFile = "$env:USERPROFILE\Desktop\" + $ReportTimeStamp + "_RecipientAddressReport_Part_2of2.csv"
 
@@ -145,8 +145,8 @@ Write-Host ""
 Write-Host $TxtFile -ForegroundColor Green
 Write-Host $CsvFile -ForegroundColor Green
 
-$TextBlock | Out-File $TxtFile
-$RecipientsAndSMTPProxies | Select-Object $AttributeList | Sort-Object RecipientType, Name | Export-CSV $CsvFile -NoTypeInformation
+$TextBlock | Out-File $TxtFile -Encoding UTF8
+$RecipientsAndSMTPProxies | Select-Object $AttributeList | Sort-Object RecipientType, Name | Export-Csv $CsvFile -NoTypeInformation -Encoding UTF8
 
 Write-Host ""
 Write-Host ""

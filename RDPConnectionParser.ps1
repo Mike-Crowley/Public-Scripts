@@ -65,9 +65,9 @@ Param(
                 }
             }
 
-    $Date = (Get-Date -Format s) -replace ":", "."
+    $Date = Get-Date -Format 'yyyyMMdd_HHmmss'
     $FilePath = "$env:USERPROFILE\Desktop\$Date`_RDP_Report.csv"
-    $FilteredOutput | Sort TimeCreated | Export-Csv $FilePath -NoTypeInformation -Encoding utf8
+    $FilteredOutput | Sort-Object TimeCreated | Export-Csv $FilePath -NoTypeInformation -Encoding UTF8
 
 Write-host "Writing File: $FilePath" -ForegroundColor Cyan
 Write-host "Done!" -ForegroundColor Cyan

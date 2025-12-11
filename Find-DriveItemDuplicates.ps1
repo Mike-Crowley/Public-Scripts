@@ -212,13 +212,13 @@ function Find-DriveItemDuplicates {
 
     # Create reports if requested
     if (($OutputStyle -eq "Report") -or ($OutputStyle -eq "ReportAndPassThru")) {
-        $FileDate = Get-Date -format ddMMMyyyy_HHmm.s
-        $Desktop = [Environment]::Getfolderpath("Desktop")
+        $FileDate = Get-Date -Format 'ddMMMyyyy_HHmm.s'
+        $Desktop = [Environment]::GetFolderPath("Desktop")
         $CsvOutputPath = "$Desktop\$UPN-DupeReport-$FileDate.csv"
         $JsonOutputPath = $CsvOutputPath -replace ".csv", ".json"
 
-        $Output | Export-Csv $CsvOutputPath -NoTypeInformation
-        $Output | ConvertTo-Json | Out-File $JsonOutputPath
+        $Output | Export-Csv $CsvOutputPath -NoTypeInformation -Encoding UTF8
+        $Output | ConvertTo-Json | Out-File $JsonOutputPath -Encoding UTF8
     }
 
     # Report status to console

@@ -84,7 +84,7 @@ $FinalOutput = foreach ($User in $queryResults.value) {
     }
 }  
 #Write to file
-$ReportDate = Get-Date -format ddMMMyyyy_HHmm
+$ReportDate = Get-Date -Format 'ddMMMyyyy_HHmm'
 $DesktopPath = ([Environment]::GetFolderPath("Desktop") + '\Graph_Reporting\Graph_Reporting_' + $ReportDate + '\')
 mkdir $DesktopPath -Force
 

@@ -55,7 +55,7 @@ function Restore-FromRecycleBin
     )
 
     $VerbosePreference = 'Continue'
-    $ScriptDate        = Get-Date -format ddMMMyyyy_HHmm.s
+    $ScriptDate        = Get-Date -Format 'ddMMMyyyy_HHmm.s'
     $ExportParams =
     @{
         AutoSize     = $true
