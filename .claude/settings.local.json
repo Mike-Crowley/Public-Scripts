@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:login.microsoftonline.com)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git mv:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(git rm:*)"
+    ]
+  }
+}

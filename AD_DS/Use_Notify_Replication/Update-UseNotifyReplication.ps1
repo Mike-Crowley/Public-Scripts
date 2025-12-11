@@ -32,15 +32,15 @@
     Path to save the report file. Defaults to desktop.
 
 .EXAMPLE
-    .\Set-UseNotifyReplication.ps1
+    .\Update-UseNotifyReplication.ps1
     Generates a report of current Use_Notify status without making changes.
 
 .EXAMPLE
-    .\Set-UseNotifyReplication.ps1 -EnableSiteLinks -WhatIf
+    .\Update-UseNotifyReplication.ps1 -EnableSiteLinks -WhatIf
     Shows what site links would be modified without making changes.
 
 .EXAMPLE
-    .\Set-UseNotifyReplication.ps1 -EnableSiteLinks -EnableReplicationConnections
+    .\Update-UseNotifyReplication.ps1 -EnableSiteLinks -EnableReplicationConnections
     Enables Use_Notify on both site links and manual replication connections.
 
 .LINK
