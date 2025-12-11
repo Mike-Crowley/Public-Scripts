@@ -12,11 +12,11 @@
         1) Exchange 2010 or 2013
         2) PowerShell 4.0
 
-    
+
     April 4 2015
     Mike Crowley
-    
-    https://BaselineTechnologies.com    
+
+    https://BaselineTechnologies.com
 #>
 
 param(
@@ -60,10 +60,10 @@ Write-Host ("Connecting to " + $ExchangeFQDN + "...") -ForegroundColor Cyan
 Get-PSSession | Where-Object { $_.ConfigurationName -eq 'Microsoft.Exchange' } | Remove-PSSession
 $Session = @{
     ConfigurationName = 'Microsoft.Exchange'
-    ConnectionUri     = 'http://' + $ExchangeFQDN + '/PowerShell/?SerializationLevel=Full' 
+    ConnectionUri     = 'http://' + $ExchangeFQDN + '/PowerShell/?SerializationLevel=Full'
     Authentication    = 'Kerberos'
 }
-Import-PSSession (New-PSSession @Session) 
+Import-PSSession (New-PSSession @Session)
 
 # Get Data
 Write-Host "Getting data from Exchange..." -ForegroundColor Cyan
@@ -90,15 +90,15 @@ $TextBlock = @(
     "Number of Mail-NonUniversal Groups: " + ($AllRecipients | Where-Object { $_.RecipientType -eq 'MailNonUniversalGroup' }).Count
     "Number of Public Folders: " + ($AllRecipients | Where-Object { $_.RecipientType -eq 'PublicFolder' }).Count
     ""
-    "Number of Accepted Domains: " + $AcceptedDomains.count 
+    "Number of Accepted Domains: " + $AcceptedDomains.count
     ""
-    "Number of domains found on recipients: " + $UniqueRecipientDomains.count 
+    "Number of domains found on recipients: " + $UniqueRecipientDomains.count
     ""
     $DomainComparrison = Compare-Object $AcceptedDomains.DomainName $UniqueRecipientDomains
     "These domains have been assigned to recipients, but are not Accepted Domains in the Exchange Organization:"
-    ($DomainComparrison | Where-Object { $_.SideIndicator -eq '=>' }).InputObject 
+    ($DomainComparrison | Where-Object { $_.SideIndicator -eq '=>' }).InputObject
     ""
-    "These Accepted Domains are not assigned to any recipients:" 
+    "These Accepted Domains are not assigned to any recipients:"
     ($DomainComparrison | Where-Object { $_.SideIndicator -eq '<=' }).InputObject
     ""
     "See this CSV for a complete listing of all addresses: " + $CsvFile
@@ -108,21 +108,21 @@ Write-Host "Preparing Output 2 of 2..." -ForegroundColor Cyan
 
 $RecipientsAndSMTPProxies = @()
 $CounterWatermark = 1
- 
+
 $AllRecipients | ForEach-Object {
-    
+
     # Create a new placeholder object
     $RecipientOutputObject = New-Object PSObject -Property @{
         Name          = $_.Name
         RecipientType = $_.RecipientType
         SMTPAddress0  = ($_.emailaddresses | Where-Object { $_ -clike 'SMTP:*' } ) -replace "SMTP:"
-    }    
-    
+    }
+
     # If applicable, get a list of other addresses for the recipient
-    if (($_.emailaddresses).count -gt '1') {       
+    if (($_.emailaddresses).count -gt '1') {
         $OtherAddresses = @()
         $OtherAddresses = ($_.emailaddresses | Where-Object { $_ -clike 'smtp:*' } ) -replace "smtp:"
-        
+
         $Counter = $OtherAddresses.count
         if ($Counter -gt $CounterWatermark) { $CounterWatermark = $Counter }
         $OtherAddresses | ForEach-Object {
@@ -132,7 +132,7 @@ $AllRecipients | ForEach-Object {
     }
     $RecipientsAndSMTPProxies += $RecipientOutputObject
 }
-  
+
 $AttributeList = @(
     'Name'
     'RecipientType'

@@ -1,8 +1,8 @@
 <#
 
-.SYNOPSIS 
+.SYNOPSIS
   This function queries the AlternateMailboxes node within a user's AutoDiscover response. This version now supports Modern Auth. For the basic Auth version of this script, use  Get-AlternateMailboxes_BasicAuth.ps1.
-  
+
   Requirements:
 
   1) Install the MSAL.PS PowerShell Module (Install-Module MSAL.PS)
@@ -13,7 +13,7 @@
     c) Click Add permission
     d) Click "APIs my organization uses" (NOT GRAPH!)
     e) Type "Office 365 Exchange Online" in the search box
-    f) Select the following permission:        
+    f) Select the following permission:
         User.Read.All
   4) Optionally: Use a certificate for application-based authentication, which is what the example below uses. Otherwise, you can use the different auth mentioned by Microsoft in the links below.
 
@@ -24,7 +24,7 @@
 
     Create a self-signed public certificate to authenticate your application
     https://learn.microsoft.com/en-us/azure/active-directory/develop/howto-create-self-signed-certificate
-    
+
 
   Version: March 9, 2023
 
@@ -38,7 +38,7 @@
 
 .EXAMPLE
 
-  $TokenParams = @{    
+  $TokenParams = @{
     ClientId          = '656d524e-fe4a-407a-9579-7e2be1a74a3c'
     TenantId          = 'example.com'
     ClientCertificate = Get-Item Cert:\CurrentUser\My\<Your Cert Thumbprint>
@@ -46,7 +46,7 @@
     Scopes            = 'https://outlook.office365.com/.default'
   }
 
-  $MsalToken = Get-MsalToken @TokenParams 
+  $MsalToken = Get-MsalToken @TokenParams
 
   Get-AlternateMailboxes -SMTPAddress mike@example.com -MsalToken $MsalToken
 
@@ -71,9 +71,9 @@ Function Get-AlternateMailboxes {
     throw
   }
   $AutoDiscoverRequest = @"
-      <soap:Envelope xmlns:a="http://schemas.microsoft.com/exchange/2010/Autodiscover" 
-              xmlns:wsa="http://www.w3.org/2005/08/addressing" 
-              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+      <soap:Envelope xmlns:a="http://schemas.microsoft.com/exchange/2010/Autodiscover"
+              xmlns:wsa="http://www.w3.org/2005/08/addressing"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
               xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
         <soap:Header>
           <a:RequestedServerVersion>Exchange2013</a:RequestedServerVersion>
@@ -116,14 +116,14 @@ Function Get-AlternateMailboxes {
 
 ########## Example ##########
 
-$TokenParams = @{    
+$TokenParams = @{
   ClientId          = '656d524e-fe4a-407a-9579-7e2be1a74a3c'
   TenantId          = 'example.com'
   ClientCertificate = Get-Item Cert:\CurrentUser\My\<Your Cert Thumbprint>
   CorrelationId     = New-Guid
   Scopes            = 'https://outlook.office365.com/.default'
 }
-$MsalToken = Get-MsalToken @TokenParams 
+$MsalToken = Get-MsalToken @TokenParams
 
 Get-AlternateMailboxes -SMTPAddress 'mike@example.com' -MsalToken $MsalToken
 

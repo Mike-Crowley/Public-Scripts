@@ -42,5 +42,5 @@ function Get-EntraCredentialType {
         DesktopSsoEnabled     = $Response.EstsProperties.DesktopSsoEnabled
         UserTenantBranding    = $Response.EstsProperties.UserTenantBranding
     }
-    
+
 }

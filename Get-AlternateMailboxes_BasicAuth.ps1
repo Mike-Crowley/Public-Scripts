@@ -1,6 +1,6 @@
 <#
 
-.SYNOPSIS 
+.SYNOPSIS
     This function queries the AlternateMailboxes node within a user's AutoDiscover response. Does not support Modern Auth. See the link for details.
 
     Version: Jul 29, 2021
@@ -8,15 +8,15 @@
 
 .DESCRIPTION
     This function queries the AlternateMailboxes node within a user's AutoDiscover response. See the link for details.
-  
+
     Author:
     Mike Crowley
     https://BaselineTechnologies.com
 
  .EXAMPLE
- 
+
     Get-AlternateMailboxes -SMTPAddress mike@contoso.com -Credential (Get-Credential)
- 
+
 .LINK
     https://mikecrowley.us/2017/12/08/querying-msexchdelegatelistlink-in-exchange-online-with-powershell/
 
@@ -24,17 +24,17 @@
 
 Function Get-AlternateMailboxes {
 
-    Param(
-        [parameter(Mandatory=$true)][string]
-        $SMTPAddress,
-        [parameter(Mandatory=$true)][pscredential]
-        $Credential
-        )
+  Param(
+    [parameter(Mandatory = $true)][string]
+    $SMTPAddress,
+    [parameter(Mandatory = $true)][pscredential]
+    $Credential
+  )
 
-        $AutoDiscoverRequest = @"
-        <soap:Envelope xmlns:a="http://schemas.microsoft.com/exchange/2010/Autodiscover" 
-                xmlns:wsa="http://www.w3.org/2005/08/addressing" 
-                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+  $AutoDiscoverRequest = @"
+        <soap:Envelope xmlns:a="http://schemas.microsoft.com/exchange/2010/Autodiscover"
+                xmlns:wsa="http://www.w3.org/2005/08/addressing"
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                 xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
           <soap:Header>
             <a:RequestedServerVersion>Exchange2013</a:RequestedServerVersion>
@@ -61,17 +61,17 @@ Function Get-AlternateMailboxes {
           </soap:Body>
         </soap:Envelope>
 "@
-    #Other attributes available here: https://msdn.microsoft.com/en-us/library/microsoft.exchange.webservices.autodiscover.usersettingname(v=exchg.80).aspx
+  #Other attributes available here: https://msdn.microsoft.com/en-us/library/microsoft.exchange.webservices.autodiscover.usersettingname(v=exchg.80).aspx
 
-    $Headers = @{
-        'X-AnchorMailbox' = $Credential.UserName
-    }
+  $Headers = @{
+    'X-AnchorMailbox' = $Credential.UserName
+  }
 
-    $WebResponse = Invoke-WebRequest https://autodiscover-s.outlook.com/autodiscover/autodiscover.svc -Credential $Credential -Method Post -Body $AutoDiscoverRequest -ContentType 'text/xml; charset=utf-8' -Headers $Headers
-    [System.Xml.XmlDocument]$XMLResponse = $WebResponse.Content
-    $RequestedSettings = $XMLResponse.Envelope.Body.GetUserSettingsResponseMessage.Response.UserResponses.UserResponse.UserSettings.UserSetting
-    return $RequestedSettings.AlternateMailboxes.AlternateMailbox
+  $WebResponse = Invoke-WebRequest https://autodiscover-s.outlook.com/autodiscover/autodiscover.svc -Credential $Credential -Method Post -Body $AutoDiscoverRequest -ContentType 'text/xml; charset=utf-8' -Headers $Headers
+  [System.Xml.XmlDocument]$XMLResponse = $WebResponse.Content
+  $RequestedSettings = $XMLResponse.Envelope.Body.GetUserSettingsResponseMessage.Response.UserResponses.UserResponse.UserSettings.UserSetting
+  return $RequestedSettings.AlternateMailboxes.AlternateMailbox
 }
 
 
-Get-AlternateMailboxes 
+Get-AlternateMailboxes

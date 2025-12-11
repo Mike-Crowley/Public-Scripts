@@ -1,4 +1,4 @@
-# Similar to: 
+# Similar to:
 #  https://github.com/Mike-Crowley/Public-Scripts/blob/main/Get-AlternateMailboxes.ps1
 #  "Get-TenantDomains" in this script: https://github.com/Gerenios/AADInternals/blob/ad071b736e2eb0f5f2b35df2920bb515b8c29a8c/AccessToken_utils.ps1
 # Reported to Microsoft in 26Jul2018 who replied to say this is not a security issue, but a feature :)

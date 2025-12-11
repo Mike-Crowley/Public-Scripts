@@ -1,5 +1,5 @@
 <#
-.SYNOPSIS 
+.SYNOPSIS
     Practicing with functions just for fun. Convert-CaesarCipher encodes or decodes case-sensitive English strings based on the Caesar Cipher.
 
 .DESCRIPTION
@@ -29,13 +29,13 @@
     Convert-CaesarCipher -InputString "Hello World" -Shift 20 -Encode
     # You can also specify Encode to avoid confusion.
     # Returns: Byffi Qilfx
-    
+
 .EXAMPLE
 
     Convert-CaesarCipher -InputString "Byffi Qilfx" -Shift 20 -Decode
     # Returns: Hello World
 
-.LINK 
+.LINK
 
     https://mikecrowley.us
 #>
@@ -45,7 +45,7 @@ function Convert-CaesarCipher {
     [CmdletBinding(DefaultParameterSetName = 'Encode')]
     param (
         [parameter(ParameterSetName = "Encode")][switch]$Encode,
-        [parameter(ParameterSetName = "Decode")][switch]$Decode, 
+        [parameter(ParameterSetName = "Decode")][switch]$Decode,
         [Parameter(
             Mandatory = $true,
             ValueFromPipeline = $true,

@@ -3,8 +3,8 @@
 <#
     In this example, I query Microsoft Graph with Invoke-RestMethod, using a custom app registration,
     looking for users that have a UPN that ends with subdomain.mikecrowley.us
-    
-    It will ultimatly build an xlsx file with the following headers:    
+
+    It will ultimatly build an xlsx file with the following headers:
         displayName, userPrincipalName, lastSignInDateTime, lastNonInteractiveSignInDateTime, skuPartNumbers, licenseAssignmentStates, userId
 
     Needs graph permissions:
@@ -18,7 +18,7 @@ $tokenParams = @{
     tenantID    = <guid>
     RedirectUri = <uri>
 }
-$myToken = Get-MsalToken @tokenParams 
+$myToken = Get-MsalToken @tokenParams
 
 #build request headers
 $uri = @'
@@ -29,8 +29,8 @@ $requestParams = @{
     Headers = @{
         Authorization    = "Bearer $($myToken.AccessToken)"
         ConsistencyLevel = "eventual"
-    } 
-    Method  = "Get"    
+    }
+    Method  = "Get"
 }
 
 #collect users displayName and signInActivity
@@ -39,7 +39,7 @@ $requestParams = @{
 $queryResults = @()
 
 do {
-    if ((get-date).AddMinutes(5) -lt $myToken.ExpiresOn.LocalDateTime) {       
+    if ((get-date).AddMinutes(5) -lt $myToken.ExpiresOn.LocalDateTime) {
         $pageResults = Invoke-RestMethod -Method $requestParams.Method -Headers $requestParams.Headers -Uri $uri
         if ($null -eq $PageResults.value) {
             $QueryResults += $PageResults.value
@@ -50,7 +50,7 @@ do {
     else {
         Write-Output "Please wait - renewing token..."
         $myToken = Get-MsalToken @tokenParams
-    }   
+    }
 
     Write-Output ("Users downloaded: " + $queryResults.Count)
 }
@@ -78,11 +78,11 @@ $FinalOutput = foreach ($User in $queryResults.value) {
         userPrincipalName                = $user.userPrincipalName
         lastSignInDateTime               = $user.signInActivity.lastSignInDateTime
         lastNonInteractiveSignInDateTime = $user.signInActivity.lastNonInteractiveSignInDateTime
-        skuPartNumbers                   = If ($user.licenseAssignmentStates -ne "") { ( $user.assignedlicenses.skuid | ForEach-Object { $SKUs.get_item($_) }) -join ';' }        
+        skuPartNumbers                   = If ($user.licenseAssignmentStates -ne "") { ( $user.assignedlicenses.skuid | ForEach-Object { $SKUs.get_item($_) }) -join ';' }
         licenseAssignmentStates          = $user.licenseAssignmentStates.state -join ';'
-        userId                           = $user.id        
+        userId                           = $user.id
     }
-}  
+}
 #Write to file
 $ReportDate = Get-Date -Format 'ddMMMyyyy_HHmm'
 $DesktopPath = ([Environment]::GetFolderPath("Desktop") + '\Graph_Reporting\Graph_Reporting_' + $ReportDate + '\')

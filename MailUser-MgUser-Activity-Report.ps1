@@ -2,20 +2,20 @@
 Connect-MgGraph -TenantId <tenant>
 Select-MgProfile beta
 
-$MailUsers = Get-MailUser -filter {recipienttypedetails -eq 'MailUser'} -ResultSize unlimited
+$MailUsers = Get-MailUser -filter { recipienttypedetails -eq 'MailUser' } -ResultSize unlimited
 $Counter = 0
 $ReportUsers = $MailUsers | ForEach-Object {
     $MailUser = $_
 
     $Counter++
     $percentComplete = (($Counter / $MailUsers.count) * 100)
-    Write-Progress -Activity "Getting MG Objects" -PercentComplete $percentComplete -Status "$percentComplete% Complete:"    
-       
-       #to do - organize properties better
+    Write-Progress -Activity "Getting MG Objects" -PercentComplete $percentComplete -Status "$percentComplete% Complete:"
+
+    #to do - organize properties better
     Get-MgUser -UserId $MailUser.ExternalDirectoryObjectId -ConsistencyLevel eventual -Property @(
         'UserPrincipalName'
         'SignInActivity'
-        'CreatedDateTime'        
+        'CreatedDateTime'
         'DisplayName'
         'Mail'
         'OnPremisesImmutableId'
@@ -25,8 +25,8 @@ $ReportUsers = $MailUsers | ForEach-Object {
         'RefreshTokensValidFromDateTime'
         'id'
     ) | Select-Object @(
-        'UserPrincipalName'        
-        'CreatedDateTime'        
+        'UserPrincipalName'
+        'CreatedDateTime'
         'DisplayName'
         'Mail'
         'OnPremisesImmutableId'
@@ -34,11 +34,11 @@ $ReportUsers = $MailUsers | ForEach-Object {
         'OnPremisesLastSyncDateTime'
         'SignInSessionsValidFromDateTime'
         'RefreshTokensValidFromDateTime'
-        'id'        
-        @{n='PrimarySmtpAddress'; e={$MailUser.PrimarySmtpAddress}}
-        @{n='ExternalEmailAddress'; e={$MailUser.ExternalEmailAddress}}
-        @{n='LastSignInDateTime'; e={[datetime]$_.SignInActivity.LastSignInDateTime}}
-        @{n='lastNonInteractiveSignInDateTime'; e={[datetime]$_.SignInActivity.AdditionalProperties.lastNonInteractiveSignInDateTime}}           
+        'id'
+        @{n = 'PrimarySmtpAddress'; e = { $MailUser.PrimarySmtpAddress } }
+        @{n = 'ExternalEmailAddress'; e = { $MailUser.ExternalEmailAddress } }
+        @{n = 'LastSignInDateTime'; e = { [datetime]$_.SignInActivity.LastSignInDateTime } }
+        @{n = 'lastNonInteractiveSignInDateTime'; e = { [datetime]$_.SignInActivity.AdditionalProperties.lastNonInteractiveSignInDateTime } }
     )
 }
 
