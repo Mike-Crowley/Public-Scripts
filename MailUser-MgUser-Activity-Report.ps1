@@ -3,10 +3,11 @@ Connect-MgGraph -TenantId <tenant>
 Select-MgProfile beta
 
 $MailUsers = Get-MailUser -filter {recipienttypedetails -eq 'MailUser'} -ResultSize unlimited
+$Counter = 0
 $ReportUsers = $MailUsers | ForEach-Object {
-    $MailUser = $_   
-    
-    $Counter ++
+    $MailUser = $_
+
+    $Counter++
     $percentComplete = (($Counter / $MailUsers.count) * 100)
     Write-Progress -Activity "Getting MG Objects" -PercentComplete $percentComplete -Status "$percentComplete% Complete:"    
        

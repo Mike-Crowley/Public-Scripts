@@ -24,8 +24,14 @@ function Compare-ObjectsInVSCode {
     $json1 = $Object1 | ConvertTo-Json -Depth $Depth
     $json2 = $Object2 | ConvertTo-Json -Depth $Depth
 
-    $json1 | Out-File -FilePath $file1Path
-    $json2 | Out-File -FilePath $file2Path
+    try {
+        $json1 | Out-File -FilePath $file1Path -ErrorAction Stop
+        $json2 | Out-File -FilePath $file2Path -ErrorAction Stop
+    }
+    catch {
+        Write-Error "Failed to write temporary files: $_"
+        return
+    }
 
     # Open files in VS Code for comparison
     code -d $file1Path $file2Path

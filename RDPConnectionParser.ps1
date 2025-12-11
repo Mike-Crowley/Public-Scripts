@@ -67,10 +67,15 @@ Param(
 
     $Date = Get-Date -Format 'yyyyMMdd_HHmmss'
     $FilePath = "$env:USERPROFILE\Desktop\$Date`_RDP_Report.csv"
-    $FilteredOutput | Sort-Object TimeCreated | Export-Csv $FilePath -NoTypeInformation -Encoding UTF8
 
-Write-host "Writing File: $FilePath" -ForegroundColor Cyan
-Write-host "Done!" -ForegroundColor Cyan
+    try {
+        $FilteredOutput | Sort-Object TimeCreated | Export-Csv $FilePath -NoTypeInformation -Encoding UTF8 -ErrorAction Stop
+        Write-Host "Writing File: $FilePath" -ForegroundColor Cyan
+        Write-Host "Done!" -ForegroundColor Cyan
+    }
+    catch {
+        Write-Host "Failed to write report file: $_" -ForegroundColor Red
+    }
 
 
 #End

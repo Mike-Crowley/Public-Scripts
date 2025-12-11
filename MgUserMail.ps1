@@ -69,14 +69,18 @@
 
     Connect-Graph @MgConnectParams
     Select-MgProfile v1.0
-    
-    $body += @{subject      = $emailSubject}
-    $body += @{toRecipients = $toRecipients}    
-    $body += @{attachments  = $attachments}
-    $body += @{body         = $emailBody}
 
-    $bodyParameter += @{'message'         = $body}
-    $bodyParameter += @{'saveToSentItems' = $false}
+    $body = @{
+        subject      = $emailSubject
+        toRecipients = $toRecipients
+        attachments  = $attachments
+        body         = $emailBody
+    }
+
+    $bodyParameter = @{
+        'message'         = $body
+        'saveToSentItems' = $false
+    }
 
     Send-MgUserMail -UserId $emailSender -BodyParameter $bodyParameter
 

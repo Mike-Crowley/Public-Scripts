@@ -217,8 +217,13 @@ function Find-DriveItemDuplicates {
         $CsvOutputPath = "$Desktop\$UPN-DupeReport-$FileDate.csv"
         $JsonOutputPath = $CsvOutputPath -replace ".csv", ".json"
 
-        $Output | Export-Csv $CsvOutputPath -NoTypeInformation -Encoding UTF8
-        $Output | ConvertTo-Json | Out-File $JsonOutputPath -Encoding UTF8
+        try {
+            $Output | Export-Csv $CsvOutputPath -NoTypeInformation -Encoding UTF8 -ErrorAction Stop
+            $Output | ConvertTo-Json | Out-File $JsonOutputPath -Encoding UTF8 -ErrorAction Stop
+        }
+        catch {
+            Write-Warning "Failed to save report files: $_"
+        }
     }
 
     # Report status to console

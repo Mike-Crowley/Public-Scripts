@@ -145,8 +145,15 @@ Write-Host ""
 Write-Host $TxtFile -ForegroundColor Green
 Write-Host $CsvFile -ForegroundColor Green
 
-$TextBlock | Out-File $TxtFile -Encoding UTF8
-$RecipientsAndSMTPProxies | Select-Object $AttributeList | Sort-Object RecipientType, Name | Export-Csv $CsvFile -NoTypeInformation -Encoding UTF8
+try {
+    $TextBlock | Out-File $TxtFile -Encoding UTF8 -ErrorAction Stop
+    $RecipientsAndSMTPProxies | Select-Object $AttributeList | Sort-Object RecipientType, Name | Export-Csv $CsvFile -NoTypeInformation -Encoding UTF8 -ErrorAction Stop
+}
+catch {
+    Write-Host ""
+    Write-Host "Failed to save report files: $_" -ForegroundColor Red
+    Exit
+}
 
 Write-Host ""
 Write-Host ""

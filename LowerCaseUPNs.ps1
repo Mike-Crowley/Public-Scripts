@@ -18,8 +18,15 @@ Function Get-FileFriendlyDate {Get-Date -format ddMMMyyyy_HHmm.s}
 $DesktopPath = ([Environment]::GetFolderPath("Desktop") + '\')
 $LogPath = ($DesktopPath + (Get-FileFriendlyDate) + "-UppercaseBackup.xml")
 
-$TargetObjects | select DistinguishedName, PrimarySMTPAddress, UserPrincipalName | Export-Clixml $LogPath
-Write-Host "A backup XML has been placed here:" $LogPath -ForegroundColor Cyan
+try {
+    $TargetObjects | Select-Object DistinguishedName, PrimarySMTPAddress, UserPrincipalName | Export-Clixml $LogPath -ErrorAction Stop
+    Write-Host "A backup XML has been placed here:" $LogPath -ForegroundColor Cyan
+}
+catch {
+    Write-Host "Failed to create backup file: $_" -ForegroundColor Red
+    Write-Host "Exiting to prevent data loss." -ForegroundColor Red
+    return
+}
 Write-Host
 
 $Counter = $TargetObjects.Count

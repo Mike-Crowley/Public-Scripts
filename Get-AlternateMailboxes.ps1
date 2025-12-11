@@ -107,7 +107,7 @@ Function Get-AlternateMailboxes {
     'Authorization'   = "Bearer $($MsalToken.AccessToken)"
   }
 
-  $WebResponse = Invoke-WebRequest https://autodiscover-s.outlook.com/autodiscover/autodiscover.svc -Credential $Credential -Method Post -Body $AutoDiscoverRequest -ContentType 'text/xml; charset=utf-8' -Headers $Headers
+  $WebResponse = Invoke-WebRequest https://autodiscover-s.outlook.com/autodiscover/autodiscover.svc -Method Post -Body $AutoDiscoverRequest -ContentType 'text/xml; charset=utf-8' -Headers $Headers
   [System.Xml.XmlDocument]$XMLResponse = $WebResponse.Content
   $RequestedSettings = $XMLResponse.Envelope.Body.GetUserSettingsResponseMessage.Response.UserResponses.UserResponse.UserSettings.UserSetting
   return $RequestedSettings.AlternateMailboxes.AlternateMailbox
