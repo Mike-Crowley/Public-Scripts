@@ -14,7 +14,11 @@
     - ADFS mode: Query an ADFS farm by FQDN (uses -FarmFqdn parameter)
     - Entra ID mode: Query Entra ID federation metadata by URL (uses -MetadataUrl parameter)
 
+    DaysToExpiry values are color-coded: Green (90+ days), Yellow (30-89 days), Red (<30 days or expired).
+
     Sample Output with -Display $true (default):
+
+        EntityID: http://adfs.contoso.com/adfs/services/trust
 
         SSL (HTTPS) Certificate:
 
@@ -46,30 +50,29 @@
 
     Sample Output with -Display $false (for use with loops, pipeline, etc):
 
+            EntityID                      : http://adfs.contoso.com/adfs/services/trust
             SSL_Subject                   : CN=ADFS.CONTOSO, O=CONTOSO CORP, OID.1.3.6.1.4.1.311.60.2.1.3=US
             SSL_NotAfter                  : 11/14/2023 6:59:59 PM
             SSL_Thumbprint                : 21321F3C2E225480F112A7BC2B3347B58B439842
             SSL_Issuer                    : CN=CONTOSO CORP
             SSL_DaysToExpiry              : 256
-            FirstSigning_Subject        : CN=ADFS Signing - adfs.contoso.com
-            FirstSigning_NotAfter       : 7/5/2023 7:05:32 PM
-            FirstSigning_Thumbprint     : 0507D8E023B8715FE3F5F4A6421F47A36C6DD3AD
-            FirstSigning_Issuer         : CN=ADFS Signing - adfs.contoso.com
-            FirstSigning_DaysToExpiry   : 124
-            SecondSigning_Subject      :
-            SecondSigning_NotAfter     :
-            SecondSigning_Thumbprint   :
-            SecondSigning_Issuer       :
-            SecondSigning_DaysToExpiry : -738581
+            FirstSigning_Subject          : CN=ADFS Signing - adfs.contoso.com
+            FirstSigning_NotAfter         : 7/5/2023 7:05:32 PM
+            FirstSigning_Thumbprint       : 0507D8E023B8715FE3F5F4A6421F47A36C6DD3AD
+            FirstSigning_Issuer           : CN=ADFS Signing - adfs.contoso.com
+            FirstSigning_DaysToExpiry     : 124
+            SecondSigning_Subject         :
+            SecondSigning_NotAfter        :
+            SecondSigning_Thumbprint      :
+            SecondSigning_Issuer          :
+            SecondSigning_DaysToExpiry    :
             Encryption_Subject            : CN=ADFS Encryption - adfs.contoso.com
             Encryption_NotAfter           : 7/5/2023 7:05:31 PM
             Encryption_Thumbprint         : 0507D8E023B8715FE3F5F4A6421F47A36C6DD3AD
             Encryption_Issuer             : CN=ADFS Encryption - adfs.contoso.com
             Encryption_DaysToExpiry       : 124
 
-    NOTE 1: This does not currently support PowerShell v6 or v7 (PowerShell Core)
-
-    NOTE 2: This tool by Microsoft may be handy as well: https://adfshelp.microsoft.com/MetadataExplorer/GetFederationMetadata
+    NOTE: This tool by Microsoft may be handy as well: https://adfshelp.microsoft.com/MetadataExplorer/GetFederationMetadata
 
     Author:
     Mike Crowley
@@ -86,6 +89,9 @@
 
 .EXAMPLE
     Request-FederationCerts -MetadataUrl "https://login.microsoftonline.com/632bce27-2d09-4272-bc9a-ed0c2196a5db/federationmetadata/2007-06/federationmetadata.xml?appid=24d20551-21d8-44a6-a923-777a371a3145"
+
+.EXAMPLE
+    Request-FederationCerts -FarmFqdn adfs.contoso.com -ExportCsv "C:\reports\certs.csv" -ExportJson "C:\reports\certs.json"
 
 .LINK
     https://github.com/mike-crowley_blkln
@@ -104,11 +110,14 @@ function Request-FederationCerts {
         [ValidateNotNullOrEmpty()]
         [string]$MetadataUrl,
 
-        [bool]$Display = $true
+        [bool]$Display = $true,
+
+        [string]$ExportCsv,
+
+        [string]$ExportJson
     )
 
-    $global:UnsupportedPowerShell = $false
-    $IsEntraMode = $PSCmdlet.ParameterSetName -eq 'Entra'
+    $IsPSCore = $PSVersionTable.PSEdition -eq 'Core'
 
     # Validate that at least one parameter is provided
     if (-not $FarmFqdn -and -not $MetadataUrl) {
@@ -131,15 +140,31 @@ function Request-FederationCerts {
         $hostHeader = ([uri]$MetadataUrl).Host
     }
 
-    #ignore ssl warnings and ensure TLS 1.2
+    # Ensure TLS 1.2
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    if ($PSVersionTable.PSEdition -eq "core") { $global:UnsupportedPowerShell = $true }
-    else { [Net.ServicePointManager]::ServerCertificateValidationCallback = { $true } }
 
-    #Make HTTPS connection and get content
+    # For Windows PowerShell, ignore SSL warnings for self-signed certs
+    if (-not $IsPSCore) {
+        [Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }
+    }
+
+    # Make HTTPS connection and get content
     try {
-        if ($MetadataUrl) {
-            # Entra mode - use Invoke-WebRequest for simplicity
+        if ($IsPSCore) {
+            # PowerShell 7+ - use Invoke-WebRequest with -SkipCertificateCheck for self-signed certs
+            $webResponse = Invoke-WebRequest -Uri $url -UseBasicParsing -SkipCertificateCheck
+            $content = $webResponse.Content
+
+            # Get SSL cert from the connection via TcpClient
+            $tcpClient = [System.Net.Sockets.TcpClient]::new($hostHeader, 443)
+            $sslStream = [System.Net.Security.SslStream]::new($tcpClient.GetStream(), $false, { $true })
+            $sslStream.AuthenticateAsClient($hostHeader)
+            $SSLCert_x509 = [Security.Cryptography.X509Certificates.X509Certificate2]::new($sslStream.RemoteCertificate)
+            $sslStream.Close()
+            $tcpClient.Close()
+        }
+        elseif ($MetadataUrl) {
+            # Windows PowerShell + Entra mode - use Invoke-WebRequest
             $webResponse = Invoke-WebRequest -Uri $url -UseBasicParsing
             $content = $webResponse.Content
 
@@ -152,11 +177,10 @@ function Request-FederationCerts {
             $tcpClient.Close()
         }
         else {
-            # ADFS mode - use HttpWebRequest to handle custom Host header and self-signed certs
+            # Windows PowerShell + ADFS mode - use HttpWebRequest to handle custom Host header
             $request = [Net.HttpWebRequest]::Create($url)
             $request.Host = $hostHeader
             $request.AllowAutoRedirect = $false
-            #$request.Headers.Add("UserAgent", 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Microsoft Windows 10.0.22621; en-US) PowerShell/7.3.3') # optional
             $response = $request.GetResponse()
 
             $HttpsCertBytes = $request.ServicePoint.Certificate.GetRawCertData()
@@ -167,7 +191,7 @@ function Request-FederationCerts {
             $contentStream.Close()
             $response.Close()
 
-            #Extract HTTPS cert (ADFS Calls this the "SSL" cert)
+            # Extract HTTPS cert (ADFS calls this the "SSL" cert)
             $CertInBase64 = [convert]::ToBase64String($HttpsCertBytes)
             $SSLCert_x509 = [Security.Cryptography.X509Certificates.X509Certificate2]([System.Convert]::FromBase64String($CertInBase64))
         }
@@ -178,11 +202,15 @@ function Request-FederationCerts {
         return
     }
 
-    #Parse FederationMetadata for certs
+    # Parse FederationMetadata for certs
     # Remove BOM if present (can cause XML parsing issues in PowerShell 7)
     $content = $content -replace '^\xEF\xBB\xBF', '' -replace '^\uFEFF', ''
     # ADFS uses SPSSODescriptor, Entra ID uses IDPSSODescriptor
     $xmlContent = [xml]$content
+
+    # Extract EntityID from the metadata
+    $EntityID = $xmlContent.EntityDescriptor.entityID
+
     $KeyDescriptors = $xmlContent.EntityDescriptor.SPSSODescriptor.KeyDescriptor
     if (-not $KeyDescriptors) {
         $KeyDescriptors = $xmlContent.EntityDescriptor.IDPSSODescriptor.KeyDescriptor
@@ -200,6 +228,8 @@ function Request-FederationCerts {
     $Now = Get-Date
 
     $CertReportObject = [pscustomobject]@{
+        EntityID                   = $EntityID
+
         SSL_Subject                = $SSLCert_x509.Subject
         SSL_NotAfter               = $SSLCert_x509.NotAfter
         SSL_Thumbprint             = $SSLCert_x509.Thumbprint
@@ -225,11 +255,20 @@ function Request-FederationCerts {
         Encryption_DaysToExpiry    = if ($EncryptionCert_x509) { ($EncryptionCert_x509.NotAfter - $Now).Days } else { $null }
     }
 
+    # Helper function for expiry color coding
+    function Get-ExpiryColor {
+        param([int]$Days)
+        if ($null -eq $Days) { return 'Gray' }
+        if ($Days -lt 0) { return 'Red' }
+        if ($Days -lt 30) { return 'Red' }
+        if ($Days -lt 90) { return 'Yellow' }
+        return 'Green'
+    }
+
     if ($Display -eq $true) {
 
-        #Clear-Host
-
-        if ($UnsupportedPowerShell -eq $true) { Write-Host "Functionality is limited with invalid HTTPS certificates in this version of PowerShell. `nhttps://github.com/PowerShell/PowerShell/issues/17340" -ForegroundColor Red }
+        Write-Host "`n    EntityID: " -ForegroundColor Cyan -NoNewline
+        Write-Host $CertReportObject.EntityID
 
         Write-Host "    `nSSL (HTTPS) Certificate:`n" -ForegroundColor Green
         Write-Host "    SSL_Subject:     " $CertReportObject.SSL_Subject
@@ -237,7 +276,7 @@ function Request-FederationCerts {
         Write-Host "    SSL_Thumbprint:  " $CertReportObject.SSL_Thumbprint
         Write-Host "    SSL_Issuer:      " $CertReportObject.SSL_Issuer
         Write-Host "    SSL_DaysToExpiry: " -NoNewline
-        Write-Host  $CertReportObject.SSL_DaysToExpiry -ForegroundColor Cyan
+        Write-Host $CertReportObject.SSL_DaysToExpiry -ForegroundColor (Get-ExpiryColor $CertReportObject.SSL_DaysToExpiry)
 
         if ($null -ne $CertReportObject.Encryption_Subject) {
             Write-Host "    `nEncryption Certificate:`n" -ForegroundColor DarkMagenta
@@ -246,7 +285,7 @@ function Request-FederationCerts {
             Write-Host "    Encryption_Thumbprint:  " $CertReportObject.Encryption_Thumbprint
             Write-Host "    Encryption_Issuer:      " $CertReportObject.Encryption_Issuer
             Write-Host "    Encryption_DaysToExpiry: " -NoNewline
-            Write-Host $CertReportObject.Encryption_DaysToExpiry -ForegroundColor Cyan
+            Write-Host $CertReportObject.Encryption_DaysToExpiry -ForegroundColor (Get-ExpiryColor $CertReportObject.Encryption_DaysToExpiry)
         }
         else {
             Write-Host "    `nEncryption Certificate:`n" -ForegroundColor DarkMagenta
@@ -264,7 +303,7 @@ function Request-FederationCerts {
         Write-Host "    FirstSigning_Thumbprint:  " $CertReportObject.FirstSigning_Thumbprint
         Write-Host "    FirstSigning_Issuer:      " $CertReportObject.FirstSigning_Issuer
         Write-Host "    FirstSigning_DaysToExpiry: " -NoNewline
-        Write-Host $CertReportObject.FirstSigning_DaysToExpiry -ForegroundColor Cyan
+        Write-Host $CertReportObject.FirstSigning_DaysToExpiry -ForegroundColor (Get-ExpiryColor $CertReportObject.FirstSigning_DaysToExpiry)
 
         Write-Host "`nSecond Token Signing Certificate:`n" -ForegroundColor DarkYellow
 
@@ -274,7 +313,7 @@ function Request-FederationCerts {
             Write-Host "    SecondSigning_Thumbprint:  " $CertReportObject.SecondSigning_Thumbprint
             Write-Host "    SecondSigning_Issuer:      " $CertReportObject.SecondSigning_Issuer
             Write-Host "    SecondSigning_DaysToExpiry: " -NoNewline
-            Write-Host $CertReportObject.SecondSigning_DaysToExpiry -ForegroundColor Cyan
+            Write-Host $CertReportObject.SecondSigning_DaysToExpiry -ForegroundColor (Get-ExpiryColor $CertReportObject.SecondSigning_DaysToExpiry)
             Write-Host "`n    NOTE: A federation metadata document can have multiple signing keys." -ForegroundColor Gray
             Write-Host "      When a federation metadata document includes more than one certificate, a service that is validating the tokens should support all certificates in the document." -ForegroundColor Gray
             Write-Host "      The 'First' certificate in the metadata may not be the 'Primary' certificate in the ADFS configuration"
@@ -284,7 +323,31 @@ function Request-FederationCerts {
 
         Write-Host "`n"
     }
-    else {
+
+    # Export to CSV if requested
+    if ($ExportCsv) {
+        try {
+            $CertReportObject | Export-Csv -Path $ExportCsv -NoTypeInformation -Encoding UTF8 -ErrorAction Stop
+            Write-Host "Exported to CSV: $ExportCsv" -ForegroundColor Green
+        }
+        catch {
+            Write-Warning "Failed to export CSV: $_"
+        }
+    }
+
+    # Export to JSON if requested
+    if ($ExportJson) {
+        try {
+            $CertReportObject | ConvertTo-Json -Depth 3 | Out-File -FilePath $ExportJson -Encoding UTF8 -ErrorAction Stop
+            Write-Host "Exported to JSON: $ExportJson" -ForegroundColor Green
+        }
+        catch {
+            Write-Warning "Failed to export JSON: $_"
+        }
+    }
+
+    # Return object if not displaying (for pipeline use)
+    if ($Display -eq $false) {
         return $CertReportObject
     }
 }
