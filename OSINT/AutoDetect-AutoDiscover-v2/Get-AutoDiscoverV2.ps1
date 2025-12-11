@@ -2,8 +2,16 @@ Function Get-AutoDiscoverV2 {
     param (
         [parameter(Mandatory = $true)][string]
         $Upn
-    )    
-    $Response = Invoke-WebRequest "https://outlook.office365.com/autodiscover/autodiscover.json/v1.0/$($upn)?Protocol=activesync" #or change to ews
+    )
+
+    try {
+        $Response = Invoke-WebRequest -Uri "https://outlook.office365.com/autodiscover/autodiscover.json/v1.0/$($Upn)?Protocol=activesync" -UseBasicParsing -ErrorAction Stop  # or change Protocol to ews
+    }
+    catch {
+        Write-Warning "Failed to retrieve autodiscover information for $Upn : $($_.Exception.Message)"
+        return
+    }
+
     $Response.Content | ConvertFrom-Json
 }
 

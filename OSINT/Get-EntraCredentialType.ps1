@@ -22,8 +22,15 @@ Function Get-EntraCredentialType {
         isOtherIdpSupported = $true
     }
     $Body = $Body | ConvertTo-Json -Compress
-    $Response = Invoke-RestMethod -Method Post -Uri "https://login.microsoftonline.com/common/GetCredentialType" -Body $Body
-    
+
+    try {
+        $Response = Invoke-RestMethod -Method Post -Uri "https://login.microsoftonline.com/common/GetCredentialType" -Body $Body -ContentType "application/json" -ErrorAction Stop
+    }
+    catch {
+        Write-Warning "Failed to retrieve credential type for $Upn : $($_.Exception.Message)"
+        return
+    }
+
     [pscustomobject]@{
         Username              = $Response.Username
         PrefCredential        = $Response.Credentials.PrefCredential

@@ -29,10 +29,18 @@ function Get-ExODomains {
             </soap:Body>
         </soap:Envelope>
 "@
-    $headers = @{    
-        "SOAPAction" = '"http://schemas.microsoft.com/exchange/2010/Autodiscover/Autodiscover/GetFederationInformation"'    
-    } 
-    $response = Invoke-RestMethod -Method Post -uri "https://autodiscover-s.outlook.com/autodiscover/autodiscover.svc" -Body $body -Headers $headers -UserAgent "AutodiscoverClient" -ContentType "text/xml; charset=utf-8"
+    $headers = @{
+        "SOAPAction" = '"http://schemas.microsoft.com/exchange/2010/Autodiscover/Autodiscover/GetFederationInformation"'
+    }
+
+    try {
+        $response = Invoke-RestMethod -Method Post -Uri "https://autodiscover-s.outlook.com/autodiscover/autodiscover.svc" -Body $body -Headers $headers -UserAgent "AutodiscoverClient" -ContentType "text/xml; charset=utf-8" -ErrorAction Stop
+    }
+    catch {
+        Write-Warning "Failed to retrieve federation information for $Domain : $($_.Exception.Message)"
+        return
+    }
+
     $response.Envelope.body.GetFederationInformationResponseMessage.response.Domains.Domain | Sort-Object
 }
 

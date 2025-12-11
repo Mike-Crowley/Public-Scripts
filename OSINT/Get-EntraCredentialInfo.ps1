@@ -24,10 +24,21 @@ function Get-EntraCredentialInfo {
     }
     $Body = $Body | ConvertTo-Json -Compress
 
-    $ErrorActionPreference = "SilentlyContinue"
-    $CredentialResponse = Invoke-RestMethod "https://login.microsoftonline.com/common/GetCredentialType" -Method Post -Body $Body
-    $OpenidResponse = Invoke-WebRequest "https://login.microsoftonline.com/$domain/.well-known/openid-configuration" | ConvertFrom-Json
-    $ErrorActionPreference = "Continue"
+    try {
+        $CredentialResponse = Invoke-RestMethod -Uri "https://login.microsoftonline.com/common/GetCredentialType" -Method Post -Body $Body -ContentType "application/json" -ErrorAction Stop
+    }
+    catch {
+        Write-Warning "Failed to retrieve credential type for $Upn : $($_.Exception.Message)"
+        return
+    }
+
+    try {
+        $OpenidResponse = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$Domain/.well-known/openid-configuration" -ErrorAction Stop
+    }
+    catch {
+        Write-Warning "Failed to retrieve OpenID configuration for $Domain : $($_.Exception.Message)"
+        $OpenidResponse = $null
+    }
 
     $Output = [pscustomobject]@{
         Username                  = $CredentialResponse.Username
