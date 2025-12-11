@@ -76,7 +76,7 @@
 
     Author:
     Mike Crowley
-    http://<>
+    https://mikecrowley.us
 
 .EXAMPLE
     Request-FederationCerts -FarmFqdn adfs.contoso.com
@@ -88,7 +88,7 @@
     Request-FederationCerts -MetadataUrl "https://login.microsoftonline.com/contoso.onmicrosoft.com/federationmetadata/2007-06/federationmetadata.xml"
 
 .EXAMPLE
-    Request-FederationCerts -MetadataUrl "https://login.microsoftonline.com/632bce27-2d09-4272-bc9a-ed0c2196a5db/federationmetadata/2007-06/federationmetadata.xml?appid=24d20551-21d8-44a6-a923-777a371a3145"
+    Request-FederationCerts -MetadataUrl "https://login.microsoftonline.com/50afff0a-571a-4822-915b-d6823ca9fe63/federationmetadata/2007-06/federationmetadata.xml?appid=df3d5533-18a3-400a-9027-ae7da4836fc7"
 
 .EXAMPLE
     Request-FederationCerts -FarmFqdn adfs.contoso.com -ExportCsv "C:\reports\certs.csv" -ExportJson "C:\reports\certs.json"
