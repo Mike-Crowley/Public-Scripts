@@ -4,9 +4,11 @@
 # Reported to Microsoft in 26Jul2018 who replied to say this is not a security issue, but a feature :)
 
 function Get-ExODomains {
+    [CmdletBinding()]
     param (
-        [parameter(Mandatory = $true)][string]
-        $Domain
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Domain
     )
     # https://learn.microsoft.com/en-us/exchange/client-developer/web-service-reference/getfederationinformation-operation-soap
     $body = @"

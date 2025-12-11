@@ -1,7 +1,9 @@
-Function Get-AutoDiscoverV2 {
+function Get-AutoDiscoverV2 {
+    [CmdletBinding()]
     param (
-        [parameter(Mandatory = $true)][string]
-        $Upn
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Upn
     )
 
     try {

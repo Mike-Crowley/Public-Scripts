@@ -1,7 +1,9 @@
-Function Get-AutoDetect {
+function Get-AutoDetect {
+    [CmdletBinding()]
     param (
-        [parameter(Mandatory = $true)][string]
-        $Upn
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Upn
     )
 
     try {

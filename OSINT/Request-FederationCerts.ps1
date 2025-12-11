@@ -94,12 +94,17 @@
 #>
 
 function Request-FederationCerts {
+    [CmdletBinding(DefaultParameterSetName = 'ADFS')]
     param (
-        [Parameter(ParameterSetName = 'ADFS')]
+        [Parameter(ParameterSetName = 'ADFS', ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
         [string]$FarmFqdn,
-        [Parameter(ParameterSetName = 'Entra')]
+
+        [Parameter(ParameterSetName = 'Entra', ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
         [string]$MetadataUrl,
-        [string]$Display = $true
+
+        [bool]$Display = $true
     )
 
     $global:UnsupportedPowerShell = $false

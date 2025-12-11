@@ -12,9 +12,11 @@
 #>
 
 function Get-EntraCredentialInfo {
+    [CmdletBinding()]
     param (
-        [parameter(Mandatory = $true)][string]
-        $Upn
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Upn
     )
 
     $Domain = ($Upn -split '@')[1]

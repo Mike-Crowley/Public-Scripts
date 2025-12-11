@@ -12,10 +12,12 @@
 
     https://mikecrowley.us
 #>
-Function Get-EntraCredentialType {
+function Get-EntraCredentialType {
+    [CmdletBinding()]
     param (
-        [parameter(Mandatory = $true)][string]
-        $Upn
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Upn
     )
     $Body = @{
         username            = $Upn
