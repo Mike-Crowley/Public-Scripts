@@ -98,7 +98,7 @@ Microsoft [retired the TechNet Gallery](https://learn.microsoft.com/en-us/teambl
 
   + Query Entra for the CredentialType and openid-configuration of a user for a combined output.
 
-+ [Request-AdfsCerts.ps1](./OSINT/Request-AdfsCerts.ps1)
++ [Request-FederationCerts.ps1](./OSINT/Request-FederationCerts.ps1)
 
   + Remotely query ADFS or Entra ID federation metadata to see information about the certificates being used. Supports both `-FarmFqdn` for ADFS servers and `-MetadataUrl` for Entra ID federation metadata endpoints.
 

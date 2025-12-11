@@ -5,7 +5,7 @@
 
     This tool does not authenticate to the server or investigate each ADFS farm node directly. For this, use the ADFS Cert Diag tool
 
-    Version: Dec 2024
+    Version: Dec 2025
 
 .DESCRIPTION
     This tool displays the signing and encrypting certificates published in ADFS or Entra ID federation metadata as well as the HTTPS ("SSL") certificate used in the connection itself.
@@ -76,16 +76,16 @@
     http://<>
 
 .EXAMPLE
-    Request-AdfsCerts -FarmFqdn adfs.contoso.com
+    Request-FederationCerts -FarmFqdn adfs.contoso.com
 
 .EXAMPLE
-    Request-AdfsCerts -FarmFqdn adfs.contoso.com -Display $false
+    Request-FederationCerts -FarmFqdn adfs.contoso.com -Display $false
 
 .EXAMPLE
-    Request-AdfsCerts -MetadataUrl "https://login.microsoftonline.com/contoso.onmicrosoft.com/federationmetadata/2007-06/federationmetadata.xml"
+    Request-FederationCerts -MetadataUrl "https://login.microsoftonline.com/contoso.onmicrosoft.com/federationmetadata/2007-06/federationmetadata.xml"
 
 .EXAMPLE
-    Request-AdfsCerts -MetadataUrl "https://login.microsoftonline.com/632bce27-2d09-4272-bc9a-ed0c2196a5db/federationmetadata/2007-06/federationmetadata.xml?appid=24d20551-21d8-44a6-a923-777a371a3145"
+    Request-FederationCerts -MetadataUrl "https://login.microsoftonline.com/632bce27-2d09-4272-bc9a-ed0c2196a5db/federationmetadata/2007-06/federationmetadata.xml?appid=24d20551-21d8-44a6-a923-777a371a3145"
 
 .LINK
     https://github.com/mike-crowley_blkln
@@ -93,7 +93,7 @@
 
 #>
 
-function Request-AdfsCerts {
+function Request-FederationCerts {
     param (
         [Parameter(ParameterSetName = 'ADFS')]
         [string]$FarmFqdn,
@@ -286,7 +286,7 @@ function Request-AdfsCerts {
 
 # Examples
 # ADFS mode:
-# Request-AdfsCerts -FarmFqdn adfs.contoso.com -Display $true
+# Request-FederationCerts -FarmFqdn adfs.contoso.com -Display $true
 
 # Entra ID mode:
-# Request-AdfsCerts -MetadataUrl "https://login.microsoftonline.com/contoso.onmicrosoft.com/federationmetadata/2007-06/federationmetadata.xml"
+# Request-FederationCerts -MetadataUrl "https://login.microsoftonline.com/contoso.onmicrosoft.com/federationmetadata/2007-06/federationmetadata.xml"
