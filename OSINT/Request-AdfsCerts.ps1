@@ -1,14 +1,18 @@
 ﻿<#
 
 .SYNOPSIS
-    This tool displays the signing and encrypting certificates published in ADFS' federation metadata as well as the HTTPS ("SSL") certificate used in the connection itself.
+    This tool displays the signing and encrypting certificates published in ADFS or Entra ID federation metadata as well as the HTTPS ("SSL") certificate used in the connection itself.
 
     This tool does not authenticate to the server or investigate each ADFS farm node directly. For this, use the ADFS Cert Diag tool
 
-    Version: Feb 9 2024
+    Version: Dec 2024
 
 .DESCRIPTION
-    This tool displays the signing and encrypting certificates published in ADFS' federation metadata as well as the HTTPS ("SSL") certificate used in the connection itself.
+    This tool displays the signing and encrypting certificates published in ADFS or Entra ID federation metadata as well as the HTTPS ("SSL") certificate used in the connection itself.
+
+    Supports two modes:
+    - ADFS mode: Query an ADFS farm by FQDN (uses -FarmFqdn parameter)
+    - Entra ID mode: Query Entra ID federation metadata by URL (uses -MetadataUrl parameter)
 
     Sample Output with -Display $true (default):
 
@@ -77,6 +81,12 @@
 .EXAMPLE
     Request-AdfsCerts -FarmFqdn adfs.contoso.com -Display $false
 
+.EXAMPLE
+    Request-AdfsCerts -MetadataUrl "https://login.microsoftonline.com/contoso.onmicrosoft.com/federationmetadata/2007-06/federationmetadata.xml"
+
+.EXAMPLE
+    Request-AdfsCerts -MetadataUrl "https://login.microsoftonline.com/632bce27-2d09-4272-bc9a-ed0c2196a5db/federationmetadata/2007-06/federationmetadata.xml?appid=24d20551-21d8-44a6-a923-777a371a3145"
+
 .LINK
     https://github.com/mike-crowley_blkln
     https://github.com/Mike-Crowley
@@ -85,136 +95,198 @@
 
 function Request-AdfsCerts {
     param (
+        [Parameter(ParameterSetName = 'ADFS')]
         [string]$FarmFqdn,
+        [Parameter(ParameterSetName = 'Entra')]
+        [string]$MetadataUrl,
         [string]$Display = $true
     )
-    if (Test-NetConnection -ComputerName $FarmFqdn -Port 443 -InformationLevel Quiet -Verbose) {
 
-        $url = https://$FarmFqdn/FederationMetadata/2007-06/FederationMetadata.xml
-        $global:UnsupportedPowerShell = $false
+    $global:UnsupportedPowerShell = $false
+    $IsEntraMode = $PSCmdlet.ParameterSetName -eq 'Entra'
 
-        #ignore ssl warnings
-        if ($PSVersionTable.PSEdition -eq "core") { $global:UnsupportedPowerShell = $true }
-        else { [Net.ServicePointManager]::ServerCertificateValidationCallback = { $true } }
+    # Validate that at least one parameter is provided
+    if (-not $FarmFqdn -and -not $MetadataUrl) {
+        Write-Warning "Please specify either -FarmFqdn or -MetadataUrl"
+        return
+    }
 
-        #Make HTTPS connection and get content
-        $request = [Net.HttpWebRequest]::Create($url)
-        $request.Host = $FarmFqdn
-        $request.AllowAutoRedirect = $false
-        #$request.Headers.Add("UserAgent", 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Microsoft Windows 10.0.22621; en-US) PowerShell/7.3.3') # optional
-        $response = $request.GetResponse()
-
-        $HttpsCertBytes = $request.ServicePoint.Certificate.GetRawCertData()
-        $contentStream = $response.GetResponseStream()
-        $reader = [IO.StreamReader]::new($contentStream)
-        $content = $reader.ReadToEnd()
-        $reader.Close()
-        $contentStream.Close()
-        $response.Close()
-
-        #Extract HTTPS cert (ADFS Calls this the "SSL" cert)
-        $CertInBase64 = [convert]::ToBase64String($HttpsCertBytes)
-        $SSLCert_x509 = [Security.Cryptography.X509Certificates.X509Certificate2]([System.Convert]::FromBase64String($CertInBase64))
-
-        #Parse FederationMetadata for certs
-        $KeyDescriptors = ([xml]$content).EntityDescriptor.SPSSODescriptor.KeyDescriptor
-
-        $FirstSigningCert_base64 = ([array]($KeyDescriptors | Where-Object use -eq 'signing').KeyInfo)[0].X509Data.X509Certificate
-        $FirstSigningCert_x509 = [Security.Cryptography.X509Certificates.X509Certificate2][System.Convert]::FromBase64String($FirstSigningCert_base64)
-
-        $SecondSigningCert_base64 = ([array]($KeyDescriptors | Where-Object use -eq 'signing').KeyInfo)[1].X509Data.X509Certificate
-        $SecondSigningCert_x509 = [Security.Cryptography.X509Certificates.X509Certificate2][System.Convert]::FromBase64String($SecondSigningCert_base64)
-
-        $EncryptionCert_base64 = ($KeyDescriptors | Where-Object use -eq 'encryption').KeyInfo.X509Data.X509Certificate
-        $EncryptionCert_x509 = [Security.Cryptography.X509Certificates.X509Certificate2][System.Convert]::FromBase64String($EncryptionCert_base64)
-
-        $Now = Get-Date
-
-        $CertReportObject = [pscustomobject]@{
-            SSL_Subject                = $SSLCert_x509.Subject
-            SSL_NotAfter               = $SSLCert_x509.NotAfter
-            SSL_Thumbprint             = $SSLCert_x509.Thumbprint
-            SSL_Issuer                 = $SSLCert_x509.Issuer
-            SSL_DaysToExpiry           = ($SSLCert_x509.NotAfter - $Now).Days
-
-            FirstSigning_Subject       = $FirstSigningCert_x509.Subject
-            FirstSigning_NotAfter      = $FirstSigningCert_x509.NotAfter
-            FirstSigning_Thumbprint    = $FirstSigningCert_x509.Thumbprint
-            FirstSigning_Issuer        = $FirstSigningCert_x509.Issuer
-            FirstSigning_DaysToExpiry  = ($FirstSigningCert_x509.NotAfter - $Now).Days
-
-            SecondSigning_Subject      = $SecondSigningCert_x509.Subject
-            SecondSigning_NotAfter     = $SecondSigningCert_x509.NotAfter
-            SecondSigning_Thumbprint   = $SecondSigningCert_x509.Thumbprint
-            SecondSigning_Issuer       = $SecondSigningCert_x509.Issuer
-            SecondSigning_DaysToExpiry = ($SecondSigningCert_x509.NotAfter - $Now).Days
-
-            Encryption_Subject         = $EncryptionCert_x509.Subject
-            Encryption_NotAfter        = $EncryptionCert_x509.NotAfter
-            Encryption_Thumbprint      = $EncryptionCert_x509.Thumbprint
-            Encryption_Issuer          = $EncryptionCert_x509.Issuer
-            Encryption_DaysToExpiry    = ($EncryptionCert_x509.NotAfter - $Now).Days
+    if ($FarmFqdn) {
+        # ADFS mode - test connection first
+        if (-not (Test-NetConnection -ComputerName $FarmFqdn -Port 443 -InformationLevel Quiet -Verbose)) {
+            Write-Warning "Cannot connect to: $FarmFqdn"
+            return
         }
+        $url = "https://$FarmFqdn/FederationMetadata/2007-06/FederationMetadata.xml"
+        $hostHeader = $FarmFqdn
+    }
+    else {
+        # Entra mode - use the provided URL directly
+        $url = $MetadataUrl
+        $hostHeader = ([uri]$MetadataUrl).Host
+    }
 
-        if ($Display -eq $true) {
+    #ignore ssl warnings and ensure TLS 1.2
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    if ($PSVersionTable.PSEdition -eq "core") { $global:UnsupportedPowerShell = $true }
+    else { [Net.ServicePointManager]::ServerCertificateValidationCallback = { $true } }
 
-            Clear-Host
+    #Make HTTPS connection and get content
+    try {
+        if ($MetadataUrl) {
+            # Entra mode - use Invoke-WebRequest for simplicity
+            $webResponse = Invoke-WebRequest -Uri $url -UseBasicParsing
+            $content = $webResponse.Content
 
-            if ($UnsupportedPowerShell -eq $true) { Write-Host "Functionality is limited with invalid HTTPS certificates in this version of PowerShell. `nhttps://github.com/PowerShell/PowerShell/issues/17340" -ForegroundColor Red }
-
-            Write-Host "    `nSSL (HTTPS) Certificate:`n" -ForegroundColor Green
-            Write-Host "    SSL_Subject:     " $CertReportObject.SSL_Subject
-            Write-Host "    SSL_NotAfter:    " $CertReportObject.SSL_NotAfter
-            Write-Host "    SSL_Thumbprint:  " $CertReportObject.SSL_Thumbprint
-            Write-Host "    SSL_Issuer:      " $CertReportObject.SSL_Issuer
-            Write-Host "    SSL_DaysToExpiry: " -NoNewline
-            Write-Host  $CertReportObject.SSL_DaysToExpiry -ForegroundColor Cyan
-
-            Write-Host "    `nEncryption Certificate:`n" -ForegroundColor DarkMagenta
-            Write-Host "    EncryptionSigning_Subject:     " $CertReportObject.Encryption_Subject
-            Write-Host "    EncryptionSigning_NotAfter:    " $CertReportObject.Encryption_NotAfter
-            Write-Host "    EncryptionSigning_Thumbprint:  " $CertReportObject.Encryption_Thumbprint
-            Write-Host "    EncryptionSigning_Issuer:      " $CertReportObject.Encryption_Issuer
-            Write-Host "    EncryptionSigning_DaysToExpiry: " -NoNewline
-            Write-Host $CertReportObject.Encryption_DaysToExpiry -ForegroundColor Cyan
-
-            if ($null -eq $CertReportObject.SecondSigning_Subject) {
-                Write-Host "    `nToken Signing Certificate:`n" -ForegroundColor Yellow
-            }
-            else {
-                Write-Host "    `nFirst Token Signing Certificate:`n" -ForegroundColor Yellow
-            }
-            Write-Host "    FirstSigning_Subject:     " $CertReportObject.FirstSigning_Subject
-            Write-Host "    FirstSigning_NotAfter:    " $CertReportObject.FirstSigning_NotAfter
-            Write-Host "    FirstSigning_Thumbprint:  " $CertReportObject.FirstSigning_Thumbprint
-            Write-Host "    FirstSigning_Issuer:      " $CertReportObject.FirstSigning_Issuer
-            Write-Host "    FirstSigning_DaysToExpiry: " -NoNewline
-            Write-Host $CertReportObject.FirstSigning_DaysToExpiry -ForegroundColor Cyan
-
-            Write-Host "`nSecond Token Signing Certificate:`n" -ForegroundColor DarkYellow
-
-            if ($null -ne $CertReportObject.SecondSigning_Subject) {
-                Write-Host "    SecondSigning_Subject:     " $CertReportObject.SecondSigning_Subject
-                Write-Host "    SecondSigning_NotAfter:    " $CertReportObject.SecondSigning_NotAfter
-                Write-Host "    SecondSigning_Thumbprint:  " $CertReportObject.SecondSigning_Thumbprint
-                Write-Host "    SecondSigning_Issuer:      " $CertReportObject.SecondSigning_Issuer
-                Write-Host "    SecondSigning_DaysToExpiry: " -NoNewline
-                Write-Host $CertReportObject.SecondSigning_DaysToExpiry -ForegroundColor Cyan
-                Write-Host "`n    NOTE: A federation metadata document published by ADFS can have multiple signing keys." -ForegroundColor Gray
-                Write-Host "      When a federation metadata document includes more than one certificate, a service that is validating the tokens should support all certificates in the document." -ForegroundColor Gray
-                Write-Host "      The 'First' certificate in the metadata may not be the 'Primary' certificate in the ADFS configuration"
-                Write-Host "      https://learn.microsoft.com/en-us/entra/identity-platform/federation-metadata#token-signing-certificates"
-            }
-            else { Write-Host "    !! No Second Token Signing Certificate Found !!`n" }
-
-            Write-Host "`n"
+            # Get SSL cert from the connection
+            $tcpClient = [System.Net.Sockets.TcpClient]::new($hostHeader, 443)
+            $sslStream = [System.Net.Security.SslStream]::new($tcpClient.GetStream(), $false, { $true })
+            $sslStream.AuthenticateAsClient($hostHeader)
+            $SSLCert_x509 = [Security.Cryptography.X509Certificates.X509Certificate2]::new($sslStream.RemoteCertificate)
+            $sslStream.Close()
+            $tcpClient.Close()
         }
         else {
-            return $CertReportObject
+            # ADFS mode - use HttpWebRequest to handle custom Host header and self-signed certs
+            $request = [Net.HttpWebRequest]::Create($url)
+            $request.Host = $hostHeader
+            $request.AllowAutoRedirect = $false
+            #$request.Headers.Add("UserAgent", 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Microsoft Windows 10.0.22621; en-US) PowerShell/7.3.3') # optional
+            $response = $request.GetResponse()
+
+            $HttpsCertBytes = $request.ServicePoint.Certificate.GetRawCertData()
+            $contentStream = $response.GetResponseStream()
+            $reader = [IO.StreamReader]::new($contentStream)
+            $content = $reader.ReadToEnd()
+            $reader.Close()
+            $contentStream.Close()
+            $response.Close()
+
+            #Extract HTTPS cert (ADFS Calls this the "SSL" cert)
+            $CertInBase64 = [convert]::ToBase64String($HttpsCertBytes)
+            $SSLCert_x509 = [Security.Cryptography.X509Certificates.X509Certificate2]([System.Convert]::FromBase64String($CertInBase64))
         }
     }
-    else { Write-Warning "Cannot connect to: $FarmFqdn" }
+    catch {
+        Write-Warning "Failed to retrieve metadata from: $url"
+        Write-Warning $_.Exception.Message
+        return
+    }
+
+    #Parse FederationMetadata for certs
+    # Remove BOM if present (can cause XML parsing issues in PowerShell 7)
+    $content = $content -replace '^\xEF\xBB\xBF', '' -replace '^\uFEFF', ''
+    # ADFS uses SPSSODescriptor, Entra ID uses IDPSSODescriptor
+    $xmlContent = [xml]$content
+    $KeyDescriptors = $xmlContent.EntityDescriptor.SPSSODescriptor.KeyDescriptor
+    if (-not $KeyDescriptors) {
+        $KeyDescriptors = $xmlContent.EntityDescriptor.IDPSSODescriptor.KeyDescriptor
+    }
+
+    $FirstSigningCert_base64 = ([array]($KeyDescriptors | Where-Object use -eq 'signing').KeyInfo)[0].X509Data.X509Certificate
+    $FirstSigningCert_x509 = if ($FirstSigningCert_base64) { [Security.Cryptography.X509Certificates.X509Certificate2][System.Convert]::FromBase64String($FirstSigningCert_base64) } else { $null }
+
+    $SecondSigningCert_base64 = ([array]($KeyDescriptors | Where-Object use -eq 'signing').KeyInfo)[1].X509Data.X509Certificate
+    $SecondSigningCert_x509 = if ($SecondSigningCert_base64) { [Security.Cryptography.X509Certificates.X509Certificate2][System.Convert]::FromBase64String($SecondSigningCert_base64) } else { $null }
+
+    $EncryptionCert_base64 = ($KeyDescriptors | Where-Object use -eq 'encryption').KeyInfo.X509Data.X509Certificate
+    $EncryptionCert_x509 = if ($EncryptionCert_base64) { [Security.Cryptography.X509Certificates.X509Certificate2][System.Convert]::FromBase64String($EncryptionCert_base64) } else { $null }
+
+    $Now = Get-Date
+
+    $CertReportObject = [pscustomobject]@{
+        SSL_Subject                = $SSLCert_x509.Subject
+        SSL_NotAfter               = $SSLCert_x509.NotAfter
+        SSL_Thumbprint             = $SSLCert_x509.Thumbprint
+        SSL_Issuer                 = $SSLCert_x509.Issuer
+        SSL_DaysToExpiry           = ($SSLCert_x509.NotAfter - $Now).Days
+
+        FirstSigning_Subject       = $FirstSigningCert_x509.Subject
+        FirstSigning_NotAfter      = $FirstSigningCert_x509.NotAfter
+        FirstSigning_Thumbprint    = $FirstSigningCert_x509.Thumbprint
+        FirstSigning_Issuer        = $FirstSigningCert_x509.Issuer
+        FirstSigning_DaysToExpiry  = if ($FirstSigningCert_x509) { ($FirstSigningCert_x509.NotAfter - $Now).Days } else { $null }
+
+        SecondSigning_Subject      = $SecondSigningCert_x509.Subject
+        SecondSigning_NotAfter     = $SecondSigningCert_x509.NotAfter
+        SecondSigning_Thumbprint   = $SecondSigningCert_x509.Thumbprint
+        SecondSigning_Issuer       = $SecondSigningCert_x509.Issuer
+        SecondSigning_DaysToExpiry = if ($SecondSigningCert_x509) { ($SecondSigningCert_x509.NotAfter - $Now).Days } else { $null }
+
+        Encryption_Subject         = $EncryptionCert_x509.Subject
+        Encryption_NotAfter        = $EncryptionCert_x509.NotAfter
+        Encryption_Thumbprint      = $EncryptionCert_x509.Thumbprint
+        Encryption_Issuer          = $EncryptionCert_x509.Issuer
+        Encryption_DaysToExpiry    = if ($EncryptionCert_x509) { ($EncryptionCert_x509.NotAfter - $Now).Days } else { $null }
+    }
+
+    if ($Display -eq $true) {
+
+        #Clear-Host
+
+        if ($UnsupportedPowerShell -eq $true) { Write-Host "Functionality is limited with invalid HTTPS certificates in this version of PowerShell. `nhttps://github.com/PowerShell/PowerShell/issues/17340" -ForegroundColor Red }
+
+        Write-Host "    `nSSL (HTTPS) Certificate:`n" -ForegroundColor Green
+        Write-Host "    SSL_Subject:     " $CertReportObject.SSL_Subject
+        Write-Host "    SSL_NotAfter:    " $CertReportObject.SSL_NotAfter
+        Write-Host "    SSL_Thumbprint:  " $CertReportObject.SSL_Thumbprint
+        Write-Host "    SSL_Issuer:      " $CertReportObject.SSL_Issuer
+        Write-Host "    SSL_DaysToExpiry: " -NoNewline
+        Write-Host  $CertReportObject.SSL_DaysToExpiry -ForegroundColor Cyan
+
+        if ($null -ne $CertReportObject.Encryption_Subject) {
+            Write-Host "    `nEncryption Certificate:`n" -ForegroundColor DarkMagenta
+            Write-Host "    Encryption_Subject:     " $CertReportObject.Encryption_Subject
+            Write-Host "    Encryption_NotAfter:    " $CertReportObject.Encryption_NotAfter
+            Write-Host "    Encryption_Thumbprint:  " $CertReportObject.Encryption_Thumbprint
+            Write-Host "    Encryption_Issuer:      " $CertReportObject.Encryption_Issuer
+            Write-Host "    Encryption_DaysToExpiry: " -NoNewline
+            Write-Host $CertReportObject.Encryption_DaysToExpiry -ForegroundColor Cyan
+        }
+        else {
+            Write-Host "    `nEncryption Certificate:`n" -ForegroundColor DarkMagenta
+            Write-Host "    !! No Encryption Certificate Found (typical for Entra ID metadata) !!`n"
+        }
+
+        if ($null -eq $CertReportObject.SecondSigning_Subject) {
+            Write-Host "    `nToken Signing Certificate:`n" -ForegroundColor Yellow
+        }
+        else {
+            Write-Host "    `nFirst Token Signing Certificate:`n" -ForegroundColor Yellow
+        }
+        Write-Host "    FirstSigning_Subject:     " $CertReportObject.FirstSigning_Subject
+        Write-Host "    FirstSigning_NotAfter:    " $CertReportObject.FirstSigning_NotAfter
+        Write-Host "    FirstSigning_Thumbprint:  " $CertReportObject.FirstSigning_Thumbprint
+        Write-Host "    FirstSigning_Issuer:      " $CertReportObject.FirstSigning_Issuer
+        Write-Host "    FirstSigning_DaysToExpiry: " -NoNewline
+        Write-Host $CertReportObject.FirstSigning_DaysToExpiry -ForegroundColor Cyan
+
+        Write-Host "`nSecond Token Signing Certificate:`n" -ForegroundColor DarkYellow
+
+        if ($null -ne $CertReportObject.SecondSigning_Subject) {
+            Write-Host "    SecondSigning_Subject:     " $CertReportObject.SecondSigning_Subject
+            Write-Host "    SecondSigning_NotAfter:    " $CertReportObject.SecondSigning_NotAfter
+            Write-Host "    SecondSigning_Thumbprint:  " $CertReportObject.SecondSigning_Thumbprint
+            Write-Host "    SecondSigning_Issuer:      " $CertReportObject.SecondSigning_Issuer
+            Write-Host "    SecondSigning_DaysToExpiry: " -NoNewline
+            Write-Host $CertReportObject.SecondSigning_DaysToExpiry -ForegroundColor Cyan
+            Write-Host "`n    NOTE: A federation metadata document can have multiple signing keys." -ForegroundColor Gray
+            Write-Host "      When a federation metadata document includes more than one certificate, a service that is validating the tokens should support all certificates in the document." -ForegroundColor Gray
+            Write-Host "      The 'First' certificate in the metadata may not be the 'Primary' certificate in the ADFS configuration"
+            Write-Host "      https://learn.microsoft.com/en-us/entra/identity-platform/federation-metadata#token-signing-certificates"
+        }
+        else { Write-Host "    !! No Second Token Signing Certificate Found !!`n" }
+
+        Write-Host "`n"
+    }
+    else {
+        return $CertReportObject
+    }
 }
 
-# Example
-Request-AdfsCerts -FarmFqdn testsso.contoso -Display $true
+# Examples
+# ADFS mode:
+# Request-AdfsCerts -FarmFqdn adfs.contoso.com -Display $true
+
+# Entra ID mode:
+# Request-AdfsCerts -MetadataUrl "https://login.microsoftonline.com/contoso.onmicrosoft.com/federationmetadata/2007-06/federationmetadata.xml"

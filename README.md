@@ -100,7 +100,7 @@ Microsoft [retired the TechNet Gallery](https://learn.microsoft.com/en-us/teambl
 
 + [Request-AdfsCerts.ps1](./OSINT/Request-AdfsCerts.ps1)
 
-  + Remotley query ADFS to see information about the certificates it is using.
+  + Remotely query ADFS or Entra ID federation metadata to see information about the certificates being used. Supports both `-FarmFqdn` for ADFS servers and `-MetadataUrl` for Entra ID federation metadata endpoints.
 
 + [Get-AutoDetect.ps1](./OSINT/AutoDetect-AutoDiscover-v2)
 
