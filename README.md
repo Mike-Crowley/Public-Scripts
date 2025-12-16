@@ -46,7 +46,7 @@ Microsoft [retired the TechNet Gallery](https://learn.microsoft.com/en-us/teambl
 
 + [Find-AzFileShareDuplicates.ps1](./Azure/Find-AzFileShareDuplicates.ps1)
 
-  + Find duplicate files in an Azure File Share by comparing MD5 hashes. Supports high-confidence (hash-based) and low-confidence (filename-based) duplicate detection. Requires Az.Accounts, Az.Storage, Az.Resources modules.
+  + Find duplicate files in an Azure File Share by comparing MD5 hashes. Generates HTML, CSV, and JSON reports with metrics on potential wasted space. Requires Az.Accounts, Az.Storage, Az.Resources modules.
 
 ## SharePoint Online
 
