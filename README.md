@@ -33,7 +33,7 @@
 
 # Public-Scripts Repository
 
-<p align="right">  
+<p align="right">
 <img alt="GitHub License" src="https://img.shields.io/github/license/Mike-Crowley/Public-Scripts">
 <img alt="GitHub top language" src="https://img.shields.io/github/languages/top/Mike-Crowley/Public-Scripts">
 <img alt="GitHub commit activity" src="https://img.shields.io/github/commit-activity/t/Mike-Crowley/Public-Scripts">
@@ -42,51 +42,53 @@
 
 Microsoft [retired the TechNet Gallery](https://learn.microsoft.com/en-us/teamblog/technet-gallery-retirement), so I've re-uploaded a few scripts that were formally posted here: https://social.msdn.microsoft.com/Profile/mike%20crowley
 
-## Miscellaneous
+## Azure
 
-+ [Get-AlternateMailboxes.ps1](./Get-AlternateMailboxes.ps1)
++ [Find-AzFileShareDuplicates.ps1](./Azure/Find-AzFileShareDuplicates.ps1)
+
+  + Find duplicate files in an Azure File Share by comparing MD5 hashes. Supports high-confidence (hash-based) and low-confidence (filename-based) duplicate detection. Requires Az.Accounts, Az.Storage, Az.Resources modules.
+
+## SharePoint Online
+
++ [Find-DriveItemDuplicates.ps1](./SharePointOnline/Find-DriveItemDuplicates.ps1)
+
+  + Find duplicate files on OneDrive for Business or SharePoint Online by examining file hashes via Microsoft Graph.
+
++ [Restore-FromRecycleBin.ps1](./SharePointOnline/Restore-FromRecycleBin.ps1)
+
+  + Restore files from SPO recycle bin in bulk with logging and progress tracking.
+
+## Exchange Online
+
++ [Get-AlternateMailboxes.ps1](./ExchangeOnline/Get-AlternateMailboxes.ps1)
 
   + Query Exchange Online AutoDiscover to enumerate mailbox delegates with modern auth.
 
-+ [Get-AlternateMailboxes_BasicAuth.ps1](./Get-AlternateMailboxes_BasicAuth.ps1)
++ [Get-AlternateMailboxes_BasicAuth.ps1](./ExchangeOnline/Get-AlternateMailboxes_BasicAuth.ps1)
 
   + Query Exchange Online AutoDiscover to enumerate mailbox delegates. The old basic auth version.
 
-+ [Graph_SignInActivity_Report.ps1](./Graph_SignInActivity_Report.ps1)
-
-  + Report on user SignInActivity and license detail via Invoke-RestMethod from Microsoft Graph.
-
-+ [LowerCaseUPNs.ps1](./LowerCaseUPNs.ps1)
++ [LowerCaseUPNs.ps1](./ExchangeOnline/LowerCaseUPNs.ps1)
 
   + Change Exchange user's email addresses to lowercase.
 
-+ [MailUser-MgUser-Activity-Report.ps1](./MailUser-MgUser-Activity-Report.ps1)
-
-  + Get Export login information for mail users via Microsoft Graph.
-
-+ [MgUserMail.ps1](./MgUserMail.ps1)
-
-  + Send email via Microsoft Graph.
-
-+ [RDPConnectionParser.ps1](./RDPConnectionParser.ps1)
-
-  + Extract interactive (local and remote desktop) login information and save to CSV.
-
-+ [RecipientReportv5.ps1](./RecipientReportv5.ps1)
++ [RecipientReportv5.ps1](./ExchangeOnline/RecipientReportv5.ps1)
 
   + Dump all recipients and their email addresses (proxy addresses) to CSV.
 
-+ [Restore-FromRecycleBin.ps1](./Restore-FromRecycleBin.ps1)
+## Microsoft Graph
 
-  + Restore files from SPO in bulk.
-  
-+ [Find-DriveItemDuplicates.ps1](./Find-DriveItemDuplicates.ps1)
++ [Graph_SignInActivity_Report.ps1](./MicrosoftGraph/Graph_SignInActivity_Report.ps1)
 
-  + A utility to find duplicate files on OneDrive for Business or SharePoint Online.
+  + Report on user SignInActivity and license detail via Invoke-RestMethod from Microsoft Graph.
 
-+ [Compare-ObjectsInVSCode.ps1](./Compare-ObjectsInVSCode.ps1)
++ [MailUser-MgUser-Activity-Report.ps1](./MicrosoftGraph/MailUser-MgUser-Activity-Report.ps1)
 
-  + Compare two PowerShell Objects in Visual Studio Code.
+  + Export login information for mail users via Microsoft Graph.
+
++ [MgUserMail.ps1](./MicrosoftGraph/MgUserMail.ps1)
+
+  + Send email via Microsoft Graph.
 
 ## OSINT
 
@@ -110,9 +112,31 @@ Microsoft [retired the TechNet Gallery](https://learn.microsoft.com/en-us/teambl
 
   + Query the domains in a tenant from the Exchange AutoDiscover service.
 
+## Active Directory
+
++ [Update-UseNotifyReplication.ps1](./AD_DS/Update-UseNotifyReplication.ps1)
+
+  + Evaluate and optionally enable the Use_Notify option on AD Site Links and Replication Connections to reduce replication latency.
+
+## Windows
+
++ [RDPConnectionParser.ps1](./Windows/RDPConnectionParser.ps1)
+
+  + Extract interactive (local and remote desktop) login information and save to CSV.
+
+## Utilities
+
++ [Compare-ObjectsInVSCode.ps1](./Utilities/Compare-ObjectsInVSCode.ps1)
+
+  + Compare two PowerShell Objects in Visual Studio Code.
+
++ [Convert-CaesarCipher.ps1](./Utilities/Convert-CaesarCipher.ps1)
+
+  + Encode or decode case-sensitive English strings using the Caesar Cipher.
+
 # Gists
 
-<p align="right">  
+<p align="right">
 <img alt="GitHub License" src="https://img.shields.io/github/license/Mike-Crowley/Public-Scripts">
 <img alt="GitHub top language" src="https://img.shields.io/github/languages/top/Mike-Crowley/Public-Scripts">
 </p>
