@@ -116,7 +116,7 @@ Microsoft [retired the TechNet Gallery](https://learn.microsoft.com/en-us/teambl
 
 + [Update-UseNotifyReplication.ps1](./AD_DS/Update-UseNotifyReplication.ps1)
 
-  + Evaluate and optionally enable the Use_Notify option on AD Site Links and Replication Connections to reduce replication latency.
+  + Evaluate and optionally enable the Use_Notify option on AD Site Links and Replication Connections to reduce replication latency. Reports site link properties (cost, schedule, sites) and can query DC registry settings for notification timers and AvoidPdcOnWan via `-GetRegistrySettings`.
 
 ## Windows
 
