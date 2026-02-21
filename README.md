@@ -116,6 +116,12 @@ Microsoft [retired the TechNet Gallery](https://learn.microsoft.com/en-us/teambl
 
   + Query the domains in a tenant from the Exchange AutoDiscover service.
 
+## Okta
+
++ [Get-OktaSmsFactors.ps1](./Okta/Get-OktaSmsFactors.ps1)
+
+  + Query the Okta Factors API to report on users with SMS-based MFA factors. Useful for SMS deprecation planning and MFA migration audits. Supports both direct Okta user enumeration and pre-filtered CSV input for large tenants. Handles API rate limiting automatically.
+
 ## Active Directory
 
 + [Update-UseNotifyReplication.ps1](./AD_DS/Update-UseNotifyReplication.ps1)
