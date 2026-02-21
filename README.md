@@ -90,6 +90,10 @@ Microsoft [retired the TechNet Gallery](https://learn.microsoft.com/en-us/teambl
 
   + Send email via Microsoft Graph.
 
++ [Import-EntraHardwareOathToken.ps1](./MicrosoftGraph/Import-EntraHardwareOathToken.ps1)
+
+  + Bulk-import hardware OATH tokens into Microsoft Entra ID via the Graph beta API. Automates the full create, assign, and activate workflow by computing TOTP verification codes from the seed, enabling seamless MFA provider migrations without end-user involvement. Depends on [Get-TOTP.ps1](./Utilities/Get-TOTP.ps1).
+
 ## OSINT
 
 + [Get-EntraCredentialType.ps1](./OSINT/Get-EntraCredentialType.ps1)
@@ -133,6 +137,10 @@ Microsoft [retired the TechNet Gallery](https://learn.microsoft.com/en-us/teambl
 + [Convert-CaesarCipher.ps1](./Utilities/Convert-CaesarCipher.ps1)
 
   + Encode or decode case-sensitive English strings using the Caesar Cipher.
+
++ [Get-TOTP.ps1](./Utilities/Get-TOTP.ps1)
+
+  + Generate Time-based One-Time Passwords (RFC 6238) and convert hex strings to Base32 (RFC 4648). Standalone functions with no external dependencies — useful for verifying hardware token output, automating OATH token activation, or converting vendor-supplied hex secrets for authenticator apps.
 
 # Gists
 
