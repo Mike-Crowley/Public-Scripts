@@ -28,7 +28,9 @@
 .PARAMETER SecretHex
     The shared secret as a hexadecimal string (characters 0-9, A-F). This is typically
     provided by the hardware token vendor or generated during token provisioning.
-    Example: "31323334353637383930" (the ASCII hex encoding of "1234567890").
+
+    The RFC 6238 test key is "3132333435363738393031323334353637383930"
+    (the ASCII hex encoding of "12345678901234567890", 20 bytes / 40 hex chars).
 
 .PARAMETER TimeStep
     The time interval in seconds for TOTP generation. Defaults to 30.
@@ -45,21 +47,27 @@
 
 .EXAMPLE
     . .\Get-TOTP.ps1
-    Get-TOTP -SecretHex "31323334353637383930"
+    Get-TOTP -SecretHex "3132333435363738393031323334353637383930"
 
     Generates a 6-digit TOTP code using HMAC-SHA1 with a 30-second time step.
 
+    The hex string above is the RFC 6238 test key -- the ASCII encoding of
+    "12345678901234567890" (20 bytes). At Unix time 59 (counter=1, step=30)
+    this produces "287082". You can use this to verify the function against
+    the RFC test vectors.
+
 .EXAMPLE
     . .\Get-TOTP.ps1
-    Get-TOTP -SecretHex "48656C6C6F21" -TimeStep 60 -Digits 6
+    Get-TOTP -SecretHex "3132333435363738393031323334353637383930" -TimeStep 60
 
     Generates a 6-digit TOTP with a 60-second interval, typical for hardware tokens.
 
 .EXAMPLE
     . .\Get-TOTP.ps1
-    Convert-HexToBase32 "48656C6C6F21"
+    Convert-HexToBase32 "3132333435363738393031323334353637383930"
 
-    Converts a hex string to Base32 encoding. Returns: JBSWY3DPBI======
+    Converts the RFC test key to Base32 encoding.
+    Returns: GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ
 
 .EXAMPLE
     . .\Get-TOTP.ps1
@@ -69,7 +77,7 @@
 
 .EXAMPLE
     . .\Get-TOTP.ps1
-    $hex = "31323334353637383930"
+    $hex = "3132333435363738393031323334353637383930"
     Write-Host "Base32: $(Convert-HexToBase32 $hex)"
     Write-Host "Current TOTP: $(Get-TOTP -SecretHex $hex -TimeStep 30)"
 

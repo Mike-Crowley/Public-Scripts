@@ -113,8 +113,11 @@
 
     CSV Format Example:
         SerialNumber,SecretKey,UserPrincipalName,Manufacturer,Model
-        FTK-000001,31323334353637383930,user1@contoso.com,FEITIAN,OTP c200
+        FTK-000001,3132333435363738393031323334353637383930,user1@contoso.com,FEITIAN,OTP c200
         FTK-000002,48656C6C6F21,user2@contoso.com,,
+
+    The first SecretKey above is the RFC 6238 test vector (ASCII "12345678901234567890").
+    Real vendor keys will typically be 40 hex characters (20 bytes) or longer.
 
     Output object properties:
         SerialNumber      - Token serial number
