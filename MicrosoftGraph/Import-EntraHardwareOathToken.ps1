@@ -46,7 +46,7 @@
     Required columns:
         SerialNumber          - The token's serial number (e.g., "FTK-000001")
         SecretKey             - The token's shared secret as a hexadecimal string
-        UserPrincipalName     - The user's UPN in Entra ID (e.g., "user@contoso.com")
+        UserPrincipalName     - The user's UPN in Entra ID (e.g., "user@mikecrowley.us")
 
     Optional columns (override parameter defaults per-row):
         Manufacturer          - Token manufacturer name
@@ -113,8 +113,8 @@
 
     CSV Format Example:
         SerialNumber,SecretKey,UserPrincipalName,Manufacturer,Model
-        FTK-000001,3132333435363738393031323334353637383930,user1@contoso.com,FEITIAN,OTP c200
-        FTK-000002,48656C6C6F21,user2@contoso.com,,
+        FTK-000001,3132333435363738393031323334353637383930,user1@mikecrowley.us,FEITIAN,OTP c200
+        FTK-000002,48656C6C6F21,user2@mikecrowley.us,,
 
     The first SecretKey above is the RFC 6238 test vector (ASCII "12345678901234567890").
     Real vendor keys will typically be 40 hex characters (20 bytes) or longer.

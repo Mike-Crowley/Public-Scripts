@@ -15,7 +15,7 @@
 
  .EXAMPLE
 
-    Get-AlternateMailboxes -SMTPAddress mike@contoso.com -Credential (Get-Credential)
+    Get-AlternateMailboxes -SMTPAddress mike@mikecrowley.us -Credential (Get-Credential)
 
 .LINK
     https://mikecrowley.us/2017/12/08/querying-msexchdelegatelistlink-in-exchange-online-with-powershell/

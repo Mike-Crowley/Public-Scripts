@@ -18,7 +18,7 @@
 
     Sample Output with -Display $true (default):
 
-        EntityID: http://adfs.contoso.com/adfs/services/trust
+        EntityID: http://adfs.mikecrowley.us/adfs/services/trust
 
         SSL (HTTPS) Certificate:
 
@@ -30,18 +30,18 @@
 
         Encryption Certificate:
 
-            Encryption_Subject:     CN=ADFS Encryption - adfs.contoso.com
+            Encryption_Subject:     CN=ADFS Encryption - adfs.mikecrowley.us
             Encryption_NotAfter:    7/7/2023 7:05:31 PM
             Encryption_Thumbprint:  0507D8E023B8715FE3F5F4A6421F47A36C6DD3AD
-            Encryption_Issuer:      CN=ADFS Encryption - adfs.contoso.com
+            Encryption_Issuer:      CN=ADFS Encryption - adfs.mikecrowley.us
             Encryption_DaysToExpiry:  129
 
         Token Signing Certificate:
 
-            FirstSigning_Subject:     CN=ADFS Signing - adfs.contoso.com
+            FirstSigning_Subject:     CN=ADFS Signing - adfs.mikecrowley.us
             FirstSigning_NotAfter:    7/7/2023 7:05:32 PM
             FirstSigning_Thumbprint:  0507D8E023B8715FE3F5F4A6421F47A36C6DD3AD
-            FirstSigning_Issuer:      CN=ADFS Signing - adfs.contoso.com
+            FirstSigning_Issuer:      CN=ADFS Signing - adfs.mikecrowley.us
             FirstSigning_DaysToExpiry:  129
 
         Second Token Signing Certificate:
@@ -50,26 +50,26 @@
 
     Sample Output with -Display $false (for use with loops, pipeline, etc):
 
-            EntityID                      : http://adfs.contoso.com/adfs/services/trust
+            EntityID                      : http://adfs.mikecrowley.us/adfs/services/trust
             SSL_Subject                   : CN=ADFS.CONTOSO, O=CONTOSO CORP, OID.1.3.6.1.4.1.311.60.2.1.3=US
             SSL_NotAfter                  : 11/14/2023 6:59:59 PM
             SSL_Thumbprint                : 21321F3C2E225480F112A7BC2B3347B58B439842
             SSL_Issuer                    : CN=CONTOSO CORP
             SSL_DaysToExpiry              : 256
-            FirstSigning_Subject          : CN=ADFS Signing - adfs.contoso.com
+            FirstSigning_Subject          : CN=ADFS Signing - adfs.mikecrowley.us
             FirstSigning_NotAfter         : 7/5/2023 7:05:32 PM
             FirstSigning_Thumbprint       : 0507D8E023B8715FE3F5F4A6421F47A36C6DD3AD
-            FirstSigning_Issuer           : CN=ADFS Signing - adfs.contoso.com
+            FirstSigning_Issuer           : CN=ADFS Signing - adfs.mikecrowley.us
             FirstSigning_DaysToExpiry     : 124
             SecondSigning_Subject         :
             SecondSigning_NotAfter        :
             SecondSigning_Thumbprint      :
             SecondSigning_Issuer          :
             SecondSigning_DaysToExpiry    :
-            Encryption_Subject            : CN=ADFS Encryption - adfs.contoso.com
+            Encryption_Subject            : CN=ADFS Encryption - adfs.mikecrowley.us
             Encryption_NotAfter           : 7/5/2023 7:05:31 PM
             Encryption_Thumbprint         : 0507D8E023B8715FE3F5F4A6421F47A36C6DD3AD
-            Encryption_Issuer             : CN=ADFS Encryption - adfs.contoso.com
+            Encryption_Issuer             : CN=ADFS Encryption - adfs.mikecrowley.us
             Encryption_DaysToExpiry       : 124
 
     NOTE: This tool by Microsoft may be handy as well: https://adfshelp.microsoft.com/MetadataExplorer/GetFederationMetadata
@@ -79,10 +79,10 @@
     https://mikecrowley.us
 
 .EXAMPLE
-    Request-FederationCerts -FarmFqdn adfs.contoso.com
+    Request-FederationCerts -FarmFqdn adfs.mikecrowley.us
 
 .EXAMPLE
-    Request-FederationCerts -FarmFqdn adfs.contoso.com -Display $false
+    Request-FederationCerts -FarmFqdn adfs.mikecrowley.us -Display $false
 
 .EXAMPLE
     Request-FederationCerts -MetadataUrl "https://login.microsoftonline.com/contoso.onmicrosoft.com/federationmetadata/2007-06/federationmetadata.xml"
@@ -91,7 +91,7 @@
     Request-FederationCerts -MetadataUrl "https://login.microsoftonline.com/50afff0a-571a-4822-915b-d6823ca9fe63/federationmetadata/2007-06/federationmetadata.xml?appid=df3d5533-18a3-400a-9027-ae7da4836fc7"
 
 .EXAMPLE
-    Request-FederationCerts -FarmFqdn adfs.contoso.com -ExportCsv "C:\reports\certs.csv" -ExportJson "C:\reports\certs.json"
+    Request-FederationCerts -FarmFqdn adfs.mikecrowley.us -ExportCsv "C:\reports\certs.csv" -ExportJson "C:\reports\certs.json"
 
 .LINK
     https://github.com/mike-crowley_blkln
@@ -354,7 +354,7 @@ function Request-FederationCerts {
 
 # Examples
 # ADFS mode:
-# Request-FederationCerts -FarmFqdn adfs.contoso.com -Display $true
+# Request-FederationCerts -FarmFqdn adfs.mikecrowley.us -Display $true
 
 # Entra ID mode:
 # Request-FederationCerts -MetadataUrl "https://login.microsoftonline.com/contoso.onmicrosoft.com/federationmetadata/2007-06/federationmetadata.xml"
