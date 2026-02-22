@@ -8,6 +8,9 @@
 
     Get-EntraCredentialType -Upn user1@domain.com
 
+.NOTES
+    Author: Mike Crowley
+
 .LINK
 
     https://mikecrowley.us

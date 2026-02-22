@@ -23,6 +23,9 @@
 �
     .\RDPConnectionParser.ps1 -ServersToQuery Server1, Server2 -StartTime "November 1"
 
+.NOTES
+    Author: Mike Crowley
+
 .LINK
     https://MikeCrowley.us/tag/powershell
 

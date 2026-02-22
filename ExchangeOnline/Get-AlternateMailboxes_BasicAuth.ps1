@@ -17,6 +17,9 @@
 
     Get-AlternateMailboxes -SMTPAddress mike@mikecrowley.us -Credential (Get-Credential)
 
+.NOTES
+    Author: Mike Crowley
+
 .LINK
     https://mikecrowley.us/2017/12/08/querying-msexchdelegatelistlink-in-exchange-online-with-powershell/
 

@@ -1,3 +1,4 @@
+# Author: Mike Crowley
 function Get-AutoDiscoverV2 {
     [CmdletBinding()]
     param (

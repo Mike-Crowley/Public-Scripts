@@ -37,6 +37,9 @@ March 22 2021
 
     Restore-FromRecycleBin -SiteUrl https://MySpoSite.sharepoint.com/sites/Site123 -RestoreDate 3/23/2021 -LogDirectory C:\Logs
 
+.NOTES
+    Author: Mike Crowley, Jhon Ramirez
+
 .LINK
 
     https://BaselineTechnologies.com

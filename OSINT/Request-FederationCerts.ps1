@@ -93,6 +93,9 @@
 .EXAMPLE
     Request-FederationCerts -FarmFqdn adfs.mikecrowley.us -ExportCsv "C:\reports\certs.csv" -ExportJson "C:\reports\certs.json"
 
+.NOTES
+    Author: Mike Crowley
+
 .LINK
     https://github.com/mike-crowley_blkln
     https://github.com/Mike-Crowley

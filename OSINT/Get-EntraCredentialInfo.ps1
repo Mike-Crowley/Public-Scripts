@@ -6,6 +6,9 @@
 
     Get-EntraCredentialInfo -Upn user@example.com
 
+.NOTES
+    Author: Mike Crowley
+
 .LINK
 
     https://mikecrowley.us

@@ -1,4 +1,4 @@
-﻿
+﻿# Author: Mike Crowley
 function Compare-ObjectsInVSCode {
     param (
         [Parameter(Mandatory = $true)]

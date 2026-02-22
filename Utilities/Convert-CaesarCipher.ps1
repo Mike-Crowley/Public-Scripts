@@ -35,6 +35,9 @@
     Convert-CaesarCipher -InputString "Byffi Qilfx" -Shift 20 -Decode
     # Returns: Hello World
 
+.NOTES
+    Author: Mike Crowley
+
 .LINK
 
     https://mikecrowley.us

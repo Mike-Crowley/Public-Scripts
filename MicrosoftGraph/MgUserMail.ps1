@@ -1,4 +1,5 @@
-﻿<#
+﻿# Author: Mike Crowley
+<#
     Script for sending email with send-mgusermail
 
     Ref:

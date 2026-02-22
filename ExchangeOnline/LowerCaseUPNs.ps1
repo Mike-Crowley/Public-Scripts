@@ -1,3 +1,4 @@
+# Author: Mike Crowley
 #3Jan2018
 
 #related to script #2 here:

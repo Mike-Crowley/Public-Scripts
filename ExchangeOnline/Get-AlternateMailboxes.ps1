@@ -50,6 +50,9 @@
 
   Get-AlternateMailboxes -SMTPAddress mike@example.com -MsalToken $MsalToken
 
+.NOTES
+  Author: Mike Crowley
+
 .LINK
   https://mikecrowley.us/2017/12/08/querying-msexchdelegatelistlink-in-exchange-online-with-powershell/
 

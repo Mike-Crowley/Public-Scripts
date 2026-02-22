@@ -46,6 +46,7 @@
     # Scans specific folder with larger result set.
 
 .NOTES
+    Author: Mike Crowley
     Requires: Az.Accounts, Az.Storage, Az.Resources modules
 
 .LINK

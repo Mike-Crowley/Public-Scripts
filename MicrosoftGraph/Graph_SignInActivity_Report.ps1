@@ -1,4 +1,5 @@
 ﻿#requires -modules importexcel, msal.ps
+# Author: Mike Crowley
 
 <#
     In this example, I query Microsoft Graph with Invoke-RestMethod, using a custom app registration,

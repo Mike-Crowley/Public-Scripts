@@ -1,4 +1,5 @@
-﻿Connect-ExchangeOnline -UserPrincipalName <user>
+﻿# Author: Mike Crowley
+Connect-ExchangeOnline -UserPrincipalName <user>
 Connect-MgGraph -TenantId <tenant>
 Select-MgProfile beta
 

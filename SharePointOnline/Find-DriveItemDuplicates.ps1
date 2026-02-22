@@ -38,6 +38,7 @@
     # Does not check subfolders. Creates the reports but does not return the items to the pipeline.
 
 .NOTES
+    Author: Mike Crowley
 
     Create some duplicate files for testing if needed.
 
