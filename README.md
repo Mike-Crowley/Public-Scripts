@@ -1,11 +1,11 @@
-<span style="font-size:large;">Author: Mike Crowley</span>
+<span style="font-size:large;">Author: Mike Crowley — Co-Founder, <a href="https://www.baselinetechnologies.com/leadership/">Baseline Technologies</a></span>
 
 <p align="left">
     <a href="https://mikecrowley.us">
         <img alt="Mike's Blog"
             src="https://img.shields.io/badge/Mike's-Blog-darkgreen?link=https%3A%2F%2Fmikecrowley.us">
     </a>
-    <a href="https://www.baselinetechnologies.com">
+    <a href="https://www.baselinetechnologies.com/leadership/">
         <img alt="Baseline Technologies"
             src="https://img.shields.io/badge/Baseline-Technologies-darkorange?link=https%3A%2F%2Fwww.baselinetechnologies.com">
     </a>
@@ -40,59 +40,9 @@
 <img alt="GitHub code size in bytes" src="https://img.shields.io/github/languages/code-size/Mike-Crowley/Public-Scripts">
 </p>
 
-Microsoft [retired the TechNet Gallery](https://learn.microsoft.com/en-us/teamblog/technet-gallery-retirement), so I've re-uploaded a few scripts that were formally posted here: https://social.msdn.microsoft.com/Profile/mike%20crowley
+PowerShell tools for identity security, Microsoft 365, and Windows infrastructure. Focused on Entra ID, OSINT, and practical automation for enterprise environments.
 
-## Azure
-
-+ [Find-AzFileShareDuplicates.ps1](./Azure/Find-AzFileShareDuplicates.ps1)
-
-  + Find duplicate files in an Azure File Share by comparing MD5 hashes. Generates HTML, CSV, and JSON reports with metrics on potential wasted space. Requires Az.Accounts, Az.Storage, Az.Resources modules.
-
-## SharePoint Online
-
-+ [Find-DriveItemDuplicates.ps1](./SharePointOnline/Find-DriveItemDuplicates.ps1)
-
-  + Find duplicate files on OneDrive for Business or SharePoint Online by examining file hashes via Microsoft Graph.
-
-+ [Restore-FromRecycleBin.ps1](./SharePointOnline/Restore-FromRecycleBin.ps1)
-
-  + Restore files from SPO recycle bin in bulk with logging and progress tracking.
-
-## Exchange
-
-+ [Get-AlternateMailboxes.ps1](./Exchange/Get-AlternateMailboxes.ps1)
-
-  + Query Exchange Online AutoDiscover to enumerate mailbox delegates with modern auth.
-
-+ [Get-AlternateMailboxes_BasicAuth.ps1](./Exchange/Get-AlternateMailboxes_BasicAuth.ps1)
-
-  + Query Exchange Online AutoDiscover to enumerate mailbox delegates. The old basic auth version.
-
-+ [LowerCaseUPNs.ps1](./Exchange/LowerCaseUPNs.ps1)
-
-  + Change Exchange user's email addresses to lowercase.
-
-+ [RecipientReportv5.ps1](./Exchange/RecipientReportv5.ps1)
-
-  + Dump all recipients and their email addresses (proxy addresses) to CSV.
-
-## Microsoft Graph
-
-+ [Graph_SignInActivity_Report.ps1](./MicrosoftGraph/Graph_SignInActivity_Report.ps1)
-
-  + Report on user SignInActivity and license detail via Invoke-RestMethod from Microsoft Graph.
-
-+ [MailUser-MgUser-Activity-Report.ps1](./MicrosoftGraph/MailUser-MgUser-Activity-Report.ps1)
-
-  + Export login information for mail users via Microsoft Graph.
-
-+ [MgUserMail.ps1](./MicrosoftGraph/MgUserMail.ps1)
-
-  + Send email via Microsoft Graph.
-
-+ [Import-EntraHardwareOathToken.ps1](./MicrosoftGraph/Import-EntraHardwareOathToken.ps1)
-
-  + Bulk-import hardware OATH tokens into Microsoft Entra ID via the Graph beta API. Automates the full create, assign, and activate workflow by computing TOTP verification codes from the seed, enabling seamless MFA provider migrations without end-user involvement. Depends on [Get-TOTP.ps1](./Utilities/Get-TOTP.ps1).
+Many of these scripts were originally shared on the [TechNet Gallery](https://learn.microsoft.com/en-us/teamblog/technet-gallery-retirement) and [Microsoft forums](https://social.msdn.microsoft.com/Profile/mike%20crowley), where Mike was among the top contributors and earned [Microsoft MVP](https://mvp.microsoft.com/en-US/faq) status eight consecutive years (2010–2018).
 
 ## OSINT
 
@@ -120,11 +70,63 @@ Microsoft [retired the TechNet Gallery](https://learn.microsoft.com/en-us/teambl
 
   + Query the Shodan database for information about an IP address, using the free InternetDB service or the paid API.
 
+## Microsoft Graph
+
++ [Import-EntraHardwareOathToken.ps1](./MicrosoftGraph/Import-EntraHardwareOathToken.ps1)
+
+  + Bulk-import hardware OATH tokens into Microsoft Entra ID via the Graph beta API. Automates the full create, assign, and activate workflow by computing TOTP verification codes from the seed, enabling seamless MFA provider migrations without end-user involvement. Depends on [Get-TOTP.ps1](./Utilities/Get-TOTP.ps1).
+
++ [Graph_SignInActivity_Report.ps1](./MicrosoftGraph/Graph_SignInActivity_Report.ps1)
+
+  + Report on user SignInActivity and license detail via Invoke-RestMethod from Microsoft Graph.
+
++ [MailUser-MgUser-Activity-Report.ps1](./MicrosoftGraph/MailUser-MgUser-Activity-Report.ps1)
+
+  + Export login information for mail users via Microsoft Graph.
+
++ [MgUserMail.ps1](./MicrosoftGraph/MgUserMail.ps1)
+
+  + Send email via Microsoft Graph.
+
 ## Okta
 
 + [Get-OktaSmsFactors.ps1](./Okta/Get-OktaSmsFactors.ps1)
 
   + Query the Okta Factors API to report on users with SMS-based MFA factors. Useful for SMS deprecation planning and MFA migration audits. Supports both direct Okta user enumeration and pre-filtered CSV input for large tenants. Handles API rate limiting automatically.
+
+## Exchange
+
++ [Get-AlternateMailboxes.ps1](./Exchange/Get-AlternateMailboxes.ps1)
+
+  + Query Exchange Online AutoDiscover to enumerate mailbox delegates with modern auth.
+
++ [Get-AlternateMailboxes_BasicAuth.ps1](./Exchange/Get-AlternateMailboxes_BasicAuth.ps1)
+
+  + Query Exchange Online AutoDiscover to enumerate mailbox delegates. The old basic auth version.
+
++ [RecipientReportv5.ps1](./Exchange/RecipientReportv5.ps1)
+
+  + Dump all recipients and their email addresses (proxy addresses) to CSV.
+
++ [LowerCaseUPNs.ps1](./Exchange/LowerCaseUPNs.ps1)
+
+  + Change Exchange user's email addresses to lowercase.
+
+## Azure
+
++ [Find-AzFileShareDuplicates.ps1](./Azure/Find-AzFileShareDuplicates.ps1)
+
+  + Find duplicate files in an Azure File Share by comparing MD5 hashes. Generates HTML, CSV, and JSON reports with metrics on potential wasted space. Requires Az.Accounts, Az.Storage, Az.Resources modules.
+
+## SharePoint Online
+
++ [Find-DriveItemDuplicates.ps1](./SharePointOnline/Find-DriveItemDuplicates.ps1)
+
+  + Find duplicate files on OneDrive for Business or SharePoint Online by examining file hashes via Microsoft Graph.
+
++ [Restore-FromRecycleBin.ps1](./SharePointOnline/Restore-FromRecycleBin.ps1)
+
+  + Restore files from SPO recycle bin in bulk with logging and progress tracking.
 
 ## Active Directory
 
@@ -152,6 +154,10 @@ Microsoft [retired the TechNet Gallery](https://learn.microsoft.com/en-us/teambl
 
 ## Utilities
 
++ [Get-TOTP.ps1](./Utilities/Get-TOTP.ps1)
+
+  + Generate Time-based One-Time Passwords (RFC 6238) and convert hex strings to Base32 (RFC 4648). Standalone functions with no external dependencies — useful for verifying hardware token output, automating OATH token activation, or converting vendor-supplied hex secrets for authenticator apps.
+
 + [Compare-ObjectsInVSCode.ps1](./Utilities/Compare-ObjectsInVSCode.ps1)
 
   + Compare two PowerShell Objects in Visual Studio Code.
@@ -160,18 +166,9 @@ Microsoft [retired the TechNet Gallery](https://learn.microsoft.com/en-us/teambl
 
   + Encode or decode case-sensitive English strings using the Caesar Cipher.
 
-+ [Get-TOTP.ps1](./Utilities/Get-TOTP.ps1)
-
-  + Generate Time-based One-Time Passwords (RFC 6238) and convert hex strings to Base32 (RFC 4648). Standalone functions with no external dependencies — useful for verifying hardware token output, automating OATH token activation, or converting vendor-supplied hex secrets for authenticator apps.
-
 # Gists
 
-<p align="right">
-<img alt="GitHub License" src="https://img.shields.io/github/license/Mike-Crowley/Public-Scripts">
-<img alt="GitHub top language" src="https://img.shields.io/github/languages/top/Mike-Crowley/Public-Scripts">
-</p>
-
-There are also a few things over here: https://gist.github.com/Mike-Crowley
+A few smaller things live here: https://gist.github.com/Mike-Crowley
 
 + [Get-Superscript.ps1](https://gist.github.com/Mike-Crowley/b2a63bfe6bd533452bca3125037594a1)
 
@@ -185,8 +182,6 @@ There are also a few things over here: https://gist.github.com/Mike-Crowley
 
   + Makes an SMB connection to a remote server, captures the traffic with Wireshark (tshark), and then parses the capture to report on the use of SMB signing.
 
-#
-
-<span style="font-size:large;">Be sure to read the comments in the scripts themselves for more detail!</span>
+---
 
 <span style="font-size:large;">Visit https://mikecrowley.us/tag/powershell for additional functions and scripts.</span>
