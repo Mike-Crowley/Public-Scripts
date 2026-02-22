@@ -58,21 +58,21 @@ Microsoft [retired the TechNet Gallery](https://learn.microsoft.com/en-us/teambl
 
   + Restore files from SPO recycle bin in bulk with logging and progress tracking.
 
-## Exchange Online
+## Exchange
 
-+ [Get-AlternateMailboxes.ps1](./ExchangeOnline/Get-AlternateMailboxes.ps1)
++ [Get-AlternateMailboxes.ps1](./Exchange/Get-AlternateMailboxes.ps1)
 
   + Query Exchange Online AutoDiscover to enumerate mailbox delegates with modern auth.
 
-+ [Get-AlternateMailboxes_BasicAuth.ps1](./ExchangeOnline/Get-AlternateMailboxes_BasicAuth.ps1)
++ [Get-AlternateMailboxes_BasicAuth.ps1](./Exchange/Get-AlternateMailboxes_BasicAuth.ps1)
 
   + Query Exchange Online AutoDiscover to enumerate mailbox delegates. The old basic auth version.
 
-+ [LowerCaseUPNs.ps1](./ExchangeOnline/LowerCaseUPNs.ps1)
++ [LowerCaseUPNs.ps1](./Exchange/LowerCaseUPNs.ps1)
 
   + Change Exchange user's email addresses to lowercase.
 
-+ [RecipientReportv5.ps1](./ExchangeOnline/RecipientReportv5.ps1)
++ [RecipientReportv5.ps1](./Exchange/RecipientReportv5.ps1)
 
   + Dump all recipients and their email addresses (proxy addresses) to CSV.
 

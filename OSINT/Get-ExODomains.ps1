@@ -22,7 +22,7 @@
     https://mikecrowley.us
 
     Related:
-        https://github.com/Mike-Crowley/Public-Scripts/blob/main/ExchangeOnline/Get-AlternateMailboxes.ps1
+        https://github.com/Mike-Crowley/Public-Scripts/blob/main/Exchange/Get-AlternateMailboxes.ps1
 
 .LINK
     https://learn.microsoft.com/en-us/exchange/client-developer/web-service-reference/getfederationinformation-operation-soap
