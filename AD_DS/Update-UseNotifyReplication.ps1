@@ -133,7 +133,7 @@ function Get-ReplicationConnectionStatus {
         [PSCustomObject]@{
             Name              = $_.Name
             FromServer        = ($_.ReplicateFromDirectoryServer -split ',')[1] -replace 'CN=', ''
-            ToServer          = ($_.ReplicateToDirectoryServer -split ',')[0] -replace 'CN=', ''
+            ToServer          = ($_.ReplicateToDirectoryServer -split ',')[1] -replace 'CN=', ''
             ParentSite        = ($_.DistinguishedName -split ',')[4] -replace 'CN=', ''
             DistinguishedName = $_.DistinguishedName
             Options           = $options
