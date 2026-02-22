@@ -116,6 +116,10 @@ Microsoft [retired the TechNet Gallery](https://learn.microsoft.com/en-us/teambl
 
   + Query the domains in a tenant from the Exchange AutoDiscover service.
 
++ [Get-ShodanIpLookup.ps1](./OSINT/Get-ShodanIpLookup.ps1)
+
+  + Query the Shodan database for information about an IP address, using the free InternetDB service or the paid API.
+
 ## Okta
 
 + [Get-OktaSmsFactors.ps1](./Okta/Get-OktaSmsFactors.ps1)
@@ -131,6 +135,14 @@ Microsoft [retired the TechNet Gallery](https://learn.microsoft.com/en-us/teambl
 + [Update-UseNotifyReplication.ps1](./AD_DS/Update-UseNotifyReplication.ps1)
 
   + Evaluate and optionally enable the Use_Notify option on AD Site Links and Replication Connections to reduce replication latency. Generates an HTML dashboard with health score, site link details (cost, schedule, sites), replication connections, and actionable recommendations. Use `-GetRegistrySettings` to query DC notification timers and AvoidPdcOnWan settings via WinRM.
+
++ [Get-ADSiteByIp.ps1](./AD_DS/Get-ADSiteByIp.ps1)
+
+  + Determine which Active Directory site an IP address belongs to by querying AD subnets via LDAP. Requires the IP-Calc script from the PowerShell Gallery.
+
++ [Test-AdPassword.ps1](./AD_DS/Test-AdPassword.ps1)
+
+  + Validate the credentials of a PSCredential object against the local machine or Active Directory domain.
 
 ## Windows
 
@@ -161,21 +173,9 @@ Microsoft [retired the TechNet Gallery](https://learn.microsoft.com/en-us/teambl
 
 There are also a few things over here: https://gist.github.com/Mike-Crowley
 
-+ [Get-ADSiteByIp.ps1](https://gist.github.com/Mike-Crowley/3ad9472a2ab365c723f2272da197eabf)
-
-  + Enter an IP address and this will lookup the AD site to which it belongs.
-
-+ [Test-AdPassword.ps1](https://gist.github.com/Mike-Crowley/0cfaf1a8733b530e8f00acb59dec771f)
-
-  + Determine if an AD user's password is valid.
-
 + [Get-Superscript.ps1](https://gist.github.com/Mike-Crowley/b2a63bfe6bd533452bca3125037594a1)
 
   + Replace a given letter with the superscript letter.
-
-+ [Get-ShodanIpLookup](https://gist.github.com/Mike-Crowley/ff3c432ad921799b736b45dff828acca)
-
-  + Query the Shodan database for an IP address with or without an API key
 
 + [Get-WordscapesResults.ps1](https://gist.github.com/Mike-Crowley/09a03b770ab94af01147d4c7f9a10460)
 
