@@ -99,6 +99,8 @@
 
 .NOTES
     Author: Mike Crowley
+    https://mikecrowley.us
+
     Requires: Microsoft.Graph.Authentication module
     Dependencies: ..\Utilities\Get-TOTP.ps1 (Get-TOTP and Convert-HexToBase32 functions)
     API: Microsoft Graph Beta (subject to change)

@@ -1,16 +1,30 @@
-﻿#requires -modules importexcel, msal.ps
-# Author: Mike Crowley
+﻿#Requires -Modules ImportExcel, MSAL.PS
 
 <#
-    In this example, I query Microsoft Graph with Invoke-RestMethod, using a custom app registration,
-    looking for users that have a UPN that ends with subdomain.mikecrowley.us
+.SYNOPSIS
+    Generates a sign-in activity report for filtered Entra ID users via Microsoft Graph.
 
-    It will ultimatly build an xlsx file with the following headers:
-        displayName, userPrincipalName, lastSignInDateTime, lastNonInteractiveSignInDateTime, skuPartNumbers, licenseAssignmentStates, userId
+.DESCRIPTION
+    Queries Microsoft Graph (beta) with Invoke-RestMethod using MSAL.PS for authentication.
+    Filters users by UPN suffix, retrieves sign-in activity and license assignments, and
+    exports the results to an Excel file on the desktop.
 
-    Needs graph permissions:
-    AuditLog.Read.All
-    Organization.Read.All
+    Edit the token parameters and UPN filter in the script before running.
+
+.EXAMPLE
+    .\Graph_SignInActivity_Report.ps1
+
+    Runs the report after editing the app registration, tenant, and UPN filter variables.
+
+.NOTES
+    Author: Mike Crowley
+    https://mikecrowley.us
+
+    Requires: ImportExcel, MSAL.PS modules
+    Permissions: AuditLog.Read.All, Organization.Read.All
+
+.LINK
+    https://learn.microsoft.com/en-us/entra/identity/monitoring-health/howto-manage-inactive-user-accounts
 #>
 
 #auth

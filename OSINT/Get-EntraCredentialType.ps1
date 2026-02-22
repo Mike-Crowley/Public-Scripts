@@ -1,18 +1,24 @@
 <#
 .SYNOPSIS
-    Misc OSINT
-    Superseded by Get-EntraCredentialInfo 12 Apr 2024
-    https://github.com/Mike-Crowley/Public-Scripts/blob/main/OSINT/Get-EntraCredentialInfo.ps1
+    [Deprecated] Queries Entra ID credential type for a given UPN. Use Get-EntraCredentialInfo instead.
+
+.DESCRIPTION
+    This function is superseded by Get-EntraCredentialInfo (April 2024), which returns
+    richer tenant and federation details. This script is retained for backward compatibility.
+
+    See: https://github.com/Mike-Crowley/Public-Scripts/blob/main/OSINT/Get-EntraCredentialInfo.ps1
+
+.PARAMETER Upn
+    The email address (UPN) to query.
 
 .EXAMPLE
-
-    Get-EntraCredentialType -Upn user1@domain.com
+    Get-EntraCredentialType -Upn user1@example.com
 
 .NOTES
     Author: Mike Crowley
+    https://mikecrowley.us
 
 .LINK
-
     https://mikecrowley.us
 #>
 function Get-EntraCredentialType {

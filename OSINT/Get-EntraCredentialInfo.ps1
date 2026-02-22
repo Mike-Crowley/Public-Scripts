@@ -1,16 +1,25 @@
 ﻿<#
 .SYNOPSIS
-    Misc OSINT
+    Queries Entra ID credential type and OpenID configuration for a given UPN (unauthenticated OSINT).
+
+.DESCRIPTION
+    Calls the Entra ID GetCredentialType and OpenID configuration endpoints to gather
+    tenant information for a given email address. Returns user existence, domain type,
+    federation status, tenant GUID, region, and preferred credential type.
+
+    No authentication is required. This uses public Microsoft endpoints.
+
+.PARAMETER Upn
+    The email address (UPN) to query.
 
 .EXAMPLE
-
     Get-EntraCredentialInfo -Upn user@example.com
 
 .NOTES
     Author: Mike Crowley
+    https://mikecrowley.us
 
 .LINK
-
     https://mikecrowley.us
 #>
 

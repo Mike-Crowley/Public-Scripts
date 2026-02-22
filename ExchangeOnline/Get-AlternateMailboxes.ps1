@@ -1,61 +1,45 @@
 <#
-
 .SYNOPSIS
-  This function queries the AlternateMailboxes node within a user's AutoDiscover response. This version now supports Modern Auth. For the basic Auth version of this script, use  Get-AlternateMailboxes_BasicAuth.ps1.
-
-  Requirements:
-
-  1) Install the MSAL.PS PowerShell Module (Install-Module MSAL.PS)
-  2) Register an app in the target tenant
-  3) Configure the API permissions on the app you just created
-    a) Go to your app registration in the portal
-    b) Click API permissions on the left
-    c) Click Add permission
-    d) Click "APIs my organization uses" (NOT GRAPH!)
-    e) Type "Office 365 Exchange Online" in the search box
-    f) Select the following permission:
-        User.Read.All
-  4) Optionally: Use a certificate for application-based authentication, which is what the example below uses. Otherwise, you can use the different auth mentioned by Microsoft in the links below.
-
-  Further reading:
-
-    Use app-only authentication with the Microsoft Graph PowerShell SDK
-    https://learn.microsoft.com/en-us/powershell/microsoftgraph/app-only?tabs=azure-portal&view=graph-powershell-1.0
-
-    Create a self-signed public certificate to authenticate your application
-    https://learn.microsoft.com/en-us/azure/active-directory/develop/howto-create-self-signed-certificate
-
-
-  Version: March 9, 2023
-
+    Queries the AlternateMailboxes node from a user's Exchange AutoDiscover response (Modern Auth).
 
 .DESCRIPTION
-  This function queries the AlternateMailboxes node within a user's AutoDiscover response. See the link for details.
+    Queries the AlternateMailboxes node within a user's AutoDiscover response using Modern Auth
+    via MSAL.PS. For the Basic Auth version, see Get-AlternateMailboxes_BasicAuth.ps1.
 
-  Author:
-  Mike Crowley
-  https://BaselineTechnologies.com
+    Requirements:
+        1) Install the MSAL.PS module (Install-Module MSAL.PS)
+        2) Register an app in the target tenant
+        3) Configure API permissions: Office 365 Exchange Online > User.Read.All
+           (under "APIs my organization uses", NOT Microsoft Graph)
+        4) Optionally use a certificate for app-only authentication
+
+.PARAMETER SMTPAddress
+    The SMTP email address of the user to query.
+
+.PARAMETER MsalToken
+    An MSAL token object from Get-MsalToken with Exchange Online scopes.
 
 .EXAMPLE
+    $TokenParams = @{
+        ClientId          = '656d524e-fe4a-407a-9579-7e2be1a74a3c'
+        TenantId          = 'example.com'
+        ClientCertificate = Get-Item Cert:\CurrentUser\My\<Your Cert Thumbprint>
+        CorrelationId     = New-Guid
+        Scopes            = 'https://outlook.office365.com/.default'
+    }
 
-  $TokenParams = @{
-    ClientId          = '656d524e-fe4a-407a-9579-7e2be1a74a3c'
-    TenantId          = 'example.com'
-    ClientCertificate = Get-Item Cert:\CurrentUser\My\<Your Cert Thumbprint>
-    CorrelationId     = New-Guid
-    Scopes            = 'https://outlook.office365.com/.default'
-  }
+    $MsalToken = Get-MsalToken @TokenParams
 
-  $MsalToken = Get-MsalToken @TokenParams
-
-  Get-AlternateMailboxes -SMTPAddress mike@example.com -MsalToken $MsalToken
+    Get-AlternateMailboxes -SMTPAddress mike@example.com -MsalToken $MsalToken
 
 .NOTES
-  Author: Mike Crowley
+    Author: Mike Crowley
+    https://mikecrowley.us
+
+    Requires: MSAL.PS module
 
 .LINK
-  https://mikecrowley.us/2017/12/08/querying-msexchdelegatelistlink-in-exchange-online-with-powershell/
-
+    https://mikecrowley.us/2017/12/08/querying-msexchdelegatelistlink-in-exchange-online-with-powershell/
 #>
 
 Function Get-AlternateMailboxes {

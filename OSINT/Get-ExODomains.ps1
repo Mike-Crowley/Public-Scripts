@@ -1,8 +1,32 @@
-# Author: Mike Crowley
-# Similar to:
-#  https://github.com/Mike-Crowley/Public-Scripts/blob/main/Get-AlternateMailboxes.ps1
-#  "Get-TenantDomains" in this script: https://github.com/Gerenios/AADInternals/blob/ad071b736e2eb0f5f2b35df2920bb515b8c29a8c/AccessToken_utils.ps1
-# Reported to Microsoft in 26Jul2018 who replied to say this is not a security issue, but a feature :)
+<#
+.SYNOPSIS
+    Enumerates the domains associated with a Microsoft 365 tenant via Exchange federation metadata.
+
+.DESCRIPTION
+    Queries the Exchange Online GetFederationInformation SOAP endpoint to retrieve all domains
+    associated with a tenant. This is an unauthenticated OSINT technique that uses the
+    Exchange AutoDiscover service.
+
+    Reported to Microsoft in July 2018 who confirmed this is by-design behavior, not a
+    security vulnerability.
+
+.PARAMETER Domain
+    A domain known to belong to the target Microsoft 365 tenant.
+
+.EXAMPLE
+    . .\Get-ExODomains.ps1
+    Get-ExODomains -Domain example.com
+
+.NOTES
+    Author: Mike Crowley
+    https://mikecrowley.us
+
+    Related:
+        https://github.com/Mike-Crowley/Public-Scripts/blob/main/ExchangeOnline/Get-AlternateMailboxes.ps1
+
+.LINK
+    https://learn.microsoft.com/en-us/exchange/client-developer/web-service-reference/getfederationinformation-operation-soap
+#>
 
 function Get-ExODomains {
     [CmdletBinding()]
@@ -47,5 +71,4 @@ function Get-ExODomains {
     $response.Envelope.body.GetFederationInformationResponseMessage.response.Domains.Domain | Sort-Object
 }
 
-
-Get-ExODomains -Domain example.com
+# Get-ExODomains -Domain example.com

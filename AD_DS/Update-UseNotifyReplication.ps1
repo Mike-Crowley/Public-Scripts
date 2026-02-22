@@ -64,6 +64,8 @@
 
 .NOTES
     Author: Mike Crowley
+    https://mikecrowley.us
+
     Requires: ActiveDirectory module
 #>
 

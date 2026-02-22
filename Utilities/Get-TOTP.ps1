@@ -85,6 +85,7 @@
 
 .NOTES
     Author: Mike Crowley
+    https://mikecrowley.us
 
     No external modules or dependencies required. Uses only built-in .NET classes:
         System.Security.Cryptography.HMACSHA1

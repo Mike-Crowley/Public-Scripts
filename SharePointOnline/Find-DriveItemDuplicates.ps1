@@ -1,4 +1,7 @@
 <#
+.SYNOPSIS
+    Finds duplicate files in OneDrive or SharePoint Online by comparing quickXorHash values.
+
 .DESCRIPTION
     Find-DriveItemDuplicates examines the hash values of OneDrive files to determine if there are duplicates.
     Duplicates are reported to the desktop, the pipeline, or both.
@@ -39,6 +42,10 @@
 
 .NOTES
     Author: Mike Crowley
+    https://mikecrowley.us
+
+    Requires: Microsoft.Graph.Authentication module
+    Permissions: Files.Read or Sites.Read
 
     Create some duplicate files for testing if needed.
 
@@ -59,7 +66,6 @@
     !! Wait for the files to sync via OneDrive's sync client (If using Known Folder Move - KFM) !!
 
 .LINK
-
     https://mikecrowley.us/2024/04/20/onedrive-and-sharepoint-online-file-deduplication-report-microsoft-graph-api
 #>
 

@@ -1,82 +1,36 @@
 ﻿<#
-
 .SYNOPSIS
-    This tool displays the signing and encrypting certificates published in ADFS or Entra ID federation metadata as well as the HTTPS ("SSL") certificate used in the connection itself.
-
-    This tool does not authenticate to the server or investigate each ADFS farm node directly. For this, use the ADFS Cert Diag tool
-
-    Version: Dec 2025
+    Displays signing, encrypting, and HTTPS certificates from ADFS or Entra ID federation metadata.
 
 .DESCRIPTION
-    This tool displays the signing and encrypting certificates published in ADFS or Entra ID federation metadata as well as the HTTPS ("SSL") certificate used in the connection itself.
+    Retrieves and displays the certificates published in ADFS or Entra ID federation metadata,
+    including the HTTPS ("SSL") certificate used in the connection itself.
+
+    Does not authenticate to the server or investigate individual ADFS farm nodes.
 
     Supports two modes:
-    - ADFS mode: Query an ADFS farm by FQDN (uses -FarmFqdn parameter)
-    - Entra ID mode: Query Entra ID federation metadata by URL (uses -MetadataUrl parameter)
+        - ADFS mode: Query an ADFS farm by FQDN (uses -FarmFqdn parameter)
+        - Entra ID mode: Query Entra ID federation metadata by URL (uses -MetadataUrl parameter)
 
     DaysToExpiry values are color-coded: Green (90+ days), Yellow (30-89 days), Red (<30 days or expired).
 
-    Sample Output with -Display $true (default):
+    Use -Display $false for pipeline/loop use (returns a PSCustomObject instead of console output).
 
-        EntityID: http://adfs.mikecrowley.us/adfs/services/trust
+.PARAMETER FarmFqdn
+    The FQDN of the ADFS farm to query (ADFS mode).
 
-        SSL (HTTPS) Certificate:
+.PARAMETER MetadataUrl
+    The full URL to Entra ID or ADFS federation metadata (Entra ID mode).
 
-            SSL_Subject:       CN=ADFS.CONTOSO, O=CONTOSO CORP, OID.1.3.6.1.4.1.311.60.2.1.3=US
-            SSL_NotAfter:      1/14/2024 6:59:59 PM
-            SSL_Thumbprint:    21321F3C2E225480F112A7BC2B3347B58B439842
-            SSL_Issuer:        CN=CONTOSO CORP
-            SSL_DaysToExpiry:  25
+.PARAMETER Display
+    When $true (default), writes color-coded output to the console. When $false, returns a
+    PSCustomObject for pipeline use.
 
-        Encryption Certificate:
+.PARAMETER ExportCsv
+    Optional file path to export the certificate report as CSV.
 
-            Encryption_Subject:     CN=ADFS Encryption - adfs.mikecrowley.us
-            Encryption_NotAfter:    7/7/2023 7:05:31 PM
-            Encryption_Thumbprint:  0507D8E023B8715FE3F5F4A6421F47A36C6DD3AD
-            Encryption_Issuer:      CN=ADFS Encryption - adfs.mikecrowley.us
-            Encryption_DaysToExpiry:  129
-
-        Token Signing Certificate:
-
-            FirstSigning_Subject:     CN=ADFS Signing - adfs.mikecrowley.us
-            FirstSigning_NotAfter:    7/7/2023 7:05:32 PM
-            FirstSigning_Thumbprint:  0507D8E023B8715FE3F5F4A6421F47A36C6DD3AD
-            FirstSigning_Issuer:      CN=ADFS Signing - adfs.mikecrowley.us
-            FirstSigning_DaysToExpiry:  129
-
-        Second Token Signing Certificate:
-
-            !! No Second Token Signing Certificate Found !!
-
-    Sample Output with -Display $false (for use with loops, pipeline, etc):
-
-            EntityID                      : http://adfs.mikecrowley.us/adfs/services/trust
-            SSL_Subject                   : CN=ADFS.CONTOSO, O=CONTOSO CORP, OID.1.3.6.1.4.1.311.60.2.1.3=US
-            SSL_NotAfter                  : 11/14/2023 6:59:59 PM
-            SSL_Thumbprint                : 21321F3C2E225480F112A7BC2B3347B58B439842
-            SSL_Issuer                    : CN=CONTOSO CORP
-            SSL_DaysToExpiry              : 256
-            FirstSigning_Subject          : CN=ADFS Signing - adfs.mikecrowley.us
-            FirstSigning_NotAfter         : 7/5/2023 7:05:32 PM
-            FirstSigning_Thumbprint       : 0507D8E023B8715FE3F5F4A6421F47A36C6DD3AD
-            FirstSigning_Issuer           : CN=ADFS Signing - adfs.mikecrowley.us
-            FirstSigning_DaysToExpiry     : 124
-            SecondSigning_Subject         :
-            SecondSigning_NotAfter        :
-            SecondSigning_Thumbprint      :
-            SecondSigning_Issuer          :
-            SecondSigning_DaysToExpiry    :
-            Encryption_Subject            : CN=ADFS Encryption - adfs.mikecrowley.us
-            Encryption_NotAfter           : 7/5/2023 7:05:31 PM
-            Encryption_Thumbprint         : 0507D8E023B8715FE3F5F4A6421F47A36C6DD3AD
-            Encryption_Issuer             : CN=ADFS Encryption - adfs.mikecrowley.us
-            Encryption_DaysToExpiry       : 124
-
-    NOTE: This tool by Microsoft may be handy as well: https://adfshelp.microsoft.com/MetadataExplorer/GetFederationMetadata
-
-    Author:
-    Mike Crowley
-    https://mikecrowley.us
+.PARAMETER ExportJson
+    Optional file path to export the certificate report as JSON.
 
 .EXAMPLE
     Request-FederationCerts -FarmFqdn adfs.mikecrowley.us
@@ -95,11 +49,12 @@
 
 .NOTES
     Author: Mike Crowley
+    https://mikecrowley.us
+
+    See also: https://adfshelp.microsoft.com/MetadataExplorer/GetFederationMetadata
 
 .LINK
-    https://github.com/mike-crowley_blkln
-    https://github.com/Mike-Crowley
-
+    https://github.com/Mike-Crowley/Public-Scripts
 #>
 
 function Request-FederationCerts {

@@ -1,22 +1,33 @@
 ﻿<#
-    Features:
-        1) This script Creates a TXT and CSV file with the following information:
-            a) TXT file: Recipient Address Statistics
-            b) CSV file: Output of everyone's SMTP proxy addresses.
+.SYNOPSIS
+    Generates recipient address statistics and SMTP proxy address reports for Exchange on-premises.
 
-    Instructions:
-        1) Run this from "regular" PowerShell.  Exchange Management Shell may cause problems, especially in Exchange 2010, due to PSv2.
-        2) Usage: RecipientReportv5.ps1 server5.domain.local
+.DESCRIPTION
+    Creates two report files on the desktop:
+        - TXT: Recipient address statistics (counts by type, accepted domain comparison)
+        - CSV: Complete listing of all recipients and their SMTP proxy addresses
 
-    Requirements:
-        1) Exchange 2010 or 2013
-        2) PowerShell 4.0
+    Connects to an Exchange 2010/2013 server via remote PowerShell.
 
+    Run this from standard PowerShell, not Exchange Management Shell (EMS may cause issues
+    due to PSv2 in Exchange 2010).
 
-    April 4 2015
-    Mike Crowley
+.PARAMETER ExchangeFQDN
+    The fully qualified domain name of a Client Access Server to connect to.
 
-    https://BaselineTechnologies.com
+.EXAMPLE
+    .\RecipientReportv5.ps1 server5.domain.local
+
+    Connects to the specified Exchange server and generates both report files on the desktop.
+
+.NOTES
+    Author: Mike Crowley
+    https://mikecrowley.us
+
+    Requires: Exchange 2010 or 2013, PowerShell 3.0+
+
+.LINK
+    https://github.com/Mike-Crowley/Public-Scripts
 #>
 
 param(

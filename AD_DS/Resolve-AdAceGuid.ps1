@@ -73,6 +73,8 @@
 
 .NOTES
     Author: Mike Crowley
+    https://mikecrowley.us
+
     Requires: ActiveDirectory module (RSAT)
 
     The all-zeros GUID (00000000-0000-0000-0000-000000000000) means "applies to everything"

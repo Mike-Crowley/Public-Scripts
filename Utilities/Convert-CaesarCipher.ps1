@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-    Practicing with functions just for fun. Convert-CaesarCipher encodes or decodes case-sensitive English strings based on the Caesar Cipher.
+    Encodes or decodes English strings using the Caesar Cipher.
 
 .DESCRIPTION
-    Practicing with functions just for fun. Convert-CaesarCipher encodes or decodes case-sensitive English strings based on the Caesar Cipher.
-    https://en.wikipedia.org/wiki/Caesar_cipher
+    Shifts each letter in the input string by a given number of positions in the alphabet.
+    Supports both encoding and decoding. Spaces are preserved; input is case-sensitive.
 
 .EXAMPLE
 
@@ -37,10 +37,10 @@
 
 .NOTES
     Author: Mike Crowley
+    https://mikecrowley.us
 
 .LINK
-
-    https://mikecrowley.us
+    https://en.wikipedia.org/wiki/Caesar_cipher
 #>
 
 function Convert-CaesarCipher {

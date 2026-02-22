@@ -1,8 +1,30 @@
-# Author: Mike Crowley
-#3Jan2018
+<#
+.SYNOPSIS
+    Converts uppercase UserPrincipalName values on remote mailboxes to lowercase.
 
-#related to script #2 here:
-# https://mikecrowley.us/2012/05/14/converting-smtp-proxy-addresses-to-lowercase/
+.DESCRIPTION
+    Scans all remote mailboxes in an Exchange on-premises organization and converts any UPN
+    containing uppercase characters to lowercase. Creates an XML backup of affected objects
+    on the desktop before making changes.
+
+    Connects to an Exchange 2013+ server via remote PowerShell.
+
+.PARAMETER ExchangeFQDN
+    Not a parameter -- the Exchange server FQDN is set inline in the script. Edit before running.
+
+.EXAMPLE
+    .\LowerCaseUPNs.ps1
+
+    Connects to the Exchange server defined in the script, identifies remote mailboxes with
+    uppercase UPN characters, backs them up, and converts each UPN to lowercase.
+
+.NOTES
+    Author: Mike Crowley
+    https://mikecrowley.us
+
+.LINK
+    https://mikecrowley.us/2012/05/14/converting-smtp-proxy-addresses-to-lowercase/
+#>
 
 #Connect to Exchange 2013+ Server
 $Session = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri http://exchange-admin/PowerShell/ -Authentication Kerberos

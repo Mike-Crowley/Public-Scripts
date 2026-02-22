@@ -1,4 +1,37 @@
-﻿# Author: Mike Crowley
+﻿<#
+.SYNOPSIS
+    Compares two PowerShell objects side-by-side in Visual Studio Code.
+
+.DESCRIPTION
+    Converts two objects to JSON and opens them in VS Code's diff viewer for
+    visual comparison. Useful for comparing configuration objects, API responses,
+    or any PowerShell objects.
+
+.PARAMETER Object1
+    The first object to compare.
+
+.PARAMETER Object2
+    The second object to compare.
+
+.PARAMETER Depth
+    The JSON serialization depth (1-10). Defaults to 1. Increase for deeply nested objects.
+
+.EXAMPLE
+    . .\Compare-ObjectsInVSCode.ps1
+    $Process1 = Get-Process mspaint
+    $Process2 = Get-Process excel
+    Compare-ObjectsInVSCode $Process1 $Process2 -Depth 2
+
+.NOTES
+    Author: Mike Crowley
+    https://mikecrowley.us
+
+    Requires: Visual Studio Code (code.exe) in PATH
+
+.LINK
+    https://github.com/Mike-Crowley/Public-Scripts
+#>
+
 function Compare-ObjectsInVSCode {
     param (
         [Parameter(Mandatory = $true)]
@@ -36,9 +69,3 @@ function Compare-ObjectsInVSCode {
     # Open files in VS Code for comparison
     code -d $file1Path $file2Path
 }
-
-<# Example
-    $Process1 = Get-Process mspaint
-    $Process2 = Get-Process excel
-    Compare-ObjectsInVSCode $Process1 $Process2 -Depth 2
-#>

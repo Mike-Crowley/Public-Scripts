@@ -1,49 +1,48 @@
 ﻿#Requires -Modules PnP.PowerShell, ImportExcel
 
-#DRAFT VERSION!!
-
 <#
 .SYNOPSIS
-
-    Restore-FromRecycleBin enumerates the contents of a SPO site's recycle bin and restores items after a given date, logging the results.
-    This script was designed to handle a large number of items and aims to be more reliable than the native browser-based restore functionality.
+    Restores files from a SharePoint Online site's recycle bin after a given date, with logging.
 
 .DESCRIPTION
-
-    Restore-FromRecycleBin enumerates the contents of a SPO site's recycle bin and restores items after a given date, logging the results.
-    This script was designed to handle a large number of items and aims to be more reliable than the native browser-based restore functionality.
+    Enumerates the contents of a SPO site's first-stage recycle bin and restores files deleted
+    after the specified date. Designed to handle a large number of items more reliably than the
+    browser-based restore.
 
     Features:
+        - Exports a list of files to restore before starting
+        - Displays progress during the run
+        - Writes a log file with success/failure status for each file
 
-    - Before it starts, the script writes a file to disk containing all of the files it is about to restore.
-    - During the run, there is a counter and other output describing the progress.
-    - When complete, a log file is written, which contains every file attempted and a true/false for its success.
+    The most common failure is when a file already exists at the original location.
 
-    The most common failure we've seen is due to the fact a file already exists, which can be confirmed with use of the log file.
+    Requirements:
+        - SharePoint Online (not SharePoint Server)
+        - PnP.PowerShell and ImportExcel modules
+        - PowerShell 5.0+
+        - Permission to restore items from the site
+        - Interactive session (credentials entered interactively)
 
-Requirements:
-    1) SharePoint Online. This was not written for use with SharePoint Server.
-    2) PnP.PowerShell and ImportExcel modules
-    3) PowerShell 5.0+
-    4) Permission to restore items from the site
-    5) Interactive session. This is written to require an administrator to be present and enter the credentials interactivly.
+.PARAMETER SiteUrl
+    The full URL of the SharePoint Online site.
 
+.PARAMETER RestoreDate
+    Files deleted after this date will be restored.
 
-March 22 2021
--Mike Crowley
--Jhon Ramirez
+.PARAMETER LogDirectory
+    Directory path where the pre-restore inventory and restore log files are saved.
 
 .EXAMPLE
-
     Restore-FromRecycleBin -SiteUrl https://MySpoSite.sharepoint.com/sites/Site123 -RestoreDate 3/23/2021 -LogDirectory C:\Logs
 
 .NOTES
     Author: Mike Crowley, Jhon Ramirez
+    https://mikecrowley.us
+
+    Requires: PnP.PowerShell, ImportExcel modules
 
 .LINK
-
-    https://BaselineTechnologies.com
-
+    https://github.com/Mike-Crowley/Public-Scripts
 #>
 
 
@@ -103,8 +102,3 @@ function Restore-FromRecycleBin {
 
     $LogFile | Export-Excel @ExportParams -Path ("$LogDirectory\RecycleBinFiles\" + "RestoreLog--" + $ScriptDate + ".xlsx")
 }
-
-
-
-
-#

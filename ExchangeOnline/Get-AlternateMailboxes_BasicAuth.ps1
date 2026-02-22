@@ -1,28 +1,26 @@
 <#
-
 .SYNOPSIS
-    This function queries the AlternateMailboxes node within a user's AutoDiscover response. Does not support Modern Auth. See the link for details.
-
-    Version: Jul 29, 2021
-
+    Queries the AlternateMailboxes node from a user's Exchange AutoDiscover response (Basic Auth).
 
 .DESCRIPTION
-    This function queries the AlternateMailboxes node within a user's AutoDiscover response. See the link for details.
+    Queries the AlternateMailboxes node within a user's AutoDiscover response using Basic Auth.
+    For Modern Auth support, see Get-AlternateMailboxes.ps1.
 
-    Author:
-    Mike Crowley
-    https://BaselineTechnologies.com
+.PARAMETER SMTPAddress
+    The SMTP email address of the user to query.
 
- .EXAMPLE
+.PARAMETER Credential
+    A PSCredential object for Basic Auth against Exchange AutoDiscover.
 
-    Get-AlternateMailboxes -SMTPAddress mike@mikecrowley.us -Credential (Get-Credential)
+.EXAMPLE
+    Get-AlternateMailboxes -SMTPAddress user@example.com -Credential (Get-Credential)
 
 .NOTES
     Author: Mike Crowley
+    https://mikecrowley.us
 
 .LINK
     https://mikecrowley.us/2017/12/08/querying-msexchdelegatelistlink-in-exchange-online-with-powershell/
-
 #>
 
 Function Get-AlternateMailboxes {
@@ -76,5 +74,4 @@ Function Get-AlternateMailboxes {
   return $RequestedSettings.AlternateMailboxes.AlternateMailbox
 }
 
-
-Get-AlternateMailboxes
+# Get-AlternateMailboxes -SMTPAddress user@example.com -Credential (Get-Credential)

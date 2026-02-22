@@ -1,13 +1,31 @@
-﻿# Author: Mike Crowley
-<#
-    Script for sending email with send-mgusermail
+﻿<#
+.SYNOPSIS
+    Sends email via Microsoft Graph using Send-MgUserMail with app-only authentication.
 
-    Ref:
+.DESCRIPTION
+    Demonstrates sending email with the Microsoft Graph PowerShell SDK (Send-MgUserMail),
+    including HTML body content and file attachments. Uses certificate-based app-only
+    authentication.
 
+    Edit the configuration variables at the top of the script before running.
+
+.EXAMPLE
+    .\MgUserMail.ps1
+
+    Sends an email after editing the recipient, sender, app registration, and attachment
+    variables at the top of the script.
+
+.NOTES
+    Author: Mike Crowley
+    https://mikecrowley.us
+
+    Requires: Microsoft.Graph.Users.Actions module
+
+.LINK
     https://mikecrowley.us/2021/10/27/sending-email-with-send-mgusermail-microsoft-graph-powershell
-    https://docs.microsoft.com/en-us/graph/api/user-sendmail
-    https://docs.microsoft.com/en-us/powershell/module/microsoft.graph.users.actions/send-mgusermail
 
+.LINK
+    https://learn.microsoft.com/en-us/graph/api/user-sendmail
 #>
 
 #region 1: Setup
