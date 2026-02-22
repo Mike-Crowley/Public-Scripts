@@ -124,6 +124,10 @@ Microsoft [retired the TechNet Gallery](https://learn.microsoft.com/en-us/teambl
 
 ## Active Directory
 
++ [Resolve-AdAceGuid.ps1](./AD_DS/Resolve-AdAceGuid.ps1)
+
+  + Resolve GUIDs on Active Directory ACEs to their friendly attribute, class, or extended right names. Builds a lookup hashtable from the schema and Extended-Rights container with just two LDAP queries, then resolves individual GUIDs locally — no per-ACE round-trips. Useful for auditing OU delegations and understanding who can write which attributes.
+
 + [Update-UseNotifyReplication.ps1](./AD_DS/Update-UseNotifyReplication.ps1)
 
   + Evaluate and optionally enable the Use_Notify option on AD Site Links and Replication Connections to reduce replication latency. Generates an HTML dashboard with health score, site link details (cost, schedule, sites), replication connections, and actionable recommendations. Use `-GetRegistrySettings` to query DC notification timers and AvoidPdcOnWan settings via WinRM.
