@@ -20,12 +20,18 @@ function Get-TeamsChatMessages {
         chats. Run with -RegisterApp -TenantId first to create the required app registration.
 
     .PARAMETER RegisterApp
-        Creates an Entra ID app registration with the Chat.Read.All application permission
-        and a client secret. Run this once before using app auth. Requires permission to
-        register apps in the tenant. An admin must grant consent after registration.
+        Creates an Entra ID app registration with the Chat.Read.All application permission,
+        a client secret, service principal, and grants admin consent. Run this once before
+        using app auth. Requires Application.ReadWrite.All and AppRoleAssignment.ReadWrite.All
+        permissions (typically Application Administrator or Global Administrator).
 
     .PARAMETER ClientId
         The Application (client) ID of the Azure AD app registration. Required for app auth.
+
+    .PARAMETER ClientSecret
+        The client secret for the app registration. If omitted, you will be prompted via
+        Get-Credential. Accepts the plain-text secret returned by -RegisterApp, e.g.
+        -ClientSecret $app.ClientSecret.
 
     .PARAMETER TenantId
         The tenant ID or domain name for the Microsoft 365 tenant. Required for -RegisterApp
@@ -43,10 +49,11 @@ function Get-TeamsChatMessages {
         Number of days back from now. This is the default date range mode.
 
     .PARAMETER StartDate
-        Start date in yyyy-MM-dd format. Must be used with -EndDate.
+        Start date for the query range. Accepts any format PowerShell can parse as a
+        DateTime (e.g. "2025-06-01", "June 1, 2025"). Must be used with -EndDate.
 
     .PARAMETER EndDate
-        End date in yyyy-MM-dd format (inclusive). Must be used with -StartDate.
+        End date for the query range (inclusive). Must be used with -StartDate.
 
     .PARAMETER WindowStart
         Start of window as days ago. Must be used with -WindowEnd.
@@ -54,27 +61,32 @@ function Get-TeamsChatMessages {
     .PARAMETER WindowEnd
         End of window as days ago (must be less than WindowStart). Must be used with -WindowStart.
 
+    .PARAMETER ChatCount
+        Number of most recent chats to retrieve for the picker. Default is 100.
+        Use 0 or "Unlimited" to retrieve all chats.
+
     .PARAMETER PageSize
         Number of messages per Graph API page. Maximum is 50. Default is 50.
 
     .PARAMETER ExportFormat
-        Output format: JSON, CSV, or None. Default is JSON.
+        Output format for non-interactive mode: JSON, CSV, or None. When specified, skips
+        the interactive output picker and uses this format directly.
 
     .PARAMETER ExportToFile
-        If specified, saves output to a file instead of copying to clipboard.
+        Saves output to a file instead of copying to clipboard. Used with -ExportFormat.
 
     .PARAMETER ExportPath
         File path prefix when using -ExportToFile. A timestamp and extension are appended.
         Default is '.\TeamsChat_'.
 
     .PARAMETER ShowInConsole
-        If specified, displays a sample of recent messages in the console.
+        Displays a sample of recent messages in the console.
 
     .PARAMETER ShowLastNMessages
-        Number of recent messages to display in console. Default is 10.
+        Number of recent messages to display in console with -ShowInConsole. Default is 10.
 
     .PARAMETER ShowFullBody
-        If specified, shows the full message body instead of truncating to 50 characters.
+        Shows the full message body instead of truncating.
 
     .EXAMPLE
         Get-TeamsChatMessages -RegisterApp -TenantId "contoso.com"
@@ -95,20 +107,22 @@ function Get-TeamsChatMessages {
         instead of opening a browser window. Useful for remote/SSH sessions.
 
     .EXAMPLE
-        Get-TeamsChatMessages -StartDate "2025-06-01" -EndDate "2025-06-15" -ExportToFile
+        Get-TeamsChatMessages -StartDate "2025-06-01" -EndDate "2025-06-15"
 
-        Retrieves your messages from June 1-15 using delegated auth and exports to a file.
-
-    .EXAMPLE
-        Get-TeamsChatMessages -WindowStart 14 -WindowEnd 7 -ExportFormat CSV
-
-        Retrieves your messages from 14 to 7 days ago and copies CSV to clipboard.
+        Retrieves your messages from June 1-15 and prompts for output options.
 
     .EXAMPLE
-        Get-TeamsChatMessages -ClientId "abc-123" -TenantId "contoso.com" -UserId "user@contoso.com" -DaysAgo 7
+        Get-TeamsChatMessages -WindowStart 14 -WindowEnd 7
 
-        Uses app auth with a client secret to retrieve another user's messages from the last 7 days.
-        The -UserId parameter also accepts a user's object ID (GUID).
+        Retrieves your messages from 14 to 7 days ago and prompts for output options.
+
+    .EXAMPLE
+        $app = Get-TeamsChatMessages -RegisterApp -TenantId "contoso.com" -UseDeviceCode
+        Get-TeamsChatMessages -ClientId $app.ClientId -ClientSecret $app.ClientSecret -TenantId "contoso.com" -UserId "user@contoso.com" -DaysAgo 7
+
+        Registers an app, then uses it to retrieve another user's messages from the last 7 days.
+        The -UserId parameter also accepts a user's object ID (GUID). If -ClientSecret is omitted,
+        you will be prompted for the secret via Get-Credential.
 
     .NOTES
         Author: Mike Crowley
@@ -138,17 +152,25 @@ function Get-TeamsChatMessages {
         [Parameter(Mandatory, ParameterSetName = "AppAuthRelative")]
         [Parameter(Mandatory, ParameterSetName = "AppAuthSpecific")]
         [Parameter(Mandatory, ParameterSetName = "AppAuthWindow")]
+        [ValidateNotNullOrEmpty()]
         [string]$ClientId,
+
+        [Parameter(ParameterSetName = "AppAuthRelative")]
+        [Parameter(ParameterSetName = "AppAuthSpecific")]
+        [Parameter(ParameterSetName = "AppAuthWindow")]
+        [string]$ClientSecret,
 
         [Parameter(Mandatory, ParameterSetName = "RegisterApp")]
         [Parameter(Mandatory, ParameterSetName = "AppAuthRelative")]
         [Parameter(Mandatory, ParameterSetName = "AppAuthSpecific")]
         [Parameter(Mandatory, ParameterSetName = "AppAuthWindow")]
+        [ValidateNotNullOrEmpty()]
         [string]$TenantId,
 
         [Parameter(Mandatory, ParameterSetName = "AppAuthRelative")]
         [Parameter(Mandatory, ParameterSetName = "AppAuthSpecific")]
         [Parameter(Mandatory, ParameterSetName = "AppAuthWindow")]
+        [ValidateNotNullOrEmpty()]
         [string]$UserId,
 
         # Device code flow for delegated and RegisterApp auth
@@ -166,11 +188,11 @@ function Get-TeamsChatMessages {
         # Specific date range
         [Parameter(Mandatory, ParameterSetName = "DelegatedSpecific")]
         [Parameter(Mandatory, ParameterSetName = "AppAuthSpecific")]
-        [string]$StartDate,
+        [datetime]$StartDate,
 
         [Parameter(Mandatory, ParameterSetName = "DelegatedSpecific")]
         [Parameter(Mandatory, ParameterSetName = "AppAuthSpecific")]
-        [string]$EndDate,
+        [datetime]$EndDate,
 
         # Window date range
         [Parameter(Mandatory, ParameterSetName = "DelegatedWindow")]
@@ -188,8 +210,8 @@ function Get-TeamsChatMessages {
         [Parameter(ParameterSetName = "AppAuthRelative")]
         [Parameter(ParameterSetName = "AppAuthSpecific")]
         [Parameter(ParameterSetName = "AppAuthWindow")]
-        [ValidateRange(1, 50)]
-        [int]$PageSize = 50,
+        [ValidateScript({ $_ -eq "Unlimited" -or $null -ne ($_ -as [int]) })]
+        [string]$ChatCount = "100",
 
         [Parameter(ParameterSetName = "DelegatedRelative")]
         [Parameter(ParameterSetName = "DelegatedSpecific")]
@@ -197,8 +219,18 @@ function Get-TeamsChatMessages {
         [Parameter(ParameterSetName = "AppAuthRelative")]
         [Parameter(ParameterSetName = "AppAuthSpecific")]
         [Parameter(ParameterSetName = "AppAuthWindow")]
+        [ValidateRange(1, 50)]
+        [int]$PageSize = 50,
+
+        # Non-interactive export parameters (skip the output picker when specified)
+        [Parameter(ParameterSetName = "DelegatedRelative")]
+        [Parameter(ParameterSetName = "DelegatedSpecific")]
+        [Parameter(ParameterSetName = "DelegatedWindow")]
+        [Parameter(ParameterSetName = "AppAuthRelative")]
+        [Parameter(ParameterSetName = "AppAuthSpecific")]
+        [Parameter(ParameterSetName = "AppAuthWindow")]
         [ValidateSet("JSON", "CSV", "None")]
-        [string]$ExportFormat = "JSON",
+        [string]$ExportFormat,
 
         [Parameter(ParameterSetName = "DelegatedRelative")]
         [Parameter(ParameterSetName = "DelegatedSpecific")]
@@ -245,17 +277,54 @@ function Get-TeamsChatMessages {
     $IsAppAuth = $PSCmdlet.ParameterSetName -like "AppAuth*"
     $DateMode = ($PSCmdlet.ParameterSetName -replace '^(Delegated|AppAuth)', '')
 
+    # Clear any existing Graph session to avoid MSAL cache conflicts between auth methods
+    Disconnect-MgGraph -ErrorAction SilentlyContinue | Out-Null
+
+    #region Device Code Helper
+    # Connect-MgGraph -UseDeviceCode writes the code via Console.WriteLine(), which is
+    # invisible in many PowerShell hosts. This handles the flow directly via Write-Host.
+    function Connect-GraphDeviceCode {
+        param([string]$Tenant, [string]$Scope)
+        $GraphPSClientId = "14d82eec-204b-4c2f-b7e8-296a70dab67e"
+        $DeviceCode = Invoke-RestMethod -Method POST `
+            -Uri "https://login.microsoftonline.com/$Tenant/oauth2/v2.0/devicecode" `
+            -Body @{ client_id = $GraphPSClientId; scope = "https://graph.microsoft.com/$Scope" }
+        Write-Host "`n$($DeviceCode.message)" -ForegroundColor Yellow
+        $TokenBody = @{
+            grant_type  = "urn:ietf:params:oauth:grant-type:device_code"
+            client_id   = $GraphPSClientId
+            device_code = $DeviceCode.device_code
+        }
+        while ($true) {
+            Start-Sleep -Seconds $DeviceCode.interval
+            try {
+                $Token = Invoke-RestMethod -Method POST `
+                    -Uri "https://login.microsoftonline.com/$Tenant/oauth2/v2.0/token" `
+                    -Body $TokenBody
+                break
+            }
+            catch {
+                $err = $_.ErrorDetails.Message | ConvertFrom-Json
+                if ($err.error -eq "authorization_pending") { continue }
+                if ($err.error -eq "authorization_declined") { throw "Authentication was declined." }
+                if ($err.error -eq "expired_token") { throw "Device code expired. Run the command again." }
+                throw
+            }
+        }
+        $SecureToken = ConvertTo-SecureString $Token.access_token -AsPlainText -Force
+        Connect-MgGraph -AccessToken $SecureToken
+    }
+    #endregion
+
     #region Register App
     if ($PSCmdlet.ParameterSetName -eq "RegisterApp") {
-        Write-Host "Connecting to Microsoft Graph to register the application..." -ForegroundColor Green
-        $RegisterParams = @{
-            Scopes       = "Application.ReadWrite.All"
-            TenantId     = $TenantId
-            ContextScope = "process"
-            NoWelcome    = $true
+        if ($UseDeviceCode) {
+            Connect-GraphDeviceCode -Tenant $TenantId -Scope "Application.ReadWrite.All AppRoleAssignment.ReadWrite.All"
         }
-        if ($UseDeviceCode) { $RegisterParams.UseDeviceCode = $true }
-        Connect-MgGraph @RegisterParams
+        else {
+            Write-Host "Connecting to Microsoft Graph to register the application..." -ForegroundColor Green
+            Connect-MgGraph -Scopes "Application.ReadWrite.All", "AppRoleAssignment.ReadWrite.All" -TenantId $TenantId -ContextScope "process" -NoWelcome
+        }
 
         # Look up the Chat.Read.All app role from the Microsoft Graph service principal
         $GraphAppId = "00000003-0000-0000-c000-000000000000"
@@ -287,67 +356,127 @@ function Get-TeamsChatMessages {
 
         $App = Invoke-MgGraphRequest -Method POST -Uri "v1.0/applications" -Body $AppBody -ContentType "application/json" -OutputType PSObject
 
-        # Create a client secret
+        # Create a client secret (90-day expiration)
         $SecretBody = @{
             passwordCredential = @{
                 displayName = "Get-TeamsChatMessages secret"
+                endDateTime = (Get-Date).AddDays(90).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
             }
         } | ConvertTo-Json -Depth 3
 
         $Secret = Invoke-MgGraphRequest -Method POST -Uri "v1.0/applications/$($App.id)/addPassword" -Body $SecretBody -ContentType "application/json" -OutputType PSObject
+
+        # Create the service principal so the app is usable for client credential auth
+        $SPBody = @{ appId = $App.appId } | ConvertTo-Json
+        $SP = Invoke-MgGraphRequest -Method POST -Uri "v1.0/servicePrincipals" -Body $SPBody -ContentType "application/json" -OutputType PSObject
+
+        # Grant admin consent for Chat.Read.All
+        $ConsentGranted = $false
+        try {
+            $ConsentBody = @{
+                principalId = $SP.id
+                resourceId  = $GraphSP.id
+                appRoleId   = $ChatReadAllRole.id
+            } | ConvertTo-Json
+            Invoke-MgGraphRequest -Method POST -Uri "v1.0/servicePrincipals/$($SP.id)/appRoleAssignments" -Body $ConsentBody -ContentType "application/json" -OutputType PSObject | Out-Null
+            $ConsentGranted = $true
+        }
+        catch {
+            Write-Warning "Could not grant admin consent automatically. An admin must grant consent manually:`n  Azure Portal > App Registrations > Get-TeamsChatMessages > API Permissions > Grant admin consent"
+        }
 
         Write-Host "`nApp Registration Created Successfully" -ForegroundColor Green
         Write-Host "  Display Name : $($App.displayName)" -ForegroundColor Cyan
         Write-Host "  Client ID    : $($App.appId)" -ForegroundColor Cyan
         Write-Host "  Client Secret: $($Secret.secretText)" -ForegroundColor Cyan
         Write-Host "  Secret Expiry: $($Secret.endDateTime)" -ForegroundColor Cyan
-        Write-Host "`n  IMPORTANT: A tenant admin must grant consent for Chat.Read.All before this app can be used." -ForegroundColor Yellow
-        Write-Host "  Azure Portal > App Registrations > Get-TeamsChatMessages > API Permissions > Grant admin consent" -ForegroundColor Yellow
+        if ($ConsentGranted) {
+            Write-Host "  Admin Consent: Granted" -ForegroundColor Green
+        }
         Write-Host "`n  Save the Client ID and Secret now. The secret value cannot be retrieved later." -ForegroundColor Yellow
 
         return [PSCustomObject]@{
-            DisplayName  = $App.displayName
-            ClientId     = $App.appId
-            ObjectId     = $App.id
-            ClientSecret = $Secret.secretText
-            SecretExpiry = $Secret.endDateTime
+            DisplayName    = $App.displayName
+            ClientId       = $App.appId
+            ObjectId       = $App.id
+            ClientSecret   = $Secret.secretText
+            SecretExpiry   = $Secret.endDateTime
+            ConsentGranted = $ConsentGranted
         }
     }
     #endregion
 
     #region Authentication
     if ($IsAppAuth) {
-        $ClientSecretCredential = Get-Credential -Credential $ClientId
+        if ($ClientSecret) {
+            $SecureSecret = ConvertTo-SecureString $ClientSecret -AsPlainText -Force
+            $ClientSecretCredential = [PSCredential]::new($ClientId, $SecureSecret)
+        }
+        else {
+            $ClientSecretCredential = Get-Credential -Credential $ClientId
+        }
         $ConnectParams = @{
             ClientSecretCredential = $ClientSecretCredential
             ContextScope           = "process"
             NoWelcome              = $true
             TenantId               = $TenantId
         }
-        Connect-MgGraph @ConnectParams
-        $ChatsUri = "v1.0/users/$UserId/chats?`$top=$PageSize&`$expand=members"
+        try {
+            Connect-MgGraph @ConnectParams -ErrorAction Stop
+        }
+        catch {
+            Write-Error "App authentication failed. If the app was just registered, wait a minute for propagation and verify an admin has granted consent. $_"
+            return
+        }
+        $ChatsUri = "v1.0/users/$UserId/chats?`$top=50&`$expand=members"
     }
     else {
-        $DelegatedParams = @{
-            Scopes       = "Chat.Read"
-            ContextScope = "process"
-            NoWelcome    = $true
+        try {
+            if ($UseDeviceCode) {
+                Connect-GraphDeviceCode -Tenant "organizations" -Scope "Chat.Read"
+            }
+            else {
+                Connect-MgGraph -Scopes "Chat.Read" -ContextScope "process" -NoWelcome -ErrorAction Stop
+            }
         }
-        if ($UseDeviceCode) { $DelegatedParams.UseDeviceCode = $true }
-        Connect-MgGraph @DelegatedParams
-        $ChatsUri = "v1.0/me/chats?`$top=$PageSize&`$expand=members"
+        catch {
+            Write-Error "Delegated authentication failed. $_"
+            return
+        }
+        $ChatsUri = "v1.0/me/chats?`$top=50&`$expand=members"
     }
     #endregion
 
     #region Chat Selection
-    Write-Host "Retrieving available chats..." -ForegroundColor Green
-    $ChatsParams = @{
-        OutputType = "PSObject"
-        Uri        = $ChatsUri
+    $ChatLimit = if ($ChatCount -eq "Unlimited" -or $ChatCount -eq "0") { 0 } else { [int]$ChatCount }
+    $AllChats = [Collections.Generic.List[Object]]::new()
+    $ChatsPageUri = $ChatsUri
+    try {
+        while ($ChatsPageUri -and ($ChatLimit -eq 0 -or $AllChats.Count -lt $ChatLimit)) {
+            $ChatsResponse = Invoke-MgGraphRequest -Uri $ChatsPageUri -OutputType PSObject -ErrorAction Stop
+            if ($ChatsResponse.value) {
+                $AllChats.AddRange($ChatsResponse.value)
+            }
+            $ProgressParams = @{
+                Activity = "Retrieving chats"
+                Status   = "$($AllChats.Count) chats retrieved"
+            }
+            if ($ChatLimit -gt 0) {
+                $ProgressParams.PercentComplete = [math]::Min(100, [int]($AllChats.Count / $ChatLimit * 100))
+            }
+            Write-Progress @ProgressParams
+            $ChatsPageUri = $ChatsResponse.'@odata.nextlink'
+        }
     }
-    $ChatsResponse = Invoke-MgGraphRequest @ChatsParams
+    catch {
+        Write-Progress -Activity "Retrieving chats" -Completed
+        Write-Error "Failed to retrieve chats. If the app was just registered, the permission grant may still be propagating — wait 30 seconds and try again. $_"
+        return
+    }
+    Write-Progress -Activity "Retrieving chats" -Completed
+    Write-Host "Retrieved $($AllChats.Count) chats" -ForegroundColor Green
 
-    $ChatList = $ChatsResponse.value | ForEach-Object {
+    $ChatList = $AllChats | ForEach-Object {
         [PSCustomObject]@{
             ChatType     = $_.chatType
             LastActivity = $_.lastUpdatedDateTime
@@ -382,8 +511,8 @@ function Get-TeamsChatMessages {
             Write-Host "Date range: Last $DaysAgo days" -ForegroundColor Yellow
         }
         "Specific" {
-            $Start = ([DateTime]$StartDate).ToUniversalTime().ToString($DateFormat)
-            $End = ([DateTime]$EndDate).AddDays(1).ToUniversalTime().ToString($DateFormat)
+            $Start = $StartDate.ToUniversalTime().ToString($DateFormat)
+            $End = $EndDate.AddDays(1).ToUniversalTime().ToString($DateFormat)
             Write-Host "Date range: $StartDate to $EndDate" -ForegroundColor Yellow
         }
         "Window" {
@@ -405,28 +534,25 @@ function Get-TeamsChatMessages {
     }
 
     $AllChatMessages = [Collections.Generic.List[Object]]::new()
+    $PageCount = 0
 
-    Write-Host "Retrieving messages..." -ForegroundColor Green
     do {
-        $RequestParams = @{
-            OutputType = "PSObject"
-            Uri        = $MessagesUri
-        }
-
-        $PageResults = Invoke-MgGraphRequest @RequestParams
+        $PageCount++
+        $PageResults = Invoke-MgGraphRequest -Uri $MessagesUri -OutputType PSObject
 
         if ($PageResults.value) {
-            Write-Host "  Retrieved $($PageResults.value.Count) messages from current page" -ForegroundColor Yellow
             $AllChatMessages.AddRange($PageResults.value)
         }
         else {
             $AllChatMessages.Add($PageResults)
         }
 
+        Write-Progress -Activity "Retrieving messages" -Status "$($AllChatMessages.Count) messages retrieved (page $PageCount)"
         $MessagesUri = $PageResults.'@odata.nextlink'
     } until (-not $MessagesUri)
 
-    Write-Host "Total messages retrieved: $($AllChatMessages.Count)" -ForegroundColor Green
+    Write-Progress -Activity "Retrieving messages" -Completed
+    Write-Host "Retrieved $($AllChatMessages.Count) messages" -ForegroundColor Green
     #endregion
 
     #region Process Messages
@@ -461,62 +587,114 @@ function Get-TeamsChatMessages {
 
     #region Summary
     Write-Host "`nMessage Summary:" -ForegroundColor Magenta
-    Write-Host "- Total messages processed: $($ProcessedMessages.Count)"
-    Write-Host "- Messages with reactions: $(($ProcessedMessages | Where-Object reactions).Count)"
-    Write-Host "- Reply messages: $(($ProcessedMessages | Where-Object replyToMessageId).Count)"
+    Write-Host "  Total: $($ProcessedMessages.Count)  |  With reactions: $(($ProcessedMessages | Where-Object reactions).Count)  |  Replies: $(($ProcessedMessages | Where-Object replyToMessageId).Count)"
     #endregion
 
-    #region Export
-    if ($ExportFormat -ne "None") {
-        switch ($ExportFormat) {
-            "JSON" {
-                $ExportContent = $ProcessedMessages | ConvertTo-Json -Depth 3
-                $FileExtension = "json"
-            }
-            "CSV" {
-                $ExportContent = $ProcessedMessages | ForEach-Object {
-                    [PSCustomObject]@{
-                        From            = $_.from
-                        CreatedDateTime = $_.createdDateTime
-                        Body            = $_.body -replace "`n", " " -replace "`r", " "
-                        Reactions       = ($_.reactions -join ", ")
-                        ReplyToId       = $_.replyToMessageId
-                        ReplyToPreview  = $_.replyToPreview
-                        MessageId       = $_.id
-                    }
-                } | ConvertTo-Csv -NoTypeInformation
-                $FileExtension = "csv"
-            }
-        }
+    #region Output
+    $Timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
 
-        if ($ExportToFile) {
-            $FileName = "$ExportPath$(Get-Date -Format 'yyyyMMdd_HHmmss').$FileExtension"
-            $ExportContent | Out-File -FilePath $FileName -Encoding UTF8
-            Write-Host "`nMessages exported to: $FileName" -ForegroundColor Green
-        }
-        else {
-            $ExportContent | Set-Clipboard
-            Write-Host "`nMessages copied to clipboard as $ExportFormat" -ForegroundColor Green
+    $CsvData = {
+        $ProcessedMessages | ForEach-Object {
+            [PSCustomObject]@{
+                From            = $_.from
+                CreatedDateTime = $_.createdDateTime
+                Body            = $_.body -replace "`n", " " -replace "`r", " "
+                Reactions       = ($_.reactions -join ", ")
+                ReplyToId       = $_.replyToMessageId
+                ReplyToPreview  = $_.replyToPreview
+                MessageId       = $_.id
+            }
         }
     }
-    #endregion
 
-    #region Console Display
-    if ($ShowInConsole) {
-        Write-Host "`nLast $ShowLastNMessages messages:" -ForegroundColor Cyan
+    $NonInteractive = $PSBoundParameters.ContainsKey('ExportFormat') -or
+                      $PSBoundParameters.ContainsKey('ExportToFile') -or
+                      $PSBoundParameters.ContainsKey('ShowInConsole')
 
-        $DisplayProperties = @{
-            Property = if ($ShowFullBody) {
-                "from", "createdDateTime", "body", "reactions", "replyToMessageId"
+    if ($NonInteractive) {
+        # Parameter-driven export (non-interactive / scripted)
+        if ($ExportFormat -and $ExportFormat -ne "None") {
+            switch ($ExportFormat) {
+                "JSON" {
+                    $ExportContent = $ProcessedMessages | ConvertTo-Json -Depth 3
+                    $FileExtension = "json"
+                }
+                "CSV" {
+                    $ExportContent = (& $CsvData) | ConvertTo-Csv -NoTypeInformation
+                    $FileExtension = "csv"
+                }
+            }
+
+            if ($ExportToFile) {
+                $FileName = "$ExportPath$Timestamp.$FileExtension"
+                $ExportContent | Out-File -FilePath $FileName -Encoding UTF8
+                Write-Host "  Saved to: $((Resolve-Path $FileName).Path)" -ForegroundColor Green
             }
             else {
-                "from", "createdDateTime", @{n = "body"; e = { $_.body[0..50] -join "" } }, "reactions", "replyToMessageId"
+                $ExportContent | Set-Clipboard
+                Write-Host "  $ExportFormat copied to clipboard" -ForegroundColor Green
             }
         }
 
-        $ProcessedMessages |
-            Select-Object -Last $ShowLastNMessages |
-            Format-Table @DisplayProperties -Wrap
+        if ($ShowInConsole) {
+            $DisplayProperties = @{
+                Property = if ($ShowFullBody) {
+                    "from", "createdDateTime", "body", "reactions", "replyToMessageId"
+                }
+                else {
+                    "from", "createdDateTime", @{n = "body"; e = { ($_.body -replace '<[^>]+>')[0..80] -join "" } }, "reactions", "replyToMessageId"
+                }
+            }
+            $ProcessedMessages | Select-Object -Last $ShowLastNMessages |
+                Format-Table @DisplayProperties -Wrap
+        }
+    }
+    else {
+        # Interactive output picker
+        $OutputOptions = @(
+            [PSCustomObject]@{ Action = "Copy JSON to clipboard"; Order = 1 }
+            [PSCustomObject]@{ Action = "Copy CSV to clipboard"; Order = 2 }
+            [PSCustomObject]@{ Action = "Save JSON file"; Order = 3 }
+            [PSCustomObject]@{ Action = "Save CSV file"; Order = 4 }
+            [PSCustomObject]@{ Action = "View messages in Out-GridView"; Order = 5 }
+            [PSCustomObject]@{ Action = "Show last 10 in console"; Order = 6 }
+        )
+
+        $SelectedOutputs = $OutputOptions |
+            Sort-Object Order |
+            Select-Object Action |
+            Out-GridView -Title "Select Output Options (select one or more, then click OK)" -OutputMode Multiple
+
+        foreach ($Output in $SelectedOutputs) {
+            switch ($Output.Action) {
+                "Copy JSON to clipboard" {
+                    $ProcessedMessages | ConvertTo-Json -Depth 3 | Set-Clipboard
+                    Write-Host "  JSON copied to clipboard" -ForegroundColor Green
+                }
+                "Copy CSV to clipboard" {
+                    (& $CsvData) | ConvertTo-Csv -NoTypeInformation | Set-Clipboard
+                    Write-Host "  CSV copied to clipboard" -ForegroundColor Green
+                }
+                "Save JSON file" {
+                    $FileName = ".\TeamsChat_$Timestamp.json"
+                    $ProcessedMessages | ConvertTo-Json -Depth 3 | Out-File -FilePath $FileName -Encoding UTF8
+                    Write-Host "  Saved to: $((Resolve-Path $FileName).Path)" -ForegroundColor Green
+                }
+                "Save CSV file" {
+                    $FileName = ".\TeamsChat_$Timestamp.csv"
+                    (& $CsvData) | Export-Csv -Path $FileName -NoTypeInformation -Encoding UTF8
+                    Write-Host "  Saved to: $((Resolve-Path $FileName).Path)" -ForegroundColor Green
+                }
+                "View messages in Out-GridView" {
+                    $ProcessedMessages | Out-GridView -Title "Teams Chat Messages ($($ProcessedMessages.Count) messages)"
+                }
+                "Show last 10 in console" {
+                    Write-Host ""
+                    $ProcessedMessages | Select-Object -Last 10 |
+                        Format-Table from, createdDateTime, @{n = "body"; e = { ($_.body -replace '<[^>]+>')[0..80] -join "" } }, reactions -Wrap
+                }
+            }
+        }
     }
     #endregion
 
