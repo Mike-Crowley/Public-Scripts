@@ -88,6 +88,10 @@ Many of these scripts were originally shared on the [TechNet Gallery](https://le
 
   + Send email via Microsoft Graph.
 
++ [Get-TeamsChatMessages.ps1](./MicrosoftGraph/Get-TeamsChatMessages.ps1)
+
+  + Retrieve and export Microsoft Teams chat messages via Microsoft Graph. Supports delegated auth (your own chats) and app auth (any user's chats). Includes date filtering (relative, specific range, or sliding window), pagination, Out-GridView chat picker, and JSON/CSV/clipboard export. Also provides `-RegisterApp` to create the required Entra ID app registration.
+
 ## Okta
 
 + [Get-OktaSmsFactors.ps1](./Okta/Get-OktaSmsFactors.ps1)
