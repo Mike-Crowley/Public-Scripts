@@ -70,6 +70,7 @@
 #>
 
 function Find-DriveItemDuplicates {
+    [CmdletBinding()]
     param(
         [ValidateScript(
             {
@@ -143,6 +144,7 @@ function Find-DriveItemDuplicates {
     else {
         # Internal function to recursively get files
         function Get-FolderItemsRecursively {
+            [CmdletBinding()]
             param(
                 [string]$Path,
                 [Collections.Generic.List[Object]]$AllFiles

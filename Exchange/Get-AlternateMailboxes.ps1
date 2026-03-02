@@ -43,13 +43,15 @@
 #>
 
 Function Get-AlternateMailboxes {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$SMTPAddress,
 
-  Param(
-    [parameter(Mandatory = $true)][string]
-    [string]$SMTPAddress,
-    [parameter(Mandatory = $true)][Microsoft.Identity.Client.AuthenticationResult]
-    $MsalToken
-  )
+        [Parameter(Mandatory = $true)]
+        [Microsoft.Identity.Client.AuthenticationResult]$MsalToken
+    )
   try {
     Get-Module MSAL.PS -ListAvailable
   }

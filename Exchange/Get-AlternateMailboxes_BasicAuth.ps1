@@ -24,13 +24,15 @@
 #>
 
 Function Get-AlternateMailboxes {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$SMTPAddress,
 
-  Param(
-    [parameter(Mandatory = $true)][string]
-    $SMTPAddress,
-    [parameter(Mandatory = $true)][pscredential]
-    $Credential
-  )
+        [Parameter(Mandatory = $true)]
+        [pscredential]$Credential
+    )
 
   $AutoDiscoverRequest = @"
         <soap:Envelope xmlns:a="http://schemas.microsoft.com/exchange/2010/Autodiscover"

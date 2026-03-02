@@ -7,12 +7,27 @@
     profile details from Microsoft Graph (beta endpoint) for each user. Exports the results
     to an Excel file.
 
-    Requires active connections to both Exchange Online and Microsoft Graph (beta profile).
+    Connects to both Exchange Online and Microsoft Graph automatically.
+
+.PARAMETER ExchangeUpn
+    The UPN to authenticate with for Connect-ExchangeOnline.
+
+.PARAMETER TenantId
+    The Tenant ID or domain for Connect-MgGraph.
+
+.PARAMETER OutputDirectory
+    Directory path for the output Excel report. Defaults to 'c:\tmp'.
 
 .EXAMPLE
-    .\MailUser-MgUser-Activity-Report.ps1
+    .\MailUser-MgUser-Activity-Report.ps1 -ExchangeUpn admin@example.com -TenantId 'contoso.onmicrosoft.com'
 
-    Runs the report after editing the connection parameters at the top of the script.
+    Connects to Exchange Online and Microsoft Graph, then generates the activity report
+    in the default output directory (c:\tmp).
+
+.EXAMPLE
+    .\MailUser-MgUser-Activity-Report.ps1 -ExchangeUpn admin@example.com -TenantId 'contoso.onmicrosoft.com' -OutputDirectory 'C:\Reports'
+
+    Same report with a custom output directory.
 
 .NOTES
     Author: Mike Crowley
@@ -24,9 +39,23 @@
 .LINK
     https://github.com/Mike-Crowley/Public-Scripts
 #>
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $true)]
+    [ValidateNotNullOrEmpty()]
+    [string]$ExchangeUpn,
 
-Connect-ExchangeOnline -UserPrincipalName <user>
-Connect-MgGraph -TenantId <tenant>
+    [Parameter(Mandatory = $true)]
+    [ValidateNotNullOrEmpty()]
+    [string]$TenantId,
+
+    [Parameter()]
+    [ValidateNotNullOrEmpty()]
+    [string]$OutputDirectory = 'c:\tmp'
+)
+
+Connect-ExchangeOnline -UserPrincipalName $ExchangeUpn
+Connect-MgGraph -TenantId $TenantId
 Select-MgProfile beta
 
 $MailUsers = Get-MailUser -filter { recipienttypedetails -eq 'MailUser' } -ResultSize unlimited
@@ -79,4 +108,4 @@ $Common_ExportExcelParams = @{
 
 $FileDate = Get-Date -Format yyyyMMddTHHmmss
 
-$ReportUsers | Sort-Object UserPrincipalName | Export-Excel @Common_ExportExcelParams -Path ("c:\tmp\" + $filedate + "_report.xlsx") -WorksheetName report
+$ReportUsers | Sort-Object UserPrincipalName | Export-Excel @Common_ExportExcelParams -Path ("$OutputDirectory\" + $filedate + "_report.xlsx") -WorksheetName report

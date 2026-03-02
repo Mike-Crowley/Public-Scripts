@@ -30,13 +30,15 @@
     https://github.com/Mike-Crowley/Public-Scripts
 #>
 
+[CmdletBinding()]
 param(
-    [parameter(
+    [Parameter(
         Position = 0,
         Mandatory = $true,
         ValueFromPipeline = $false,
         HelpMessage = 'Type the name of a Client Access Server'
     )]
+    [ValidateNotNullOrEmpty()]
     [string]$ExchangeFQDN
 )
 

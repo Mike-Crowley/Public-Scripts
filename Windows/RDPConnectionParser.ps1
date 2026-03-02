@@ -26,8 +26,13 @@
     https://mikecrowley.us/tag/powershell
 #>
 
+[CmdletBinding()]
 Param(
-    [array]$ServersToQuery = (hostname),
+    [Parameter()]
+    [ValidateNotNullOrEmpty()]
+    [string[]]$ServersToQuery = (hostname),
+
+    [Parameter()]
     [datetime]$StartTime = "January 1, 1970"
 )
 
@@ -43,7 +48,7 @@ foreach ($Server in $ServersToQuery) {
 
     $AllEntries | ForEach-Object {
         $entry = [xml]$_.ToXml()
-        [array]$Output += New-Object PSObject -Property @{
+        [array]$Output += [pscustomobject]@{
             TimeCreated = $_.TimeCreated
             User        = $entry.Event.UserData.EventXML.User
             IPAddress   = $entry.Event.UserData.EventXML.Address

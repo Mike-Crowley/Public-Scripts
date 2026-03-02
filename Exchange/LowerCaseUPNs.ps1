@@ -10,12 +10,12 @@
     Connects to an Exchange 2013+ server via remote PowerShell.
 
 .PARAMETER ExchangeFQDN
-    Not a parameter -- the Exchange server FQDN is set inline in the script. Edit before running.
+    The fully qualified domain name of the Exchange server to connect to via remote PowerShell.
 
 .EXAMPLE
-    .\LowerCaseUPNs.ps1
+    .\LowerCaseUPNs.ps1 -ExchangeFQDN exchange-admin.contoso.com
 
-    Connects to the Exchange server defined in the script, identifies remote mailboxes with
+    Connects to the specified Exchange server, identifies remote mailboxes with
     uppercase UPN characters, backs them up, and converts each UPN to lowercase.
 
 .NOTES
@@ -25,9 +25,15 @@
 .LINK
     https://mikecrowley.us/2012/05/14/converting-smtp-proxy-addresses-to-lowercase/
 #>
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $true, HelpMessage = 'Type the FQDN of an Exchange server')]
+    [ValidateNotNullOrEmpty()]
+    [string]$ExchangeFQDN
+)
 
 #Connect to Exchange 2013+ Server
-$Session = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri http://exchange-admin/PowerShell/ -Authentication Kerberos
+$Session = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri "http://$ExchangeFQDN/PowerShell/" -Authentication Kerberos
 Import-PSSession $Session
 Set-ADServerSettings -ViewEntireForest $true
 

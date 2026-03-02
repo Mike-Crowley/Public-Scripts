@@ -33,6 +33,7 @@
 #>
 
 function Compare-ObjectsInVSCode {
+    [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
         [PSObject]$Object1,

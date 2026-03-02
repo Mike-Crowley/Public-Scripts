@@ -9,12 +9,35 @@
     Filters users by UPN suffix, retrieves sign-in activity and license assignments, and
     exports the results to an Excel file on the desktop.
 
-    Edit the token parameters and UPN filter in the script before running.
+.PARAMETER ClientId
+    The Application (client) ID of the Azure AD app registration.
+
+.PARAMETER TenantId
+    The Tenant ID or domain for the Azure AD tenant.
+
+.PARAMETER RedirectUri
+    The redirect URI configured for the app registration.
+
+.PARAMETER UpnFilter
+    The UPN suffix to filter users by (e.g., 'subdomain.mikecrowley.us'). Used in the
+    Graph API $filter query with endswith().
 
 .EXAMPLE
-    .\Graph_SignInActivity_Report.ps1
+    .\Graph_SignInActivity_Report.ps1 -ClientId '656d524e-fe4a-407a-9579-7e2be1a74a3c' -TenantId 'contoso.onmicrosoft.com' -RedirectUri 'http://localhost' -UpnFilter 'subdomain.mikecrowley.us'
 
-    Runs the report after editing the app registration, tenant, and UPN filter variables.
+    Generates a sign-in activity report for users whose UPN ends with the specified suffix.
+    Exports results to an Excel file in a dated folder on the desktop.
+
+.EXAMPLE
+    $params = @{
+        ClientId    = '656d524e-fe4a-407a-9579-7e2be1a74a3c'
+        TenantId    = 'contoso.onmicrosoft.com'
+        RedirectUri = 'http://localhost'
+        UpnFilter   = 'contractors.fabrikam.com'
+    }
+    .\Graph_SignInActivity_Report.ps1 @params
+
+    Same report using splatting for readability.
 
 .NOTES
     Author: Mike Crowley
@@ -27,18 +50,35 @@
     https://learn.microsoft.com/en-us/entra/identity/monitoring-health/howto-manage-inactive-user-accounts
 #>
 
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $true)]
+    [ValidateNotNullOrEmpty()]
+    [string]$ClientId,
+
+    [Parameter(Mandatory = $true)]
+    [ValidateNotNullOrEmpty()]
+    [string]$TenantId,
+
+    [Parameter(Mandatory = $true)]
+    [ValidateNotNullOrEmpty()]
+    [string]$RedirectUri,
+
+    [Parameter(Mandatory = $true)]
+    [ValidateNotNullOrEmpty()]
+    [string]$UpnFilter
+)
+
 #auth
 $tokenParams = @{
-    clientID    = <guid>
-    tenantID    = <guid>
-    RedirectUri = <uri>
+    clientID    = $ClientId
+    tenantID    = $TenantId
+    RedirectUri = $RedirectUri
 }
 $myToken = Get-MsalToken @tokenParams
 
 #build request headers
-$uri = @'
-https://graph.microsoft.com/beta/users?$count=true&$filter=endswith(userPrincipalName,'subdomain.mikecrowley.us')&$select=userPrincipalName,displayName,signInActivity,licenseAssignmentStates,assignedLicenses
-'@
+$uri = "https://graph.microsoft.com/beta/users?`$count=true&`$filter=endswith(userPrincipalName,'$UpnFilter')&`$select=userPrincipalName,displayName,signInActivity,licenseAssignmentStates,assignedLicenses"
 
 $requestParams = @{
     Headers = @{

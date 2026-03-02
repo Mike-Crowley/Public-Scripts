@@ -50,9 +50,16 @@ function Restore-FromRecycleBin {
     [cmdletbinding()]
     Param
     (
-        [Parameter(Mandatory = $true)] [string] $SiteUrl,
-        [Parameter(Mandatory = $true)] [datetime] $RestoreDate,
-        [Parameter(Mandatory = $true)] [string] $LogDirectory
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$SiteUrl,
+
+        [Parameter(Mandatory = $true)]
+        [datetime]$RestoreDate,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$LogDirectory
     )
 
     $VerbosePreference = 'Continue'
