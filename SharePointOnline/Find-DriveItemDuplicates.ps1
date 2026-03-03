@@ -509,7 +509,6 @@ function Find-DriveItemDuplicates {
                         SiteCollGB    = ''
                         SiteCollFiles = ''
                         Created       = if ($site.createdDateTime) { ([datetime]$site.createdDateTime).ToString('yyyy-MM-dd') } else { '' }
-                        LastModified  = if ($site.lastModifiedDateTime) { ([datetime]$site.lastModifiedDateTime).ToString('yyyy-MM-dd') } else { '' }
                         SiteId        = $site.id
                         Upn           = ""
                     })
@@ -590,7 +589,6 @@ function Find-DriveItemDuplicates {
                         SiteCollGB    = $storageGB
                         SiteCollFiles = $fileCount
                         Created       = if ($site.createdDateTime) { ([datetime]$site.createdDateTime).ToString('yyyy-MM-dd') } else { '' }
-                        LastModified  = if ($site.lastModifiedDateTime) { ([datetime]$site.lastModifiedDateTime).ToString('yyyy-MM-dd') } else { '' }
                         SiteId        = $site.id
                         Upn           = ""
                     })
@@ -624,7 +622,6 @@ function Find-DriveItemDuplicates {
                         SiteCollGB    = ''
                         SiteCollFiles = ''
                         Created       = if ($site.createdDateTime) { ([datetime]$site.createdDateTime).ToString('yyyy-MM-dd') } else { '' }
-                        LastModified  = if ($site.lastModifiedDateTime) { ([datetime]$site.lastModifiedDateTime).ToString('yyyy-MM-dd') } else { '' }
                         SiteId        = $site.id
                         Upn           = ""
                     })
@@ -647,7 +644,6 @@ function Find-DriveItemDuplicates {
                         SiteCollGB = ''
                         SiteCollFiles     = ''
                         Created       = ''
-                        LastModified  = ''
                         SiteId        = ""
                         Upn           = $user.userPrincipalName
                     })
@@ -820,7 +816,7 @@ function Find-DriveItemDuplicates {
 
         $gridColumns = @('Type', 'DisplayName', 'WebUrl')
         if ($IncludeStorageMetrics) { $gridColumns += 'SiteCollGB', 'SiteCollFiles' }
-        $gridColumns += 'Created', 'LastModified'
+        $gridColumns += 'Created'
 
         $sortedSiteList = if ($IncludeStorageMetrics) {
             $pickerList | Sort-Object { if ($_.SiteCollGB -is [double]) { $_.SiteCollGB } else { -1 } } -Descending
