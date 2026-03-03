@@ -17,29 +17,55 @@
 
     The script can be dot-sourced to load the function, or invoked directly.
 
-    Two operating modes are available:
+    Three operating modes are available:
 
         UPN Mode (default)  -  Scans a single user's OneDrive, identified by -Upn.
         Site Picker Mode    -  Presents an interactive Out-GridView workflow that lets an
                                administrator browse SharePoint sites (and optionally OneDrive
                                personal sites), select a target site, and choose a document
                                library when more than one exists.
+        App Auth Mode       -  Connects with application (client credential) permissions for
+                               full read access to all sites and drives. Use -RegisterApp once
+                               to create the required Entra ID app, then supply -ClientId and
+                               -TenantId for subsequent runs. Defaults to site picker behavior;
+                               add -Upn to scan a specific user's OneDrive instead.
 
-    A Microsoft Graph session must be established before running this function:
+    Delegated auth (UPN and Site Picker modes) requires a pre-existing Graph session:
 
         Connect-MgGraph -Scopes Files.Read                                # UPN mode
         Connect-MgGraph -Scopes Sites.Read.All                            # Site picker
         Connect-MgGraph -Scopes Sites.Read.All, User.Read.All             # Site picker + OneDrive
         Connect-MgGraph -Scopes Sites.Read.All, Reports.Read.All          # Site picker + storage metrics
 
-    To scan drives belonging to other users or application-only scenarios, register an
-    Entra ID application with the appropriate permissions:
-        https://learn.microsoft.com/en-us/powershell/microsoftgraph/app-only?view=graph-powershell-1.0
+    App auth handles its own connection — no prior Connect-MgGraph is needed.
+
+.PARAMETER RegisterApp
+    Creates an Entra ID app registration with Sites.Read.All and Reports.Read.All
+    application permissions, a client secret (90-day expiry), a service principal,
+    and grants admin consent. Run this once per tenant before using app auth.
+    Requires Application.ReadWrite.All and AppRoleAssignment.ReadWrite.All
+    permissions (typically Application Administrator or Global Administrator).
+    Returns an object with ClientId and ClientSecret for subsequent runs.
+
+.PARAMETER ClientId
+    The Application (client) ID of the Entra ID app registration created by
+    -RegisterApp. Required for app auth. When used without -Upn, enters site picker
+    mode. When used with -Upn, scans the specified user's OneDrive.
+
+.PARAMETER ClientSecret
+    The client secret for the app registration. If omitted, you will be prompted
+    via Get-Credential. Accepts the plain-text secret returned by -RegisterApp,
+    e.g. -ClientSecret $app.ClientSecret.
+
+.PARAMETER TenantId
+    The tenant ID or domain name for the Microsoft 365 tenant. Required for
+    -RegisterApp and app auth.
 
 .PARAMETER Upn
-    User principal name of the OneDrive owner to scan. When omitted, defaults to the
-    Graph session account (Get-MgContext).Account, falling back to whoami /upn if
-    unavailable. Mutually exclusive with -SitePicker.
+    User principal name of the OneDrive owner to scan. When omitted in UPN mode,
+    defaults to the Graph session account (Get-MgContext).Account, falling back to
+    whoami /upn. When used with -ClientId, scans that user's OneDrive with app
+    permissions. Mutually exclusive with -SitePicker.
 
 .PARAMETER SitePicker
     Enables an interactive site-selection workflow powered by Out-GridView. The administrator
@@ -117,16 +143,43 @@
     Retrieves up to 1000 sites for the picker grid and evaluates up to 5000 files on the
     selected site.
 
+.EXAMPLE
+    $app = Find-DriveItemDuplicates -RegisterApp -TenantId "contoso.com"
+
+    Creates an Entra ID app registration with Sites.Read.All and Reports.Read.All
+    permissions. Save the returned ClientId and ClientSecret for subsequent runs.
+    The secret cannot be retrieved later.
+
+.EXAMPLE
+    Find-DriveItemDuplicates -ClientId $app.ClientId -ClientSecret $app.ClientSecret -TenantId "contoso.com"
+
+    Uses application permissions to browse all SharePoint sites with full file access.
+    No personal site membership required. Defaults to site picker mode.
+
+.EXAMPLE
+    Find-DriveItemDuplicates -ClientId $app.ClientId -ClientSecret $app.ClientSecret -TenantId "contoso.com" -IncludeStorageMetrics
+
+    App auth site picker with storage metrics. Because app permissions include both
+    Sites.Read.All and Reports.Read.All, all sites and storage data are accessible.
+
+.EXAMPLE
+    Find-DriveItemDuplicates -ClientId "00000000-..." -TenantId "contoso.com" -Upn user@contoso.com
+
+    Uses application permissions to scan a specific user's OneDrive. The -ClientSecret
+    is omitted, so you will be prompted via Get-Credential.
+
 .NOTES
     Author: Mike Crowley
     https://mikecrowley.us
 
     Prerequisites
         Module:       Microsoft.Graph.Authentication
-        Permissions:  Files.Read or Sites.Read (UPN mode)
-                      Sites.Read.All (Site Picker mode)
-                      Sites.Read.All, User.Read.All (Site Picker with OneDrive option)
+        Permissions:  Files.Read or Sites.Read (UPN mode, delegated)
+                      Sites.Read.All (Site Picker mode, delegated)
+                      Sites.Read.All, User.Read.All (Site Picker with OneDrive, delegated)
                       Reports.Read.All (IncludeStorageMetrics)
+                      Application.ReadWrite.All (RegisterApp only)
+                      Sites.Read.All, Reports.Read.All (App Auth — granted automatically)
 
     Testing
         The following snippet creates a set of duplicate and unique files suitable for
@@ -152,17 +205,35 @@
 
 [CmdletBinding(DefaultParameterSetName = 'UPN')]
 param(
+    [Parameter(Mandatory, ParameterSetName = 'RegisterApp')]
+    [switch]$RegisterApp,
+
+    [Parameter(Mandatory, ParameterSetName = 'AppAuth')]
+    [ValidateNotNullOrEmpty()]
+    [string]$ClientId,
+
+    [Parameter(ParameterSetName = 'AppAuth')]
+    [string]$ClientSecret,
+
+    [Parameter(Mandatory, ParameterSetName = 'RegisterApp')]
+    [Parameter(Mandatory, ParameterSetName = 'AppAuth')]
+    [ValidateNotNullOrEmpty()]
+    [string]$TenantId,
+
     [Parameter(ParameterSetName = 'UPN')]
+    [Parameter(ParameterSetName = 'AppAuth')]
     [string]$Upn,
 
     [Parameter(Mandatory, ParameterSetName = 'SitePicker')]
     [switch]$SitePicker,
 
     [Parameter(ParameterSetName = 'SitePicker')]
+    [Parameter(ParameterSetName = 'AppAuth')]
     [ValidateRange(1, 5000)]
     [int32]$SiteCount = 500,
 
     [Parameter(ParameterSetName = 'SitePicker')]
+    [Parameter(ParameterSetName = 'AppAuth')]
     [switch]$IncludeStorageMetrics,
 
     [string]$RootPath = "/",
@@ -178,17 +249,35 @@ param(
 function Find-DriveItemDuplicates {
     [CmdletBinding(DefaultParameterSetName = 'UPN')]
     param(
+        [Parameter(Mandatory, ParameterSetName = 'RegisterApp')]
+        [switch]$RegisterApp,
+
+        [Parameter(Mandatory, ParameterSetName = 'AppAuth')]
+        [ValidateNotNullOrEmpty()]
+        [string]$ClientId,
+
+        [Parameter(ParameterSetName = 'AppAuth')]
+        [string]$ClientSecret,
+
+        [Parameter(Mandatory, ParameterSetName = 'RegisterApp')]
+        [Parameter(Mandatory, ParameterSetName = 'AppAuth')]
+        [ValidateNotNullOrEmpty()]
+        [string]$TenantId,
+
         [Parameter(ParameterSetName = 'UPN')]
+        [Parameter(ParameterSetName = 'AppAuth')]
         [string]$Upn,
 
         [Parameter(Mandatory, ParameterSetName = 'SitePicker')]
         [switch]$SitePicker,
 
         [Parameter(ParameterSetName = 'SitePicker')]
+        [Parameter(ParameterSetName = 'AppAuth')]
         [ValidateRange(1, 5000)]
         [int32]$SiteCount = 500,
 
         [Parameter(ParameterSetName = 'SitePicker')]
+        [Parameter(ParameterSetName = 'AppAuth')]
         [switch]$IncludeStorageMetrics,
 
         [string]$RootPath = "/",
@@ -204,32 +293,161 @@ function Find-DriveItemDuplicates {
     $StartTime = Get-Date
     $script:MoreFilesExist = $false
 
-    #region Pre-flight checks
+    #region Module check
     if ($null -eq (Get-Command Invoke-MgGraphRequest -ErrorAction SilentlyContinue)) {
         throw "Invoke-MgGraphRequest cmdlet not found. Install the Microsoft.Graph.Authentication PowerShell module.`nhttps://learn.microsoft.com/en-us/graph/sdks/sdk-installation#install-the-microsoft-graph-powershell-sdk"
     }
+    #endregion
+
+    #region Register App
+    if ($PSCmdlet.ParameterSetName -eq 'RegisterApp') {
+        Write-Host "Connecting to Microsoft Graph to register the application..." -ForegroundColor Green
+        Connect-MgGraph -Scopes "Application.ReadWrite.All", "AppRoleAssignment.ReadWrite.All" -TenantId $TenantId -ContextScope "process" -NoWelcome
+
+        # Look up the Sites.Read.All and Reports.Read.All app roles from the Graph service principal
+        $GraphAppId = "00000003-0000-0000-c000-000000000000"
+        $GraphSPResponse = Invoke-MgGraphRequest -Uri "v1.0/servicePrincipals?`$filter=appId eq '$GraphAppId'" -OutputType PSObject
+        $GraphSP = $GraphSPResponse.value[0]
+        $SitesReadAllRole = $GraphSP.appRoles | Where-Object { $_.value -eq "Sites.Read.All" }
+        $ReportsReadAllRole = $GraphSP.appRoles | Where-Object { $_.value -eq "Reports.Read.All" }
+
+        if (-not $SitesReadAllRole) {
+            Write-Error "Could not find the Sites.Read.All app role on the Microsoft Graph service principal."
+            return
+        }
+
+        # Build required permissions
+        $resourceAccess = @(
+            @{ id = $SitesReadAllRole.id; type = "Role" }
+        )
+        if ($ReportsReadAllRole) {
+            $resourceAccess += @{ id = $ReportsReadAllRole.id; type = "Role" }
+        }
+
+        # Create the app registration
+        $AppBody = @{
+            displayName            = "Find-DriveItemDuplicates"
+            signInAudience         = "AzureADMyOrg"
+            requiredResourceAccess = @(
+                @{
+                    resourceAppId  = $GraphAppId
+                    resourceAccess = $resourceAccess
+                }
+            )
+        } | ConvertTo-Json -Depth 5
+
+        $App = Invoke-MgGraphRequest -Method POST -Uri "v1.0/applications" -Body $AppBody -ContentType "application/json" -OutputType PSObject
+
+        # Create a client secret (90-day expiration)
+        $SecretBody = @{
+            passwordCredential = @{
+                displayName = "Find-DriveItemDuplicates secret"
+                endDateTime = (Get-Date).AddDays(90).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+            }
+        } | ConvertTo-Json -Depth 3
+
+        $Secret = Invoke-MgGraphRequest -Method POST -Uri "v1.0/applications/$($App.id)/addPassword" -Body $SecretBody -ContentType "application/json" -OutputType PSObject
+
+        # Create the service principal so the app is usable for client credential auth
+        $SPBody = @{ appId = $App.appId } | ConvertTo-Json
+        $SP = Invoke-MgGraphRequest -Method POST -Uri "v1.0/servicePrincipals" -Body $SPBody -ContentType "application/json" -OutputType PSObject
+
+        # Grant admin consent for each app role
+        $ConsentGranted = $false
+        try {
+            foreach ($role in $resourceAccess) {
+                $ConsentBody = @{
+                    principalId = $SP.id
+                    resourceId  = $GraphSP.id
+                    appRoleId   = $role.id
+                } | ConvertTo-Json
+                Invoke-MgGraphRequest -Method POST -Uri "v1.0/servicePrincipals/$($SP.id)/appRoleAssignments" -Body $ConsentBody -ContentType "application/json" -OutputType PSObject | Out-Null
+            }
+            $ConsentGranted = $true
+        }
+        catch {
+            Write-Warning "Could not grant admin consent automatically. An admin must grant consent manually:`n  Azure Portal > App Registrations > Find-DriveItemDuplicates > API Permissions > Grant admin consent"
+        }
+
+        $permNames = @('Sites.Read.All')
+        if ($ReportsReadAllRole) { $permNames += 'Reports.Read.All' }
+
+        Write-Host "`nApp Registration Created Successfully" -ForegroundColor Green
+        Write-Host "  Display Name : $($App.displayName)" -ForegroundColor Cyan
+        Write-Host "  Client ID    : $($App.appId)" -ForegroundColor Cyan
+        Write-Host "  Client Secret: $($Secret.secretText)" -ForegroundColor Cyan
+        Write-Host "  Secret Expiry: $($Secret.endDateTime)" -ForegroundColor Cyan
+        Write-Host "  Permissions  : $($permNames -join ', ')" -ForegroundColor Cyan
+        if ($ConsentGranted) {
+            Write-Host "  Admin Consent: Granted" -ForegroundColor Green
+        }
+        Write-Host "`n  Save the Client ID and Secret now. The secret value cannot be retrieved later." -ForegroundColor Yellow
+
+        return [PSCustomObject]@{
+            DisplayName    = $App.displayName
+            ClientId       = $App.appId
+            ObjectId       = $App.id
+            ClientSecret   = $Secret.secretText
+            SecretExpiry   = $Secret.endDateTime
+            ConsentGranted = $ConsentGranted
+        }
+    }
+    #endregion
+
+    #region App auth connection
+    $IsAppAuth = $PSCmdlet.ParameterSetName -eq 'AppAuth'
+    if ($IsAppAuth) {
+        Disconnect-MgGraph -ErrorAction SilentlyContinue | Out-Null
+
+        if ($ClientSecret) {
+            $SecureSecret = ConvertTo-SecureString $ClientSecret -AsPlainText -Force
+            $ClientSecretCredential = [PSCredential]::new($ClientId, $SecureSecret)
+        }
+        else {
+            $ClientSecretCredential = Get-Credential -Credential $ClientId
+        }
+
+        try {
+            Connect-MgGraph -ClientSecretCredential $ClientSecretCredential -TenantId $TenantId -ContextScope "process" -NoWelcome -ErrorAction Stop
+        }
+        catch {
+            Write-Error "App authentication failed. If the app was just registered, wait a minute for propagation and verify an admin has granted consent. $_"
+            return
+        }
+
+        if (-not $Silent) { Write-Host "Connected with application permissions." -ForegroundColor Green }
+    }
+    #endregion
+
+    #region Pre-flight checks
     if ($null -eq (Get-MgContext)) {
-        throw "No Graph context found. Please call Connect-MgGraph."
+        throw "No Graph context found. Please call Connect-MgGraph, or use -ClientId/-TenantId for app auth."
     }
 
-    $scopes = (Get-MgContext).Scopes | Out-String
-    if ($PSCmdlet.ParameterSetName -eq 'SitePicker') {
-        if ($scopes -notlike '*Sites.Read.All*') {
-            Write-Warning "Sites.Read.All scope may be required for site picker.`nhttps://learn.microsoft.com/en-us/graph/api/site-search"
+    # Determine routing
+    $useSitePicker = ($PSCmdlet.ParameterSetName -eq 'SitePicker') -or
+                     ($IsAppAuth -and -not $Upn)
+
+    if (-not $IsAppAuth) {
+        $scopes = (Get-MgContext).Scopes | Out-String
+        if ($useSitePicker) {
+            if ($scopes -notlike '*Sites.Read.All*') {
+                Write-Warning "Sites.Read.All scope may be required for site picker.`nhttps://learn.microsoft.com/en-us/graph/api/site-search"
+            }
+            if ($IncludeStorageMetrics -and $scopes -notlike '*Reports.Read.All*') {
+                Write-Warning "Reports.Read.All scope is required for -IncludeStorageMetrics.`nhttps://learn.microsoft.com/en-us/graph/api/reportroot-getsharepointsiteusagedetail"
+            }
         }
-        if ($IncludeStorageMetrics -and $scopes -notlike '*Reports.Read.All*') {
-            Write-Warning "Reports.Read.All scope is required for -IncludeStorageMetrics.`nhttps://learn.microsoft.com/en-us/graph/api/reportroot-getsharepointsiteusagedetail"
-        }
-    }
-    else {
-        if ($scopes -notlike '*Files.Read*' -and $scopes -notlike '*Sites.Read*') {
-            Write-Warning "Permission scope may be missing.`nhttps://learn.microsoft.com/en-us/graph/api/driveitem-list-children?view=graph-rest-beta&tabs=http#permissions"
+        else {
+            if ($scopes -notlike '*Files.Read*' -and $scopes -notlike '*Sites.Read*') {
+                Write-Warning "Permission scope may be missing.`nhttps://learn.microsoft.com/en-us/graph/api/driveitem-list-children?view=graph-rest-beta&tabs=http#permissions"
+            }
         }
     }
     #endregion
 
     #region Drive resolution
-    if ($PSCmdlet.ParameterSetName -eq 'SitePicker') {
+    if ($useSitePicker) {
         # Step A: Ask about OneDrive personal sites
         $SiteTypeOptions = @(
             [PSCustomObject]@{ Choice = "SharePoint sites only" }
@@ -726,6 +944,7 @@ function Find-DriveItemDuplicates {
 
     #region File collection
     $FileList = [Collections.Generic.List[Object]]::new()
+    $script:AccessDeniedPaths = [Collections.Generic.List[string]]::new()
 
     # Determine whether we can show a percentage (only when ResultSize is not the default)
     $showPercent = $ResultSize -lt [int16]::MaxValue
@@ -746,7 +965,20 @@ function Find-DriveItemDuplicates {
                 if ($showPercent) { $progressParams.PercentComplete = [math]::Min(100, [int]($RawItems.Count / $ResultSize * 100)) }
                 Write-Progress @progressParams
             }
-            $PageResults = Invoke-MgGraphRequest -Uri $uri
+            try {
+                $PageResults = Invoke-MgGraphRequest -Uri $uri -ErrorAction Stop
+            }
+            catch {
+                $errMsg = "$($_.Exception.Message) $($_.ErrorDetails.Message)"
+                if ($errMsg -match '403|Forbidden|accessDenied') {
+                    $script:AccessDeniedPaths += $RootPath
+                    break
+                }
+                else {
+                    Write-Warning "Failed to read '$RootPath': $($_.Exception.Message)"
+                    break
+                }
+            }
             if ($PageResults.value) {
                 $RawItems.AddRange($PageResults.value)
             }
@@ -808,7 +1040,20 @@ function Find-DriveItemDuplicates {
                     Write-Progress @progressParams
                 }
 
-                $Response = Invoke-MgGraphRequest -Uri $Uri
+                try {
+                    $Response = Invoke-MgGraphRequest -Uri $Uri -ErrorAction Stop
+                }
+                catch {
+                    $errMsg = "$($_.Exception.Message) $($_.ErrorDetails.Message)"
+                    if ($errMsg -match '403|Forbidden|accessDenied') {
+                        $script:AccessDeniedPaths += $Path
+                        return   # skip this folder
+                    }
+                    else {
+                        Write-Warning "Failed to read '$Path': $($_.Exception.Message)"
+                        return
+                    }
+                }
 
                 foreach ($Item in $Response.value) {
                     if ($null -ne $Item.folder) {
@@ -837,6 +1082,25 @@ function Find-DriveItemDuplicates {
 
         Get-FolderItemsRecursively -Path $RootPath -AllFiles $FileList
         if (-not $Silent) { Write-Progress -Id $progressId -Activity "Scanning files" -Completed }
+    }
+
+    # Access-denied diagnostic — warn when the scan returned suspiciously few files
+    if ($script:AccessDeniedPaths.Count -gt 0 -and -not $Silent) {
+        Write-Host ""
+        Write-Warning "Access denied on $($script:AccessDeniedPaths.Count) path(s). Your account may not have Read access to this site's content."
+        Write-Host "  Tip: Even with Sites.Read.All, delegated Graph sessions can only see files" -ForegroundColor DarkGray
+        Write-Host "  your account can access in each site. To scan all files, either:" -ForegroundColor DarkGray
+        Write-Host "    1. Grant your account Read access on the target site (SharePoint Admin Center)" -ForegroundColor DarkGray
+        Write-Host "    2. Use application-only auth (Connect-MgGraph -ClientId ... -CertificateThumbprint ...)" -ForegroundColor DarkGray
+        Write-Host ""
+    }
+    elseif ($useSitePicker -and $FileList.Count -le 5 -and -not $Silent) {
+        Write-Host ""
+        Write-Warning "Only $($FileList.Count) file(s) found. Your account may not have Read access to this site's content."
+        Write-Host "  Tip: Delegated Graph sessions can only see files your account can access in" -ForegroundColor DarkGray
+        Write-Host "  each site. To scan all files, grant your account Read access on the target" -ForegroundColor DarkGray
+        Write-Host "  site, or use application-only auth." -ForegroundColor DarkGray
+        Write-Host ""
     }
     #endregion
 
@@ -1034,6 +1298,12 @@ $(foreach ($item in $topWaste) {
         $(if ($script:MoreFilesExist) {
             "<p style='color: #fbbf24; margin-top: 30px;'><strong>Warning:</strong> ResultSize limit ($ResultSize) reached. More files exist but were not evaluated. Use -ResultSize to increase.</p>"
         })
+        $(if ($script:AccessDeniedPaths.Count -gt 0) {
+            "<p style='color: #ff6b6b; margin-top: 30px;'><strong>Access Denied:</strong> $($script:AccessDeniedPaths.Count) path(s) could not be read. Your account may not have Read access to this site's content. Even with Sites.Read.All, delegated Graph sessions can only read files your account is permitted to access in each site. Grant your account Read access on the target site, or use application-only authentication.</p>"
+        })
+        $(if ($useSitePicker -and $FileList.Count -le 5 -and $script:AccessDeniedPaths.Count -eq 0) {
+            "<p style='color: #fbbf24; margin-top: 30px;'><strong>Low file count:</strong> Only $($FileList.Count) file(s) found. Your account may not have full Read access to this site. Delegated Graph sessions can only read files your account is permitted to access.</p>"
+        })
     </div>
 </body>
 </html>
@@ -1072,6 +1342,9 @@ $(foreach ($item in $topWaste) {
         }
         if ($script:MoreFilesExist) {
             Write-Host "Warning: ResultSize limit ($ResultSize) reached. Use -ResultSize to scan more." -ForegroundColor Yellow
+        }
+        if ($script:AccessDeniedPaths.Count -gt 0) {
+            Write-Host "Warning: Access denied on $($script:AccessDeniedPaths.Count) path(s). Results may be incomplete." -ForegroundColor Yellow
         }
     }
     #endregion
