@@ -30,6 +30,7 @@
         Connect-MgGraph -Scopes Files.Read                                # UPN mode
         Connect-MgGraph -Scopes Sites.Read.All                            # Site picker
         Connect-MgGraph -Scopes Sites.Read.All, User.Read.All             # Site picker + OneDrive
+        Connect-MgGraph -Scopes Sites.Read.All, Reports.Read.All          # Site picker + storage metrics
 
     To scan drives belonging to other users or application-only scenarios, register an
     Entra ID application with the appropriate permissions:
@@ -47,8 +48,17 @@
     libraries, a follow-up grid allows library selection. Mutually exclusive with -Upn.
 
 .PARAMETER SiteCount
-    Maximum number of sites to retrieve and display in the site picker grid. Accepts values
-    from 1 to 1000. Default: 100. Ignored when -SitePicker is not specified.
+    Maximum number of sites to retrieve for the site picker grid. When -IncludeStorageMetrics
+    is used, this limits the number of site collections shown (subsites are excluded
+    automatically). Accepts values from 1 to 5000. Default: 500. Ignored when -SitePicker
+    is not specified.
+
+.PARAMETER IncludeStorageMetrics
+    When used with -SitePicker, retrieves site-collection-level storage usage from the
+    Graph Reports API (getSharePointSiteUsageDetail). Adds SiteCollGB and SiteCollFiles
+    columns to the site picker grid. These values represent the entire site collection —
+    subsites share their parent collection's totals. Requires Reports.Read.All scope.
+    Data may be up to 48 hours old. Ignored without -SitePicker.
 
 .PARAMETER RootPath
     Starting directory path within the selected drive. Use forward-slash notation
@@ -96,9 +106,15 @@
     document-library selection grid.
 
 .EXAMPLE
-    Find-DriveItemDuplicates -SitePicker -SiteCount 250 -ResultSize 5000
+    Find-DriveItemDuplicates -SitePicker -IncludeStorageMetrics
 
-    Retrieves up to 250 sites for the picker grid and evaluates up to 5000 files on the
+    Site picker with site-collection-level storage columns (SiteCollGB, SiteCollFiles) from
+    the Graph Reports API. Requires Reports.Read.All scope. Data may be up to 48 hours old.
+
+.EXAMPLE
+    Find-DriveItemDuplicates -SitePicker -SiteCount 1000 -ResultSize 5000
+
+    Retrieves up to 1000 sites for the picker grid and evaluates up to 5000 files on the
     selected site.
 
 .NOTES
@@ -110,6 +126,7 @@
         Permissions:  Files.Read or Sites.Read (UPN mode)
                       Sites.Read.All (Site Picker mode)
                       Sites.Read.All, User.Read.All (Site Picker with OneDrive option)
+                      Reports.Read.All (IncludeStorageMetrics)
 
     Testing
         The following snippet creates a set of duplicate and unique files suitable for
@@ -142,8 +159,8 @@ param(
     [switch]$SitePicker,
 
     [Parameter(ParameterSetName = 'SitePicker')]
-    [ValidateRange(1, 1000)]
-    [int32]$SiteCount = 100,
+    [ValidateRange(1, 5000)]
+    [int32]$SiteCount = 500,
 
     [Parameter(ParameterSetName = 'SitePicker')]
     [switch]$IncludeStorageMetrics,
@@ -168,8 +185,8 @@ function Find-DriveItemDuplicates {
         [switch]$SitePicker,
 
         [Parameter(ParameterSetName = 'SitePicker')]
-        [ValidateRange(1, 1000)]
-        [int32]$SiteCount = 100,
+        [ValidateRange(1, 5000)]
+        [int32]$SiteCount = 500,
 
         [Parameter(ParameterSetName = 'SitePicker')]
         [switch]$IncludeStorageMetrics,
@@ -200,6 +217,9 @@ function Find-DriveItemDuplicates {
         if ($scopes -notlike '*Sites.Read.All*') {
             Write-Warning "Sites.Read.All scope may be required for site picker.`nhttps://learn.microsoft.com/en-us/graph/api/site-search"
         }
+        if ($IncludeStorageMetrics -and $scopes -notlike '*Reports.Read.All*') {
+            Write-Warning "Reports.Read.All scope is required for -IncludeStorageMetrics.`nhttps://learn.microsoft.com/en-us/graph/api/reportroot-getsharepointsiteusagedetail"
+        }
     }
     else {
         if ($scopes -notlike '*Files.Read*' -and $scopes -notlike '*Sites.Read*') {
@@ -226,25 +246,174 @@ function Find-DriveItemDuplicates {
         # Step B: Fetch sites via Graph
         $SiteList = [Collections.Generic.List[Object]]::new()
 
-        # Derive the tenant prefix from the Graph session account (e.g., "ussilica" from "user@ussilica.com")
-        # SharePoint site URLs all contain {tenant}.sharepoint.com, so this matches broadly.
-        $searchTerm = ((Get-MgContext).Account -split '@')[-1] -split '\.' | Select-Object -First 1
-        if (-not $Silent) { Write-Host "Fetching SharePoint sites (search: $searchTerm)..." -ForegroundColor Cyan }
-        $siteUri = "v1.0/sites?search=$searchTerm&`$top=$SiteCount&`$select=id,displayName,webUrl"
-        do {
-            $siteResponse = Invoke-MgGraphRequest -Uri $siteUri
-            foreach ($site in $siteResponse.value) {
-                if ($SiteList.Count -ge $SiteCount) { break }
-                $SiteList.Add([PSCustomObject]@{
-                    Type        = "SharePoint"
-                    DisplayName = $site.displayName
-                    WebUrl      = $site.webUrl
-                    SiteId      = $site.id
-                    Upn         = ""
-                })
+        # Three enumeration strategies, tried in order:
+        #   1. getAllSites          — complete inventory (needs admin-consented Sites.Read.All)
+        #   2. Reports API + batch  — complete inventory from getSharePointSiteUsageDetail,
+        #                             resolving display names via JSON-batched site lookups
+        #                             (needs Reports.Read.All; only when -IncludeStorageMetrics)
+        #   3. Search API           — partial results (standard delegated permissions)
+        if (-not $Silent) { Write-Host "Fetching SharePoint sites..." -ForegroundColor Cyan }
+        $storageAlreadyMerged = $false
+
+        # Probe whether getAllSites is accessible
+        $getAllSitesOk = $true
+        try {
+            $null = Invoke-MgGraphRequest -Uri "v1.0/sites/getAllSites?`$top=1&`$select=id" -ErrorAction Stop
+        }
+        catch {
+            if ($_.Exception.Message -match '403|Forbidden|accessDenied') { $getAllSitesOk = $false }
+            else { throw }
+        }
+
+        if ($getAllSitesOk) {
+            # Path 1: getAllSites — complete enumeration
+            if (-not $Silent) { Write-Host "Using getAllSites for complete enumeration." -ForegroundColor DarkGray }
+            $siteUri = "v1.0/sites/getAllSites?`$top=999&`$select=id,displayName,webUrl,createdDateTime,lastModifiedDateTime"
+            $siteCollCounter = 0
+            do {
+                $siteResponse = Invoke-MgGraphRequest -Uri $siteUri
+                foreach ($site in $siteResponse.value) {
+                    if ($IncludeStorageMetrics) {
+                        $pathParts = ([uri]$site.webUrl).AbsolutePath.Trim('/') -split '/' | Where-Object { $_ }
+                        $isSiteCollection = ($pathParts.Count -eq 0) -or
+                            ($pathParts.Count -eq 2 -and $pathParts[0] -in @('sites', 'teams'))
+                        if (-not $isSiteCollection) { continue }
+                        $siteCollCounter++
+                        if ($siteCollCounter -gt $SiteCount) { break }
+                    }
+                    else {
+                        if ($SiteList.Count -ge $SiteCount) { break }
+                    }
+                    $SiteList.Add([PSCustomObject]@{
+                        Type          = "SharePoint"
+                        DisplayName   = $site.displayName
+                        WebUrl        = $site.webUrl
+                        SiteCollGB    = ''
+                        SiteCollFiles = ''
+                        Created       = if ($site.createdDateTime) { ([datetime]$site.createdDateTime).ToString('yyyy-MM-dd') } else { '' }
+                        LastModified  = if ($site.lastModifiedDateTime) { ([datetime]$site.lastModifiedDateTime).ToString('yyyy-MM-dd') } else { '' }
+                        SiteId        = $site.id
+                        Upn           = ""
+                    })
+                }
+                $siteUri = $siteResponse.'@odata.nextLink'
+                $limitReached = if ($IncludeStorageMetrics) { $siteCollCounter -ge $SiteCount } else { $SiteList.Count -ge $SiteCount }
+            } until (-not $siteUri -or $limitReached)
+        }
+        elseif ($IncludeStorageMetrics) {
+            # Path 2: Reports API + JSON batching — complete enumeration with storage.
+            # The Reports API lists every site collection with storage data; batched
+            # GET /sites/{hostname},{siteId} calls resolve display names and URLs.
+            if (-not $Silent) {
+                Write-Warning "sites/getAllSites requires admin consent. Building site list from Reports API."
             }
-            $siteUri = $siteResponse.'@odata.nextLink'
-        } until (-not $siteUri -or $SiteList.Count -ge $SiteCount)
+
+            # Derive the SharePoint hostname from the root site
+            $rootSite = Invoke-MgGraphRequest -Uri "v1.0/sites/root?`$select=webUrl" -ErrorAction Stop
+            $spHostname = ([uri]$rootSite.webUrl).Host
+
+            # Fetch the full usage report
+            $tempCsv = Join-Path ([System.IO.Path]::GetTempPath()) "spo_report_$(Get-Random).csv"
+            Invoke-MgGraphRequest -Uri "v1.0/reports/getSharePointSiteUsageDetail(period='D7')" -OutputFilePath $tempCsv -ErrorAction Stop
+            $reportData = @(Import-Csv $tempCsv)
+            Remove-Item $tempCsv -Force -ErrorAction SilentlyContinue
+
+            if (-not $Silent) { Write-Host "Report returned $($reportData.Count) site rows. Resolving details via JSON batching..." -ForegroundColor Cyan }
+
+            # Sort by storage descending and cap at SiteCount
+            $reportData = @($reportData |
+                Sort-Object { if ($_.'Storage Used (Byte)') { [double]$_.'Storage Used (Byte)' } else { 0 } } -Descending |
+                Select-Object -First ([math]::Min($SiteCount, $reportData.Count)))
+
+            # Batch-resolve site details (20 per batch — Graph maximum)
+            $batchSize = 20
+            for ($i = 0; $i -lt $reportData.Count; $i += $batchSize) {
+                $end = [math]::Min($i + $batchSize - 1, $reportData.Count - 1)
+                $chunk = @($reportData[$i..$end])
+                $batchBody = @{
+                    requests = @(foreach ($row in $chunk) {
+                        @{
+                            id     = $row.'Site Id'
+                            method = "GET"
+                            url    = "/sites/$spHostname,$($row.'Site Id')?`$select=id,displayName,webUrl,createdDateTime,lastModifiedDateTime"
+                        }
+                    })
+                }
+                $batchJson = $batchBody | ConvertTo-Json -Depth 4 -Compress
+                $batchResponse = Invoke-MgGraphRequest -Uri "v1.0/`$batch" -Method POST -Body $batchJson -ContentType "application/json"
+
+                foreach ($resp in $batchResponse.responses) {
+                    if ($resp.status -ne 200) { continue }
+                    $site = $resp.body
+
+                    # Filter to site collections (managed paths only)
+                    $pathParts = ([uri]$site.webUrl).AbsolutePath.Trim('/') -split '/' | Where-Object { $_ }
+                    $isSiteCollection = ($pathParts.Count -eq 0) -or
+                        ($pathParts.Count -eq 2 -and $pathParts[0] -in @('sites', 'teams'))
+                    if (-not $isSiteCollection) { continue }
+
+                    # Attach storage metrics from the matching report row
+                    $reportRow = $chunk | Where-Object { $_.'Site Id' -eq $resp.id } | Select-Object -First 1
+                    $storageGB = ''
+                    $fileCount = ''
+                    if ($reportRow) {
+                        if ($reportRow.'Storage Used (Byte)' -and $reportRow.'Storage Used (Byte)' -ne '') {
+                            $storageGB = [math]::Round([double]$reportRow.'Storage Used (Byte)' / 1GB, 2)
+                        }
+                        if ($reportRow.'File Count' -and $reportRow.'File Count' -ne '') {
+                            $fileCount = [int]$reportRow.'File Count'
+                        }
+                    }
+
+                    $SiteList.Add([PSCustomObject]@{
+                        Type          = "SharePoint"
+                        DisplayName   = $site.displayName
+                        WebUrl        = $site.webUrl
+                        SiteCollGB    = $storageGB
+                        SiteCollFiles = $fileCount
+                        Created       = if ($site.createdDateTime) { ([datetime]$site.createdDateTime).ToString('yyyy-MM-dd') } else { '' }
+                        LastModified  = if ($site.lastModifiedDateTime) { ([datetime]$site.lastModifiedDateTime).ToString('yyyy-MM-dd') } else { '' }
+                        SiteId        = $site.id
+                        Upn           = ""
+                    })
+                }
+
+                if (-not $Silent) {
+                    $pct = [math]::Min(100, [int](($i + $batchSize) / $reportData.Count * 100))
+                    Write-Progress -Id 2 -Activity "Resolving site details" -Status "$($SiteList.Count) site collections found" -PercentComplete $pct
+                }
+            }
+            if (-not $Silent) { Write-Progress -Id 2 -Activity "Resolving site details" -Completed }
+            $storageAlreadyMerged = $true
+        }
+        else {
+            # Path 3: Search API fallback (partial results)
+            if (-not $Silent) {
+                Write-Warning "sites/getAllSites requires admin consent. Falling back to search API."
+                Write-Host "  Tip: Use -IncludeStorageMetrics for complete site enumeration, or reconnect with admin consent." -ForegroundColor DarkGray
+            }
+            $searchTerm = ((Get-MgContext).Account -split '@')[-1] -split '\.' | Select-Object -First 1
+            if (-not $Silent) { Write-Host "Searching SharePoint sites ($searchTerm)..." -ForegroundColor Cyan }
+            $siteUri = "v1.0/sites?search=$searchTerm&`$top=$SiteCount&`$select=id,displayName,webUrl,createdDateTime,lastModifiedDateTime"
+            do {
+                $siteResponse = Invoke-MgGraphRequest -Uri $siteUri
+                foreach ($site in $siteResponse.value) {
+                    if ($SiteList.Count -ge $SiteCount) { break }
+                    $SiteList.Add([PSCustomObject]@{
+                        Type          = "SharePoint"
+                        DisplayName   = $site.displayName
+                        WebUrl        = $site.webUrl
+                        SiteCollGB    = ''
+                        SiteCollFiles = ''
+                        Created       = if ($site.createdDateTime) { ([datetime]$site.createdDateTime).ToString('yyyy-MM-dd') } else { '' }
+                        LastModified  = if ($site.lastModifiedDateTime) { ([datetime]$site.lastModifiedDateTime).ToString('yyyy-MM-dd') } else { '' }
+                        SiteId        = $site.id
+                        Upn           = ""
+                    })
+                }
+                $siteUri = $siteResponse.'@odata.nextLink'
+            } until (-not $siteUri -or $SiteList.Count -ge $SiteCount)
+        }
 
         if ($includeOneDrive) {
             if (-not $Silent) { Write-Host "Fetching OneDrive users..." -ForegroundColor Cyan }
@@ -254,11 +423,15 @@ function Find-DriveItemDuplicates {
                 foreach ($user in $userResponse.value) {
                     if ($SiteList.Count -ge $SiteCount) { break }
                     $SiteList.Add([PSCustomObject]@{
-                        Type        = "OneDrive"
-                        DisplayName = "$($user.displayName) (OneDrive)"
-                        WebUrl      = $user.userPrincipalName
-                        SiteId      = ""
-                        Upn         = $user.userPrincipalName
+                        Type          = "OneDrive"
+                        DisplayName   = "$($user.displayName) (OneDrive)"
+                        WebUrl        = $user.userPrincipalName
+                        SiteCollGB = ''
+                        SiteCollFiles     = ''
+                        Created       = ''
+                        LastModified  = ''
+                        SiteId        = ""
+                        Upn           = $user.userPrincipalName
                     })
                 }
                 $userUri = $userResponse.'@odata.nextLink'
@@ -271,10 +444,179 @@ function Find-DriveItemDuplicates {
 
         if (-not $Silent) { Write-Host "Found $($SiteList.Count) sites." -ForegroundColor Cyan }
 
-        # Step C: Present site picker
-        $SelectedSite = $SiteList |
-            Select-Object Type, DisplayName, WebUrl |
-            Out-GridView -Title "Select a site to scan for duplicates ($($SiteList.Count) sites)" -OutputMode Single
+        # Step B2 (optional): Fetch storage metrics from Graph Reports API
+        # Skipped when Path 2 (Reports API + batch) already merged storage data.
+        if ($IncludeStorageMetrics -and -not $storageAlreadyMerged) {
+            if (-not $Silent) { Write-Host "Fetching storage metrics from Reports API..." -ForegroundColor Cyan }
+
+            try {
+                # getSharePointSiteUsageDetail returns a 302 redirect to a CSV download.
+                # -OutputFilePath writes the response directly to disk, avoiding JSON parse issues.
+                $tempCsv = Join-Path ([System.IO.Path]::GetTempPath()) "spo_report_$(Get-Random).csv"
+                Invoke-MgGraphRequest -Uri "v1.0/reports/getSharePointSiteUsageDetail(period='D7')" -OutputFilePath $tempCsv -ErrorAction Stop
+
+                # Verify the file was created and contains CSV (not a JSON error)
+                if (-not (Test-Path $tempCsv)) {
+                    Write-Warning "-IncludeStorageMetrics: Report file was not created."
+                }
+                else {
+                    $firstLine = Get-Content $tempCsv -TotalCount 1
+                    if (-not $Silent) { Write-Host "Report columns: $firstLine" -ForegroundColor DarkGray }
+
+                    if ($firstLine -match '^\s*\{') {
+                        Write-Warning "-IncludeStorageMetrics: Report API returned JSON instead of CSV (possible auth error).`n$firstLine"
+                    }
+                    else {
+                        $reportData = @(Import-Csv $tempCsv)
+                        Remove-Item $tempCsv -Force -ErrorAction SilentlyContinue
+
+                        if (-not $Silent) { Write-Host "Report returned $($reportData.Count) site rows." -ForegroundColor Cyan }
+
+                        if ($reportData.Count -eq 0) {
+                            Write-Warning "-IncludeStorageMetrics: Reports API returned no data rows."
+                        }
+                        else {
+                            # Determine matching strategy. When the tenant conceals user details
+                            # in reports, Site URL is blank but Site Id (a GUID) is still present.
+                            # Graph sites API returns IDs as "hostname,siteCollectionGuid,webGuid".
+                            $sampleUrl = ($reportData | Select-Object -First 1).'Site URL'
+                            $useUrlMatch = [bool]$sampleUrl
+
+                            if ($useUrlMatch) {
+                                # Build a case-insensitive lookup by Site URL for exact and prefix matching.
+                                # The Reports API reports at site-collection level, but Graph search returns
+                                # subsites too (e.g., /sites/Parent/teams/child). For subsites, we fall back
+                                # to the parent site-collection's metrics.
+                                if (-not $Silent) { Write-Host "Matching by Site URL..." -ForegroundColor DarkGray }
+                                $storageLookup = [System.Collections.Generic.Dictionary[string,object]]::new([System.StringComparer]::OrdinalIgnoreCase)
+                                foreach ($row in $reportData) {
+                                    $siteUrl = $row.'Site URL'
+                                    if ($siteUrl) {
+                                        $storageLookup[$siteUrl.TrimEnd('/')] = $row
+                                    }
+                                }
+                            }
+                            else {
+                                # Concealed-data fallback: match by Site Id GUID.
+                                if (-not $Silent) { Write-Host "Site URLs are concealed. Matching by Site Id..." -ForegroundColor DarkGray }
+                                $storageLookup = [System.Collections.Generic.Dictionary[string,object]]::new([System.StringComparer]::OrdinalIgnoreCase)
+                                foreach ($row in $reportData) {
+                                    $siteId = $row.'Site Id'
+                                    if ($siteId) {
+                                        $storageLookup[$siteId] = $row
+                                    }
+                                }
+                            }
+
+                            # The Reports API only has site-collection-level data. Subsites
+                            # inherit their parent collection's totals. The column names
+                            # (SiteCollGB, SiteCollFiles) make this aggregation explicit.
+                            $matchCount = 0
+                            foreach ($site in $SiteList) {
+                                if ($site.Type -eq 'OneDrive') { continue }
+
+                                $reportRow = $null
+                                if ($useUrlMatch) {
+                                    # Exact URL match; subsites try prefix match to parent collection
+                                    $lookupKey = $site.WebUrl.TrimEnd('/')
+                                    if ($storageLookup.ContainsKey($lookupKey)) {
+                                        $reportRow = $storageLookup[$lookupKey]
+                                    }
+                                    else {
+                                        $bestMatch = $null
+                                        $bestLen = 0
+                                        foreach ($reportUrl in $storageLookup.Keys) {
+                                            if ($lookupKey.StartsWith($reportUrl, [System.StringComparison]::OrdinalIgnoreCase) -and $reportUrl.Length -gt $bestLen) {
+                                                $bestMatch = $reportUrl
+                                                $bestLen = $reportUrl.Length
+                                            }
+                                        }
+                                        if ($bestMatch) { $reportRow = $storageLookup[$bestMatch] }
+                                    }
+                                }
+                                else {
+                                    # GUID match — use site-collection GUID (middle part of compound ID)
+                                    $idParts = $site.SiteId -split ','
+                                    if ($idParts.Count -ge 2) {
+                                        $siteCollectionGuid = $idParts[1]
+                                        if ($storageLookup.ContainsKey($siteCollectionGuid)) {
+                                            $reportRow = $storageLookup[$siteCollectionGuid]
+                                        }
+                                    }
+                                }
+
+                                if ($reportRow) {
+                                    $storageBytes = $reportRow.'Storage Used (Byte)'
+                                    if ($storageBytes -and $storageBytes -ne '') {
+                                        $site.SiteCollGB = [math]::Round([double]$storageBytes / 1GB, 2)
+                                    }
+                                    $fileCount = $reportRow.'File Count'
+                                    if ($fileCount -and $fileCount -ne '') {
+                                        $site.SiteCollFiles = [int]$fileCount
+                                    }
+                                    $matchCount++
+                                }
+                            }
+
+                            if (-not $Silent) {
+                                $spSites = @($SiteList | Where-Object { $_.Type -ne 'OneDrive' })
+                                Write-Host "Storage metrics: matched $matchCount of $($spSites.Count) SharePoint sites." -ForegroundColor Cyan
+                            }
+
+                            if ($matchCount -eq 0) {
+                                Write-Warning "-IncludeStorageMetrics: Could not match any sites. Report has $($reportData.Count) rows but no matches found against $($spSites.Count) sites."
+                            }
+                        }
+                    }
+                }
+            }
+            catch {
+                $msg = "$($_.Exception.Message) $($_.ErrorDetails.Message)"
+                if ($msg -match '403|Forbidden|Authorization') {
+                    Write-Warning "Reports.Read.All permission is required for -IncludeStorageMetrics.`nhttps://learn.microsoft.com/en-us/graph/api/reportroot-getsharepointsiteusagedetail"
+                }
+                else {
+                    Write-Warning "-IncludeStorageMetrics failed: $($_.Exception.Message)"
+                }
+            }
+        }
+
+        # Step C: Present site picker (sort by SiteCollGB descending when available)
+        # When storage metrics are shown, filter to site collections only (exclude subsites)
+        # so each row has unique storage values. In SharePoint Online, site collections
+        # exist only at managed paths: /sites/{Name} or /teams/{Name}. Everything else
+        # (e.g., /Purchasing, /Safety/Ottawa) is a subsite of the root site collection.
+        $pickerList = if ($IncludeStorageMetrics) {
+            @($SiteList | Where-Object {
+                if ($_.Type -eq 'OneDrive') { $true }
+                else {
+                    $pathParts = ([uri]$_.WebUrl).AbsolutePath.Trim('/') -split '/' | Where-Object { $_ }
+                    # Root site (0 segments) or /sites/{name} or /teams/{name} (exactly 2 segments)
+                    $pathParts.Count -eq 0 -or
+                    ($pathParts.Count -eq 2 -and $pathParts[0] -in @('sites', 'teams'))
+                }
+            })
+        } else {
+            $SiteList
+        }
+
+        $gridColumns = @('Type', 'DisplayName', 'WebUrl')
+        if ($IncludeStorageMetrics) { $gridColumns += 'SiteCollGB', 'SiteCollFiles' }
+        $gridColumns += 'Created', 'LastModified'
+
+        $sortedSiteList = if ($IncludeStorageMetrics) {
+            $pickerList | Sort-Object { if ($_.SiteCollGB -is [double]) { $_.SiteCollGB } else { -1 } } -Descending
+        } else {
+            $pickerList
+        }
+
+        if (-not $Silent -and $pickerList.Count -ne $SiteList.Count) {
+            Write-Host "Showing $($pickerList.Count) site collections (filtered $($SiteList.Count - $pickerList.Count) subsites)." -ForegroundColor DarkGray
+        }
+
+        $SelectedSite = $sortedSiteList |
+            Select-Object $gridColumns |
+            Out-GridView -Title "Select a site to scan for duplicates ($($pickerList.Count) site collections)" -OutputMode Single
 
         if (-not $SelectedSite) {
             throw "No site selected. Exiting."
@@ -296,7 +638,13 @@ function Find-DriveItemDuplicates {
         }
         else {
             $drivesResponse = Invoke-MgGraphRequest -Uri "beta/sites/$($SelectedSite.SiteId)/drives"
-            $drives = $drivesResponse.value
+
+            # Filter out system/publishing libraries that wouldn't contain user documents
+            $systemLibraryNames = @('Pages', 'Images', 'Slideshow', 'Site Pages', 'Style Library',
+                'Form Templates', 'FormServerTemplates', 'Site Collection Documents',
+                'Site Collection Images', 'PublishingImages', 'SiteCollectionImages',
+                '_catalogs', 'Converted Forms', 'appdata', 'appfiles')
+            $drives = @($drivesResponse.value | Where-Object { $_.name -notin $systemLibraryNames })
 
             if (-not $drives -or $drives.Count -eq 0) {
                 throw "No document libraries found for site '$($SelectedSite.DisplayName)'."
@@ -379,13 +727,25 @@ function Find-DriveItemDuplicates {
     #region File collection
     $FileList = [Collections.Generic.List[Object]]::new()
 
+    # Determine whether we can show a percentage (only when ResultSize is not the default)
+    $showPercent = $ResultSize -lt [int16]::MaxValue
+    $progressId = 1
+
     if ($NoRecursion) {
         $uri = "beta/drives/$DriveId/root:/$($RootPath):/children"
         $RawItems = [Collections.Generic.List[Object]]::new()
 
         do {
-            if (-not $Silent) { Write-Host "Searching: " -ForegroundColor Cyan -NoNewline }
-            if (-not $Silent) { Write-Host $uri -ForegroundColor DarkCyan }
+            if (-not $Silent) {
+                $progressParams = @{
+                    Id              = $progressId
+                    Activity        = "Scanning files"
+                    Status          = "$($RawItems.Count) items retrieved"
+                    CurrentOperation = $RootPath
+                }
+                if ($showPercent) { $progressParams.PercentComplete = [math]::Min(100, [int]($RawItems.Count / $ResultSize * 100)) }
+                Write-Progress @progressParams
+            }
             $PageResults = Invoke-MgGraphRequest -Uri $uri
             if ($PageResults.value) {
                 $RawItems.AddRange($PageResults.value)
@@ -395,6 +755,8 @@ function Find-DriveItemDuplicates {
             }
             $uri = $PageResults.'@odata.nextlink'
         } until (-not $uri -or $RawItems.Count -ge $ResultSize)
+
+        if (-not $Silent) { Write-Progress -Id $progressId -Activity "Scanning files" -Completed }
 
         if ($uri -and $RawItems.Count -ge $ResultSize) {
             $script:MoreFilesExist = $true
@@ -435,12 +797,15 @@ function Find-DriveItemDuplicates {
             }
 
             do {
-                if (-not $Silent) { Write-Host "Searching: " -ForegroundColor Cyan -NoNewline }
-                if (-not $Silent) { Write-Host $Path -ForegroundColor DarkCyan }
-
-                if ($AllFiles.Count -gt 1) {
-                    if (-not $Silent) { Write-Host "Files Evaluated: " -ForegroundColor Cyan -NoNewline }
-                    if (-not $Silent) { Write-Host $AllFiles.Count -ForegroundColor DarkCyan }
+                if (-not $Silent) {
+                    $progressParams = @{
+                        Id              = $progressId
+                        Activity        = "Scanning files"
+                        Status          = "$($AllFiles.Count) files found"
+                        CurrentOperation = $Path
+                    }
+                    if ($showPercent) { $progressParams.PercentComplete = [math]::Min(100, [int]($AllFiles.Count / $ResultSize * 100)) }
+                    Write-Progress @progressParams
                 }
 
                 $Response = Invoke-MgGraphRequest -Uri $Uri
@@ -471,6 +836,7 @@ function Find-DriveItemDuplicates {
         }
 
         Get-FolderItemsRecursively -Path $RootPath -AllFiles $FileList
+        if (-not $Silent) { Write-Progress -Id $progressId -Activity "Scanning files" -Completed }
     }
     #endregion
 
@@ -674,8 +1040,16 @@ $(foreach ($item in $topWaste) {
 "@
 
         try {
-            $Output | Export-Csv $csvPath -NoTypeInformation -Encoding UTF8 -ErrorAction Stop
-            $Output | ConvertTo-Json -Depth 3 | Out-File $jsonPath -Encoding UTF8 -ErrorAction Stop
+            if ($Output.Count -gt 0) {
+                $Output | Export-Csv $csvPath -NoTypeInformation -Encoding UTF8 -ErrorAction Stop
+                $Output | ConvertTo-Json -Depth 3 | Out-File $jsonPath -Encoding UTF8 -ErrorAction Stop
+            }
+            else {
+                # Write header-only CSV and empty JSON array so files aren't 0 bytes
+                'Confidence,MatchType,MatchValue,NumberOfFiles,FileSizeKB,FileGroupSizeKB,PossibleWasteKB,FileNames,WebLocalPaths' |
+                    Out-File $csvPath -Encoding UTF8 -ErrorAction Stop
+                '[]' | Out-File $jsonPath -Encoding UTF8 -ErrorAction Stop
+            }
             $htmlContent | Out-File $htmlPath -Encoding UTF8 -ErrorAction Stop
 
             Start-Process $htmlPath

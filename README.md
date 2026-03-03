@@ -126,7 +126,7 @@ Many of these scripts were originally shared on the [TechNet Gallery](https://le
 
 + [Find-DriveItemDuplicates.ps1](./SharePointOnline/Find-DriveItemDuplicates.ps1)
 
-  + Find duplicate files on OneDrive for Business or SharePoint Online by examining file hashes via Microsoft Graph.
+  + Identify duplicate files across OneDrive and SharePoint Online document libraries via Microsoft Graph. Uses dual-confidence detection: high confidence (quickXorHash match) and low confidence (filename match for files without hashes). Includes an interactive `-SitePicker` mode with Out-GridView for browsing SharePoint sites and OneDrive users, optional `-IncludeStorageMetrics` via the Graph Reports API, and generates an HTML dashboard with CSV/JSON exports in a timestamped folder on the desktop.
 
 + [Restore-FromRecycleBin.ps1](./SharePointOnline/Restore-FromRecycleBin.ps1)
 
