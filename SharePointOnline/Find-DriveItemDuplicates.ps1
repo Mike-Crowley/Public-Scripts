@@ -95,9 +95,9 @@
 
 .PARAMETER OutputStyle
     Determines how results are delivered:
-        Report            -  Generates desktop report files only.
+        Report            -  Generates desktop report files only (default).
         PassThru          -  Returns duplicate group objects to the pipeline only.
-        ReportAndPassThru -  Generates reports and returns objects to the pipeline (default).
+        ReportAndPassThru -  Generates reports and returns objects to the pipeline.
 
 .PARAMETER ResultSize
     Maximum number of files to evaluate. Default: 32767 ([int16]::MaxValue). When the limit
@@ -110,7 +110,7 @@
     Find-DriveItemDuplicates
 
     Scans the current user's entire OneDrive with default settings (recursive, up to 32 767
-    files, reports and pipeline output, console progress enabled).
+    files, report output only, console progress enabled).
 
 .EXAMPLE
     Find-DriveItemDuplicates -RootPath "Desktop" -OutputStyle Report -ResultSize 500
@@ -240,7 +240,7 @@ param(
     [switch]$NoRecursion,
 
     [ValidateSet("Report", "PassThru", "ReportAndPassThru")]
-    [string]$OutputStyle = "ReportAndPassThru",
+    [string]$OutputStyle = "Report",
 
     [int32]$ResultSize = [int16]::MaxValue,
     [switch]$Silent
@@ -284,7 +284,7 @@ function Find-DriveItemDuplicates {
         [switch]$NoRecursion,
 
         [ValidateSet("Report", "PassThru", "ReportAndPassThru")]
-        [string]$OutputStyle = "ReportAndPassThru",
+        [string]$OutputStyle = "Report",
 
         [int32]$ResultSize = [int16]::MaxValue,
         [switch]$Silent
