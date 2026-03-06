@@ -361,7 +361,7 @@ function Find-DriveItemDuplicates {
                     resourceId  = $GraphSP.id
                     appRoleId   = $role.id
                 } | ConvertTo-Json
-                Invoke-MgGraphRequest -Method POST -Uri "v1.0/servicePrincipals/$($SP.id)/appRoleAssignments" -Body $ConsentBody -ContentType "application/json" -OutputType PSObject | Out-Null
+                $null = Invoke-MgGraphRequest -Method POST -Uri "v1.0/servicePrincipals/$($SP.id)/appRoleAssignments" -Body $ConsentBody -ContentType "application/json" -OutputType PSObject
             }
             $ConsentGranted = $true
         }
@@ -397,7 +397,7 @@ function Find-DriveItemDuplicates {
     #region App auth connection
     $IsAppAuth = $PSCmdlet.ParameterSetName -eq 'AppAuth'
     if ($IsAppAuth) {
-        Disconnect-MgGraph -ErrorAction SilentlyContinue | Out-Null
+        $null = Disconnect-MgGraph -ErrorAction SilentlyContinue
 
         if ($ClientSecret) {
             $SecureSecret = ConvertTo-SecureString $ClientSecret -AsPlainText -Force
@@ -440,7 +440,7 @@ function Find-DriveItemDuplicates {
         }
         else {
             if ($scopes -notlike '*Files.Read*' -and $scopes -notlike '*Sites.Read*') {
-                Write-Warning "Permission scope may be missing.`nhttps://learn.microsoft.com/en-us/graph/api/driveitem-list-children?view=graph-rest-beta&tabs=http#permissions"
+                Write-Warning "Permission scope may be missing.`nhttps://learn.microsoft.com/en-us/graph/api/driveitem-list-children?view=graph-rest-1.0&tabs=http#permissions"
             }
         }
     }
@@ -540,7 +540,7 @@ function Find-DriveItemDuplicates {
             # Sort by storage descending and cap at SiteCount
             $reportData = @($reportData |
                 Sort-Object { if ($_.'Storage Used (Byte)') { [double]$_.'Storage Used (Byte)' } else { 0 } } -Descending |
-                Select-Object -First ([math]::Min($SiteCount, $reportData.Count)))
+                Select-Object -First $SiteCount)
 
             # Batch-resolve site details (20 per batch — Graph maximum)
             $batchSize = 20
@@ -845,20 +845,23 @@ function Find-DriveItemDuplicates {
 
         # Step D: Resolve the selected site's drive
         if ($SelectedSite.Type -eq "OneDrive") {
-            $DriveResponse = Invoke-MgGraphRequest -Uri "beta/users/$($SelectedSite.Upn)/drive"
+            $DriveResponse = Invoke-MgGraphRequest -Uri "beta/users/$($SelectedSite.Upn)/drive?`$select=id,webUrl"
             $DriveId = $DriveResponse.id
             $DriveWebUrl = $DriveResponse.webUrl
             $reportIdentifier = $SelectedSite.Upn
         }
         else {
-            $drivesResponse = Invoke-MgGraphRequest -Uri "beta/sites/$($SelectedSite.SiteId)/drives"
+            $drivesResponse = Invoke-MgGraphRequest -Uri "beta/sites/$($SelectedSite.SiteId)/drives?`$select=id,name,webUrl"
 
             # Filter out system/publishing libraries that wouldn't contain user documents
-            $systemLibraryNames = @('Pages', 'Images', 'Slideshow', 'Site Pages', 'Style Library',
-                'Form Templates', 'FormServerTemplates', 'Site Collection Documents',
-                'Site Collection Images', 'PublishingImages', 'SiteCollectionImages',
-                '_catalogs', 'Converted Forms', 'appdata', 'appfiles')
-            $drives = @($drivesResponse.value | Where-Object { $_.name -notin $systemLibraryNames })
+            $systemLibraryNames = [Collections.Generic.HashSet[string]]::new(
+                [string[]]@('Pages', 'Images', 'Slideshow', 'Site Pages', 'Style Library',
+                    'Form Templates', 'FormServerTemplates', 'Site Collection Documents',
+                    'Site Collection Images', 'PublishingImages', 'SiteCollectionImages',
+                    '_catalogs', 'Converted Forms', 'appdata', 'appfiles'),
+                [StringComparer]::OrdinalIgnoreCase
+            )
+            $drives = @($drivesResponse.value | Where-Object { -not $systemLibraryNames.Contains($_.name) })
 
             if (-not $drives -or $drives.Count -eq 0) {
                 throw "No document libraries found for site '$($SelectedSite.DisplayName)'."
@@ -906,7 +909,7 @@ function Find-DriveItemDuplicates {
         }
 
         try {
-            $DriveResponse = Invoke-MgGraphRequest -Uri "beta/users/$Upn/drive" -ErrorAction Stop
+            $DriveResponse = Invoke-MgGraphRequest -Uri "beta/users/$Upn/drive?`$select=id,webUrl" -ErrorAction Stop
         }
         catch {
             $msg = "$($_.Exception.Message) $($_.ErrorDetails.Message)"
@@ -945,9 +948,14 @@ function Find-DriveItemDuplicates {
     # Determine whether we can show a percentage (only when ResultSize is not the default)
     $showPercent = $ResultSize -lt [int16]::MaxValue
     $progressId = 1
+    $childSelect = '?$select=id,name,size,webUrl,lastModifiedDateTime,file,folder'
 
     if ($NoRecursion) {
-        $uri = "beta/drives/$DriveId/root:/$($RootPath):/children"
+        $uri = if ($RootPath -eq "/") {
+            "beta/drives/$DriveId/root/children$childSelect"
+        } else {
+            "beta/drives/$DriveId/root:/$($RootPath):/children$childSelect"
+        }
         $RawItems = [Collections.Generic.List[Object]]::new()
 
         do {
@@ -967,7 +975,7 @@ function Find-DriveItemDuplicates {
             catch {
                 $errMsg = "$($_.Exception.Message) $($_.ErrorDetails.Message)"
                 if ($errMsg -match '403|Forbidden|accessDenied') {
-                    $script:AccessDeniedPaths += $RootPath
+                    $script:AccessDeniedPaths.Add($RootPath)
                     break
                 }
                 else {
@@ -1018,10 +1026,10 @@ function Find-DriveItemDuplicates {
             }
 
             if ($Path -eq "/") {
-                $uri = "$baseUri/children"
+                $uri = "$baseUri/children$childSelect"
             }
             else {
-                $uri = "$baseUri`:/$Path`:/children"
+                $uri = "$baseUri`:/$Path`:/children$childSelect"
             }
 
             do {
@@ -1042,7 +1050,7 @@ function Find-DriveItemDuplicates {
                 catch {
                     $errMsg = "$($_.Exception.Message) $($_.ErrorDetails.Message)"
                     if ($errMsg -match '403|Forbidden|accessDenied') {
-                        $script:AccessDeniedPaths += $Path
+                        $script:AccessDeniedPaths.Add($Path)
                         return   # skip this folder
                     }
                     else {
