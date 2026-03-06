@@ -46,9 +46,7 @@ Many of these scripts were originally shared on the [TechNet Gallery](https://le
 
 ## OSINT
 
-+ [Get-EntraCredentialType.ps1](./OSINT/Get-EntraCredentialType.ps1)
-
-  + Query Entra for the CredentialType of a user.
++ ~~[Get-EntraCredentialType.ps1](./OSINT/Get-EntraCredentialType.ps1)~~ — *Deprecated. Use Get-EntraCredentialInfo instead.*
 
 + [Get-EntraCredentialInfo.ps1](./OSINT/Get-EntraCredentialInfo.ps1)
 
@@ -127,6 +125,10 @@ Many of these scripts were originally shared on the [TechNet Gallery](https://le
 + [Find-DriveItemDuplicates.ps1](./SharePointOnline/Find-DriveItemDuplicates.ps1)
 
   + Identify duplicate files across OneDrive and SharePoint Online document libraries via Microsoft Graph. Uses dual-confidence detection: high confidence (quickXorHash match) and low confidence (filename match for files without hashes). Includes an interactive `-SitePicker` mode with Out-GridView for browsing SharePoint sites and OneDrive users, optional `-IncludeStorageMetrics` via the Graph Reports API, and generates an HTML dashboard with CSV/JSON exports in a timestamped folder on the desktop.
+
++ [Get-SPOStorageInsights.ps1](./SharePointOnline/Get-SPOStorageInsights.ps1)
+
+  + Analyze SharePoint Online and OneDrive storage for duplicate files, version history bloat, and preservation hold libraries via Microsoft Graph. Supports multi-site scanning with interactive site picker, dual-confidence duplicate detection, and generates an HTML dashboard with CSV/JSON exports.
 
 + [Restore-FromRecycleBin.ps1](./SharePointOnline/Restore-FromRecycleBin.ps1)
 
