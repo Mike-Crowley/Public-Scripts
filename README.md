@@ -180,6 +180,10 @@ Many of these scripts were originally shared on the [TechNet Gallery](https://le
 
   + Encode or decode case-sensitive English strings using the Caesar Cipher.
 
++ [Find-SensitiveInfo.ps1](./Utilities/Find-SensitiveInfo.ps1)
+
+  + Check strings against Microsoft Purview DLP keyword and regex patterns to identify potentially sensitive data (IP addresses, account numbers, personal identifiers). Uses the same classification rules as Microsoft 365 DLP, exported from Exchange Online.
+
 + [Read-Fonts.ps1](./Utilities/Read-Fonts.ps1)
 
   + Extract font names from DOCX, XLSX, and PPTX files by parsing the embedded Office Open XML. Reports whether each font is installed on the local system. Requires PowerShell 7.
