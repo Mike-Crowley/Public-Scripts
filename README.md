@@ -180,6 +180,10 @@ Many of these scripts were originally shared on the [TechNet Gallery](https://le
 
   + Encode or decode case-sensitive English strings using the Caesar Cipher.
 
++ [Read-Fonts.ps1](./Utilities/Read-Fonts.ps1)
+
+  + Extract font names from DOCX, XLSX, and PPTX files by parsing the embedded Office Open XML. Reports whether each font is installed on the local system. Requires PowerShell 7.
+
 # Gists
 
 A few smaller things live here: https://gist.github.com/Mike-Crowley
