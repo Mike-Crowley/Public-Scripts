@@ -136,6 +136,10 @@ Many of these scripts were originally shared on the [TechNet Gallery](https://le
 
 ## Active Directory
 
++ [Convert-GuidFormat.ps1](./AD_DS/Convert-GuidFormat.ps1)
+
+  + Convert between standard GUID, ImmutableId (Base64), and hex byte representations. Auto-detects the input format and returns all three encodings — useful when cross-referencing objects across Azure AD Connect, Entra ID, and Active Directory.
+
 + [Resolve-AdAceGuid.ps1](./AD_DS/Resolve-AdAceGuid.ps1)
 
   + Resolve GUIDs on Active Directory ACEs to their friendly attribute, class, or extended right names. Builds a lookup hashtable from the schema and Extended-Rights container with just two LDAP queries, then resolves individual GUIDs locally — no per-ACE round-trips. Useful for auditing OU delegations and understanding who can write which attributes.
