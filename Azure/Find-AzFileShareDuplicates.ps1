@@ -32,7 +32,7 @@
     Suppresses console progress output.
 
 .PARAMETER TenantId
-    Azure AD tenant ID. If provided and no Azure context exists, triggers device authentication.
+    Entra ID tenant ID. If provided and no Azure context exists, triggers device authentication.
 
 .EXAMPLE
     .\Find-AzFileShareDuplicates.ps1 -StorageAccountName "mystorageacct" -ShareName "myshare" -TenantId "xxx-xxx"

@@ -14,10 +14,10 @@
     The sender email address (must have Send.Mail permission in the app registration).
 
 .PARAMETER ClientId
-    The Application (client) ID of the Azure AD app registration.
+    The Application (client) ID of the Entra ID app registration.
 
 .PARAMETER TenantId
-    The Tenant ID for the Azure AD tenant.
+    The Tenant ID for the Entra ID tenant.
 
 .PARAMETER CertificateThumbprint
     The certificate thumbprint for app-only authentication.

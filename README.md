@@ -142,7 +142,7 @@ Many of these scripts were originally shared on the [TechNet Gallery](https://le
 
 + [Convert-GuidFormat.ps1](./AD_DS/Convert-GuidFormat.ps1)
 
-  + Convert between standard GUID, ImmutableId (Base64), and hex byte representations. Auto-detects the input format and returns all three encodings — useful when cross-referencing objects across Azure AD Connect, Entra ID, and Active Directory.
+  + Convert between standard GUID, ImmutableId (Base64), and hex byte representations. Auto-detects the input format and returns all three encodings — useful when cross-referencing objects across Entra Connect, Entra ID, and Active Directory.
 
 + [Resolve-AdAceGuid.ps1](./AD_DS/Resolve-AdAceGuid.ps1)
 

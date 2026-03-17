@@ -26,7 +26,7 @@ function Get-TeamsChatMessages {
         permissions (typically Application Administrator or Global Administrator).
 
     .PARAMETER ClientId
-        The Application (client) ID of the Azure AD app registration. Required for app auth.
+        The Application (client) ID of the Entra ID app registration. Required for app auth.
 
     .PARAMETER ClientSecret
         The client secret for the app registration. If omitted, you will be prompted via

@@ -10,10 +10,10 @@
     exports the results to an Excel file on the desktop.
 
 .PARAMETER ClientId
-    The Application (client) ID of the Azure AD app registration.
+    The Application (client) ID of the Entra ID app registration.
 
 .PARAMETER TenantId
-    The Tenant ID or domain for the Azure AD tenant.
+    The Tenant ID or domain for the Entra ID tenant.
 
 .PARAMETER RedirectUri
     The redirect URI configured for the app registration.
@@ -89,7 +89,7 @@ $requestParams = @{
 }
 
 #collect users displayName and signInActivity
-#ref: https://learn.microsoft.com/en-us/azure/active-directory/reports-monitoring/howto-manage-inactive-user-accounts#how-to-detect-inactive-user-accounts
+#ref: https://learn.microsoft.com/en-us/entra/identity/monitoring-health/howto-manage-inactive-user-accounts#how-to-detect-inactive-user-accounts
 
 $queryResults = @()
 
@@ -113,9 +113,9 @@ until ($null -eq $uri)
 
 
 
-# Static list of AAD SKUs
+# Static list of Entra ID SKUs
 # $SubscribedSkus = Import-Csv .\SupportingFiles\Graph_SignInActivity_Report_AAD_SKUs.csv
-# Most are also available here: https://learn.microsoft.com/en-us/azure/active-directory/enterprise-users/licensing-service-plan-reference
+# Most are also available here: https://learn.microsoft.com/en-us/entra/identity/users/licensing-service-plan-reference
 # And as a CSV here: https://download.microsoft.com/download/e/3/e/e3e9faf2-f28b-490a-9ada-c6089a1fc5b0/Product%20names%20and%20service%20plan%20identifiers%20for%20licensing.csv
 
 #Get the list from the tenant

@@ -5,7 +5,7 @@ function Convert-GuidFormat {
 
     .DESCRIPTION
         Automatically detects the input format and returns all three representations of the same
-        GUID. Useful when working with Azure AD Connect, Entra ID, and Active Directory, where
+        GUID. Useful when working with Entra Connect, Entra ID, and Active Directory, where
         the same object identifier appears in different encodings depending on the tool.
 
         Supported formats:
@@ -50,7 +50,7 @@ function Convert-GuidFormat {
         https://mikecrowley.us
 
     .LINK
-        https://learn.microsoft.com/en-us/azure/active-directory/hybrid/plan-connect-design-concepts#sourceanchor
+        https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/plan-connect-design-concepts#sourceanchor
     #>
 
     [CmdletBinding()]
