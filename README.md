@@ -98,6 +98,10 @@ Many of these scripts were originally shared on the [TechNet Gallery](https://le
 
 ## Exchange
 
++ [Audit-ExoAppAccessPolicies.ps1](./Exchange/Audit-ExoAppAccessPolicies.ps1)
+
+  + Audit all Exchange Online Application Access Policies and generate an HTML migration report with ready-to-run PowerShell commands for converting each policy to RBAC for Applications. Identifies orphaned apps, missing targets, permission gaps, and single-mailbox blockers.
+
 + [Get-AlternateMailboxes.ps1](./Exchange/Get-AlternateMailboxes.ps1)
 
   + Query Exchange Online AutoDiscover to enumerate mailbox delegates with modern auth.
