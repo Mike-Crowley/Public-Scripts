@@ -204,6 +204,10 @@ A few smaller things live here: https://gist.github.com/Mike-Crowley
 
   + Makes an SMB connection to a remote server, captures the traffic with Wireshark (tshark), and then parses the capture to report on the use of SMB signing.
 
+## Other Repos
+
++ [PSNamecheap](https://github.com/Mike-Crowley/PSNamecheap) — Config-driven PowerShell module for managing Namecheap domains and DNS records via the Namecheap API. Define your desired DNS state in per-domain JSON files, preview changes with `Test-NcDnsConfig`, and sync with `Sync-NcDnsConfig`.
+
 ---
 
 <span style="font-size:large;">Visit https://mikecrowley.us/tag/powershell for additional functions and scripts.</span>
