@@ -6,9 +6,20 @@ Thank you for your interest in helping keep this repository and its users secure
 
 ### How to Report a Vulnerability
 
-If you discover a security vulnerability within any of the scripts in this repository, please send a detailed report to:
+If you discover a security vulnerability within any of the scripts in this repository, please send a detailed report via email or Signal:
 
-    Mike [at] MikeCrowley [dot] us
+<a href="#">
+    <img alt="Email"
+        src="https://img.shields.io/badge/Email-Mike%20%5Bat%5D%20MikeCrowley%20%5Bdot%5D%20us-555555?logo=maildotru&logoColor=white">
+</a>
+<a href="https://mikecrowley.us/files/mikecrowley-pgp.asc">
+    <img alt="Public PGP Key"
+        src="https://img.shields.io/badge/PGP%2FGPG-Key-darkred?logo=gnuprivacyguard&logoColor=white">
+</a>
+<a href="#">
+    <img alt="Signal: grade.10"
+        src="https://img.shields.io/badge/Signal-grade.10-3A76F0?logo=signal&logoColor=white">
+</a>
 
 Please provide:
 1. A clear description of the vulnerability

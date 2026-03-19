@@ -13,9 +13,9 @@
         <img alt="Microsoft MVP"
             src="https://img.shields.io/badge/Microsoft_MVP-2010--2018-blue">
     </a>
-    <a href="https://mikecrowley.files.wordpress.com/2020/06/8f158f9484a5cee37192077e0979564af679d0bb.asc">
+    <a href="https://mikecrowley.us/files/mikecrowley-pgp.asc">
         <img alt="Public PGP Key"
-            src="https://img.shields.io/badge/PGP%2FGPG-Key-darkred?link=https%3A%2F%2Fmikecrowley.files.wordpress.com%2F2020%2F06%2F8f158f9484a5cee37192077e0979564af679d0bb.asc">
+            src="https://img.shields.io/badge/PGP%2FGPG-Key-darkred?link=https%3A%2F%2Fmikecrowley.us%2Ffiles%2Fmikecrowley-pgp.asc">
     </a>
     <a href="http://www.linkedin.com/in/mikecrowley">
         <img alt="linkedin.com/in/MikeCrowley"
