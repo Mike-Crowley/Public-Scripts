@@ -110,6 +110,9 @@
     https://github.com/Mike-Crowley/Public-Scripts
 
 .LINK
+    https://mikecrowley.us/2026/03/24/instant-active-directory-replication/
+
+.LINK
     https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-adts/d2435927-0999-4c62-8c6d-13ba31a52e1a
 
 .LINK
@@ -867,6 +870,7 @@ $(if ($DCsWithErrors) {
         <div class="footer">
             <p>Generated $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') by <a href="https://github.com/Mike-Crowley/Public-Scripts" style="color: #00d4ff;">Update-UseNotifyReplication.ps1</a> |
             Author: Mike Crowley |
+            <a href="https://mikecrowley.us/2026/03/24/instant-active-directory-replication/" style="color: #888;">Blog Post</a> |
             <a href="https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-adts/" style="color: #888;">MS-ADTS</a> |
             <a href="https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-2000-server/cc961787(v=technet.10)" style="color: #888;">TechNet Reference</a></p>
         </div>
