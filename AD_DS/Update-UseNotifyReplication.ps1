@@ -62,7 +62,12 @@
     Understanding Urgent Replication (Ken St. Cyr)
         Explains the distinction between urgent replication, change notification, and immediate replication.
         Clarifies that urgent replication bypasses the notification delay but still requires change notification to be enabled between sites.
-        https://web.archive.org/web/20161201131803/https://blogs.technet.microsoft.com/kenstcyr/2008/07/05/understanding-urgent-replication/
+        https://learn.microsoft.com/en-us/archive/blogs/kenstcyr/understanding-urgent-replication
+
+    Configuring Change Notification on a Manually Created Replication Partner (Ask DS blog)
+        Workaround for manual connections: set NTDSCONN_OPT_USE_NOTIFY (0x8) directly on the connection object.
+        Manual connections do not inherit notification settings from site links; this must be done per-connection.
+        https://techcommunity.microsoft.com/blog/askds/configuring-change-notification-on-a-manually-created-replication-partner/400188
 
     Modify the default intra-site DC replication interval (KB214678)
         Documents the per-partition msDS-Replication-Notify-First-DSA-Delay and msDS-Replication-Notify-Subsequent-DSA-Delay attributes.
@@ -112,7 +117,10 @@
     https://learn.microsoft.com/en-us/archive/blogs/canberrapfe/active-directory-replication-change-notification-you
 
 .LINK
-    https://web.archive.org/web/20161201131803/https://blogs.technet.microsoft.com/kenstcyr/2008/07/05/understanding-urgent-replication/
+    https://learn.microsoft.com/en-us/archive/blogs/kenstcyr/understanding-urgent-replication
+
+.LINK
+    https://techcommunity.microsoft.com/blog/askds/configuring-change-notification-on-a-manually-created-replication-partner/400188
 
 .LINK
     https://learn.microsoft.com/en-us/troubleshoot/windows-server/active-directory/modify-default-intra-site-dc-replication-interval
