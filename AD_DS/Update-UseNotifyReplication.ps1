@@ -9,7 +9,7 @@
     Use_Notify enables change notification between domain controllers, reducing replication latency
     from the default 15-minute schedule to near-immediate replication.
 
-    Site Link Options (bit flags per MS-ADTS section 6.1.1.2.2.3.2):
+    Site Link Options (bit flags per MS-ADTS section 6.1.1.2.2.3.3):
         0x1 (bit 0) - NTDSSITELINK_OPT_USE_NOTIFY: Enables change notification for the site link
         0x2 (bit 1) - NTDSSITELINK_OPT_TWOWAY_SYNC: Enables reciprocal replication (dial-up/VPN scenarios)
         0x4 (bit 2) - NTDSSITELINK_OPT_DISABLE_COMPRESSION: Disables inter-site replication compression
@@ -46,7 +46,7 @@
 
     MS-ADTS (Active Directory Technical Specification)
         Authoritative source for all bit flag definitions (site link options, connection options, nTDSDSA options).
-        This script's constants and binary operations are validated against sections 6.1.1.2.2.3.2 and 6.1.1.2.2.1.2.1.2.
+        This script's constants and binary operations are validated against sections 6.1.1.2.2.3.3 and 6.1.1.2.2.1.2.1.2.
         https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-adts/d2435927-0999-4c62-8c6d-13ba31a52e1a
 
     Advanced Replication Management (Windows 2000 Resource Kit)
@@ -140,7 +140,7 @@ param (
     [string]$ReportPath = "$env:USERPROFILE\Desktop\$(Get-Date -Format 'yyyyMMdd_HHmmss')_UseNotifyReport.html"
 )
 
-# Site Link option flags (MS-ADTS 6.1.1.2.2.3.2)
+# Site Link option flags (MS-ADTS 6.1.1.2.2.3.3)
 # Full register:
 #   0x1  NTDSSITELINK_OPT_USE_NOTIFY
 #   0x2  NTDSSITELINK_OPT_TWOWAY_SYNC
@@ -158,9 +158,9 @@ $SITELINK_USE_NOTIFY = 0x1
 #   0x20  NTDSCONN_OPT_USER_OWNED_SCHEDULE
 #   0x40  NTDSCONN_OPT_RODC_TOPOLOGY
 #   Bits 7-31 reserved.
-$CONN_IS_GENERATED            = 0x01
+$CONN_IS_GENERATED = 0x01
 $CONN_OVERRIDE_NOTIFY_DEFAULT = 0x04
-$CONN_USE_NOTIFY              = 0x08
+$CONN_USE_NOTIFY = 0x08
 
 # Registry default values (Server 2003+ defaults; Win2000 used 300/30)
 $DEFAULT_NOTIFY_PAUSE_AFTER_MODIFY = 15  # seconds (holdback timer)
@@ -222,17 +222,16 @@ function Get-ReplicationConnectionStatus {
 
 function Get-DCRegistrySettings {
     [CmdletBinding()]
-    param(
-        [Parameter(Mandatory)]
-        [string]$DomainDN
-    )
+    param()
 
-    $DCs = Get-ADComputer -Filter * -SearchBase "OU=Domain Controllers,$DomainDN" -Properties DNSHostName
+    # Get-ADDomainController queries the AD topology directly, finding DCs
+    # regardless of which OU their computer object resides in.
+    $DCs = Get-ADDomainController -Filter *
 
     foreach ($DC in $DCs) {
         $result = [PSCustomObject]@{
             ComputerName                = $DC.Name
-            DNSHostName                 = $DC.DNSHostName
+            DNSHostName                 = $DC.HostName
             NotifyPauseAfterModify      = $null
             NotifyPauseAfterModify_Note = $null
             NotifyPauseBetweenDSAs      = $null
@@ -244,7 +243,7 @@ function Get-DCRegistrySettings {
 
         try {
             # Single remote session for both registry hives
-            $regData = Invoke-Command -ComputerName $DC.DNSHostName -ScriptBlock {
+            $regData = Invoke-Command -ComputerName $DC.HostName -ScriptBlock {
                 @{
                     NTDS     = Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Services\NTDS\Parameters' -ErrorAction SilentlyContinue
                     Netlogon = Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters' -ErrorAction SilentlyContinue
@@ -339,24 +338,26 @@ $Domain = Get-ADDomain
 $RootDSE = Get-ADRootDSE
 
 Write-Verbose "Retrieving site link information..."
-$SiteLinks = Get-SiteLinkStatus
+$SiteLinks = @(Get-SiteLinkStatus)
 
 Write-Verbose "Retrieving replication connection information..."
-$ReplicationConnections = Get-ReplicationConnectionStatus
+$ReplicationConnections = @(Get-ReplicationConnectionStatus)
 
 # Get AD Sites
-$Sites = Get-ADReplicationSite -Filter *
+$Sites = @(Get-ADReplicationSite -Filter *)
 
 # Partition notification delay settings (always queried; no WinRM required)
 Write-Verbose "Retrieving partition notification delay settings..."
-$PartitionSettings = Get-PartitionNotifySettings -ConfigurationDN $RootDSE.configurationNamingContext
+$PartitionSettings = @(Get-PartitionNotifySettings -ConfigurationDN $RootDSE.configurationNamingContext)
 $PartitionsCustom = $PartitionSettings | Where-Object { $_.IsCustom }
 
 # Registry settings (optional)
 $RegistrySettings = $null
 if ($GetRegistrySettings) {
+    # Note: queries DCs in the current domain only. In a multi-domain forest,
+    # run this from each domain or extend to enumerate all domains via $Forest.Domains.
     Write-Verbose "Retrieving DC registry settings (requires WinRM)..."
-    $RegistrySettings = Get-DCRegistrySettings -DomainDN $Domain.DistinguishedName
+    $RegistrySettings = Get-DCRegistrySettings
 }
 
 $SiteLinksEnabled = $SiteLinks | Where-Object { $_.NotifyEnabled }
@@ -589,15 +590,20 @@ $(foreach ($conn in ($ReplicationConnections | Sort-Object ParentSite, ToServer)
     $typeClass = if ($conn.AutoGenerated) { 'tag-blue' } else { 'tag-yellow' }
     $typeText = if ($conn.AutoGenerated) { 'Auto (KCC)' } else { 'Manual' }
 
-    if ($conn.AutoGenerated) {
+    if ($conn.OverrideNotify -and $conn.NotifyEnabled) {
+        # Connection has notify explicitly set (0xC): either KCC-inherited or manually configured
         $notifyClass = 'status-good'
-        $notifyText = 'Inherits from site link'
-    } elseif ($conn.OverrideNotify -and $conn.NotifyEnabled) {
-        $notifyClass = 'status-good'
-        $notifyText = 'Yes (explicit)'
-    } else {
+        $notifyText = if ($conn.AutoGenerated) { 'Yes (from site link)' } else { 'Yes (explicit)' }
+    } elseif ($conn.AutoGenerated -and -not $conn.OverrideNotify) {
+        # KCC connection without notify override: site link does not have USE_NOTIFY
+        $notifyClass = 'status-warn'
+        $notifyText = 'No (site link not configured)'
+    } elseif ($conn.IsManual) {
         $notifyClass = 'status-warn'
         $notifyText = 'No (manual connection)'
+    } else {
+        $notifyClass = 'status-info'
+        $notifyText = 'Unknown'
     }
 @"
                 <tr>
@@ -723,7 +729,7 @@ $(if ($DCsWithErrors) {
 
         <h2>Reference</h2>
         <div class="info-box">
-            <h4>Site Link Options (MS-ADTS 6.1.1.2.2.3.2)</h4>
+            <h4>Site Link Options (MS-ADTS 6.1.1.2.2.3.3)</h4>
             <p><code>0x1</code> (bit 0) - <strong>NTDSSITELINK_OPT_USE_NOTIFY:</strong> Enables change notification. DCs notify partners of changes rather than waiting for the replication schedule.</p>
             <p><code>0x2</code> (bit 1) - <strong>NTDSSITELINK_OPT_TWOWAY_SYNC:</strong> Enables reciprocal replication. Designed for dial-up/VPN scenarios where only one side can initiate.</p>
             <p><code>0x4</code> (bit 2) - <strong>NTDSSITELINK_OPT_DISABLE_COMPRESSION:</strong> Disables inter-site replication compression on this link.</p>
