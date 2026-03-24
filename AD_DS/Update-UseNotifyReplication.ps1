@@ -386,6 +386,85 @@ $ConnectionsManual = $ReplicationConnections | Where-Object { $_.IsManual }
 # Health score based on site links (the efficient place to configure notify)
 $healthScore = if ($SiteLinks.Count -gt 0) { [math]::Round(($SiteLinksEnabled.Count / $SiteLinks.Count) * 100) } else { 100 }
 
+#endregion
+
+#region Enable Mode — runs before report generation so the report reflects the final state
+
+if ($EnableSiteLinks) {
+
+    # Create backup before making changes
+    $BackupPath = $ReportPath -replace '\.html$', '_Backup.txt'
+    $BackupData = @()
+    $BackupData += "BACKUP CREATED: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+    $BackupData += "Forest: $($Forest.Name)"
+    $BackupData += "Domain: $($Domain.DNSRoot)"
+    $BackupData += ""
+
+    if ($SiteLinksDisabled) {
+        $BackupData += "SITE LINKS (before changes):"
+        $BackupData += ($SiteLinksDisabled | Select-Object Name, DistinguishedName, Options, OptionsHex | Format-List | Out-String)
+
+        foreach ($SiteLink in $SiteLinksDisabled) {
+            $newOptions = $SiteLink.Options -bor $SITELINK_USE_NOTIFY
+            if ($PSCmdlet.ShouldProcess($SiteLink.Name, "Set options from 0x$($SiteLink.Options.ToString('X')) to 0x$($newOptions.ToString('X'))")) {
+                try {
+                    Set-ADReplicationSiteLink -Identity $SiteLink.DistinguishedName -Replace @{'options' = $newOptions }
+                    Write-Host "  Updated site link: $($SiteLink.Name)" -ForegroundColor Cyan
+                }
+                catch {
+                    Write-Error "Failed to update site link $($SiteLink.Name): $_"
+                }
+            }
+        }
+    }
+    else {
+        Write-Host "  All site links already have Use_Notify enabled." -ForegroundColor Green
+    }
+
+    $ManualWithoutNotify = $ConnectionsManual | Where-Object { -not ($_.OverrideNotify -and $_.NotifyEnabled) }
+
+    if ($ManualWithoutNotify) {
+        $BackupData += "MANUAL CONNECTIONS (before changes):"
+        $BackupData += ($ManualWithoutNotify | Select-Object Name, FromServer, ToServer, ToSite, DistinguishedName, Options, OptionsHex | Format-List | Out-String)
+
+        foreach ($conn in $ManualWithoutNotify) {
+            $newOptions = $conn.Options -bor $CONN_OVERRIDE_NOTIFY_DEFAULT -bor $CONN_USE_NOTIFY
+            $target = "$($conn.FromServer) -> $($conn.ToServer) [$($conn.ToSite)]"
+            if ($PSCmdlet.ShouldProcess($target, "Set connection options from 0x$($conn.Options.ToString('X')) to 0x$($newOptions.ToString('X'))")) {
+                try {
+                    Set-ADObject -Identity $conn.DistinguishedName -Replace @{ 'options' = $newOptions }
+                    Write-Host "  Updated manual connection: $target" -ForegroundColor Cyan
+                }
+                catch {
+                    Write-Error "Failed to update manual connection $($target): $_"
+                }
+            }
+        }
+    }
+    elseif ($ConnectionsManual.Count -gt 0) {
+        Write-Host "  All manual connections already have Use_Notify enabled." -ForegroundColor Green
+    }
+
+    # Save backup
+    if ($BackupData.Count -gt 4) {
+        $BackupData | Out-File -FilePath $BackupPath -Encoding UTF8 -Force
+        Write-Host "Backup saved to: $BackupPath" -ForegroundColor Yellow
+    }
+
+    # Re-query AD so the report reflects the post-change state
+    Write-Verbose "Re-querying AD for post-change report..."
+    $SiteLinks = @(Get-SiteLinkStatus)
+    $ReplicationConnections = @(Get-ReplicationConnectionStatus)
+    $SiteLinksEnabled = $SiteLinks | Where-Object { $_.NotifyEnabled }
+    $SiteLinksDisabled = $SiteLinks | Where-Object { -not $_.NotifyEnabled }
+    $ConnectionsManual = $ReplicationConnections | Where-Object { $_.IsManual }
+    $healthScore = if ($SiteLinks.Count -gt 0) { [math]::Round(($SiteLinksEnabled.Count / $SiteLinks.Count) * 100) } else { 100 }
+}
+
+#endregion
+
+#region Report Generation
+
 # Build HTML report
 $htmlContent = @"
 <!-- Report generated $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') by Update-UseNotifyReplication.ps1 -->
@@ -793,82 +872,10 @@ $(if ($DCsWithErrors) {
 try {
     $htmlContent | Out-File -FilePath $ReportPath -Encoding UTF8 -Force
     Write-Host "Report saved to: $ReportPath" -ForegroundColor Green
-
-    # Open the report
     Start-Process $ReportPath
 }
 catch {
     Write-Error "Failed to save report: $_"
-}
-
-#endregion
-
-#region Enable Mode
-
-if ($EnableSiteLinks) {
-
-    # Create backup before making changes
-    $BackupPath = $ReportPath -replace '\.html$', '_Backup.txt'
-    $BackupData = @()
-    $BackupData += "BACKUP CREATED: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
-    $BackupData += "Forest: $($Forest.Name)"
-    $BackupData += "Domain: $($Domain.DNSRoot)"
-    $BackupData += ""
-
-    if ($SiteLinksDisabled) {
-        $BackupData += "SITE LINKS (before changes):"
-        $BackupData += ($SiteLinksDisabled | Select-Object Name, DistinguishedName, Options, OptionsHex | Format-List | Out-String)
-
-        foreach ($SiteLink in $SiteLinksDisabled) {
-            $newOptions = $SiteLink.Options -bor $SITELINK_USE_NOTIFY
-            if ($PSCmdlet.ShouldProcess($SiteLink.Name, "Set options from 0x$($SiteLink.Options.ToString('X')) to 0x$($newOptions.ToString('X'))")) {
-                try {
-                    Set-ADReplicationSiteLink -Identity $SiteLink.DistinguishedName -Replace @{'options' = $newOptions }
-                    Write-Host "  Updated site link: $($SiteLink.Name)" -ForegroundColor Cyan
-                }
-                catch {
-                    Write-Error "Failed to update site link $($SiteLink.Name): $_"
-                }
-            }
-        }
-    }
-    else {
-        Write-Host "  All site links already have Use_Notify enabled." -ForegroundColor Green
-    }
-
-    # Enable notify on manual connections that lack it.
-    # Manual connections do not inherit from site links; they need OVERRIDE_NOTIFY_DEFAULT (0x4) |
-    # USE_NOTIFY (0x8) = 0xC set explicitly. This only changes behavior flags on existing connections
-    # and does NOT alter the replication topology (no connections are created, deleted, or retargeted).
-    $ManualWithoutNotify = $ConnectionsManual | Where-Object { -not ($_.OverrideNotify -and $_.NotifyEnabled) }
-
-    if ($ManualWithoutNotify) {
-        $BackupData += "MANUAL CONNECTIONS (before changes):"
-        $BackupData += ($ManualWithoutNotify | Select-Object Name, FromServer, ToServer, ToSite, DistinguishedName, Options, OptionsHex | Format-List | Out-String)
-
-        foreach ($conn in $ManualWithoutNotify) {
-            $newOptions = $conn.Options -bor $CONN_OVERRIDE_NOTIFY_DEFAULT -bor $CONN_USE_NOTIFY
-            $target = "$($conn.FromServer) -> $($conn.ToServer) [$($conn.ToSite)]"
-            if ($PSCmdlet.ShouldProcess($target, "Set connection options from 0x$($conn.Options.ToString('X')) to 0x$($newOptions.ToString('X'))")) {
-                try {
-                    Set-ADObject -Identity $conn.DistinguishedName -Replace @{ 'options' = $newOptions }
-                    Write-Host "  Updated manual connection: $target" -ForegroundColor Cyan
-                }
-                catch {
-                    Write-Error "Failed to update manual connection $($target): $_"
-                }
-            }
-        }
-    }
-    elseif ($ConnectionsManual.Count -gt 0) {
-        Write-Host "  All manual connections already have Use_Notify enabled." -ForegroundColor Green
-    }
-
-    # Save backup
-    if ($BackupData.Count -gt 4) {
-        $BackupData | Out-File -FilePath $BackupPath -Encoding UTF8 -Force
-        Write-Host "Backup saved to: $BackupPath" -ForegroundColor Yellow
-    }
 }
 
 #endregion
