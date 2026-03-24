@@ -147,7 +147,7 @@ param (
     [switch]$GetRegistrySettings,
 
     [ValidateNotNullOrEmpty()]
-    [string]$ReportPath = "$env:USERPROFILE\Desktop\$(Get-Date -Format 'yyyyMMdd_HHmmss')_UseNotifyReport.html"
+    [string]$ReportPath = "$([Environment]::GetFolderPath('Desktop'))\$(Get-Date -Format 'yyyyMMdd_HHmmss')_UseNotifyReport.html"
 )
 
 # Site Link option flags (MS-ADTS 6.1.1.2.2.3.3)
