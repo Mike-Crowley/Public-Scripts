@@ -140,19 +140,27 @@ param (
     [string]$ReportPath = "$env:USERPROFILE\Desktop\$(Get-Date -Format 'yyyyMMdd_HHmmss')_UseNotifyReport.html"
 )
 
-# Bit flag constants - Site Links (MS-ADTS 6.1.1.2.2.3.2)
-$SITELINK_USE_NOTIFY          = 0x1  # NTDSSITELINK_OPT_USE_NOTIFY
-$SITELINK_TWOWAY_SYNC         = 0x2  # NTDSSITELINK_OPT_TWOWAY_SYNC
-$SITELINK_DISABLE_COMPRESSION = 0x4  # NTDSSITELINK_OPT_DISABLE_COMPRESSION
+# Site Link option flags (MS-ADTS 6.1.1.2.2.3.2)
+# Full register:
+#   0x1  NTDSSITELINK_OPT_USE_NOTIFY
+#   0x2  NTDSSITELINK_OPT_TWOWAY_SYNC
+#   0x4  NTDSSITELINK_OPT_DISABLE_COMPRESSION
+#   Bits 3-31 reserved.
+$SITELINK_USE_NOTIFY = 0x1
 
-# Bit flag constants - Replication Connections (MS-ADTS 6.1.1.2.2.1.2.1.2)
-$CONN_IS_GENERATED                = 0x01  # NTDSCONN_OPT_IS_GENERATED
-$CONN_TWOWAY_SYNC                 = 0x02  # NTDSCONN_OPT_TWOWAY_SYNC
-$CONN_OVERRIDE_NOTIFY_DEFAULT     = 0x04  # NTDSCONN_OPT_OVERRIDE_NOTIFY_DEFAULT
-$CONN_USE_NOTIFY                  = 0x08  # NTDSCONN_OPT_USE_NOTIFY
-$CONN_DISABLE_INTERSITE_COMPRESS  = 0x10  # NTDSCONN_OPT_DISABLE_INTERSITE_COMPRESSION
-$CONN_USER_OWNED_SCHEDULE         = 0x20  # NTDSCONN_OPT_USER_OWNED_SCHEDULE
-$CONN_RODC_TOPOLOGY               = 0x40  # NTDSCONN_OPT_RODC_TOPOLOGY
+# Replication Connection option flags (MS-ADTS 6.1.1.2.2.1.2.1.2)
+# Full register:
+#   0x01  NTDSCONN_OPT_IS_GENERATED
+#   0x02  NTDSCONN_OPT_TWOWAY_SYNC
+#   0x04  NTDSCONN_OPT_OVERRIDE_NOTIFY_DEFAULT
+#   0x08  NTDSCONN_OPT_USE_NOTIFY
+#   0x10  NTDSCONN_OPT_DISABLE_INTERSITE_COMPRESSION
+#   0x20  NTDSCONN_OPT_USER_OWNED_SCHEDULE
+#   0x40  NTDSCONN_OPT_RODC_TOPOLOGY
+#   Bits 7-31 reserved.
+$CONN_IS_GENERATED            = 0x01
+$CONN_OVERRIDE_NOTIFY_DEFAULT = 0x04
+$CONN_USE_NOTIFY              = 0x08
 
 # Registry default values (Server 2003+ defaults; Win2000 used 300/30)
 $DEFAULT_NOTIFY_PAUSE_AFTER_MODIFY = 15  # seconds (holdback timer)
@@ -192,9 +200,9 @@ function Get-ReplicationConnectionStatus {
 
     Get-ADReplicationConnection -Filter * -Properties options | ForEach-Object {
         $options = if ($null -eq $_.options) { 0 } else { [int]$_.options }
-        $isGenerated      = ($options -band $CONN_IS_GENERATED) -eq $CONN_IS_GENERATED
-        $overrideNotify   = ($options -band $CONN_OVERRIDE_NOTIFY_DEFAULT) -eq $CONN_OVERRIDE_NOTIFY_DEFAULT
-        $notifyEnabled    = ($options -band $CONN_USE_NOTIFY) -eq $CONN_USE_NOTIFY
+        $isGenerated = ($options -band $CONN_IS_GENERATED) -eq $CONN_IS_GENERATED
+        $overrideNotify = ($options -band $CONN_OVERRIDE_NOTIFY_DEFAULT) -eq $CONN_OVERRIDE_NOTIFY_DEFAULT
+        $notifyEnabled = ($options -band $CONN_USE_NOTIFY) -eq $CONN_USE_NOTIFY
 
         [PSCustomObject]@{
             Name              = $_.Name
@@ -304,19 +312,19 @@ function Get-PartitionNotifySettings {
 
     foreach ($ref in $crossRefs) {
         $firstDelay = $ref.'msDS-Replication-Notify-First-DSA-Delay'
-        $subDelay   = $ref.'msDS-Replication-Notify-Subsequent-DSA-Delay'
+        $subDelay = $ref.'msDS-Replication-Notify-Subsequent-DSA-Delay'
 
         [PSCustomObject]@{
-            Partition              = ($ref.nCName -split ',')[0] -replace 'DC=|CN=', ''
-            NCName                 = $ref.nCName
-            DnsRoot                = $ref.dnsRoot
-            FirstDSADelay          = $firstDelay
-            FirstDSADelay_Note     = if ($null -eq $firstDelay) { 'default (15s)' } else { 'custom' }
-            FirstDSADelay_Effective = if ($null -eq $firstDelay) { $DEFAULT_NOTIFY_PAUSE_AFTER_MODIFY } else { $firstDelay }
-            SubsequentDSADelay     = $subDelay
-            SubsequentDSADelay_Note = if ($null -eq $subDelay) { 'default (3s)' } else { 'custom' }
+            Partition                    = ($ref.nCName -split ',')[0] -replace 'DC=|CN=', ''
+            NCName                       = $ref.nCName
+            DnsRoot                      = $ref.dnsRoot
+            FirstDSADelay                = $firstDelay
+            FirstDSADelay_Note           = if ($null -eq $firstDelay) { 'default (15s)' } else { 'custom' }
+            FirstDSADelay_Effective      = if ($null -eq $firstDelay) { $DEFAULT_NOTIFY_PAUSE_AFTER_MODIFY } else { $firstDelay }
+            SubsequentDSADelay           = $subDelay
+            SubsequentDSADelay_Note      = if ($null -eq $subDelay) { 'default (3s)' } else { 'custom' }
             SubsequentDSADelay_Effective = if ($null -eq $subDelay) { $DEFAULT_NOTIFY_PAUSE_BETWEEN_DSAS } else { $subDelay }
-            IsCustom               = ($null -ne $firstDelay) -or ($null -ne $subDelay)
+            IsCustom                     = ($null -ne $firstDelay) -or ($null -ne $subDelay)
         }
     }
 }
