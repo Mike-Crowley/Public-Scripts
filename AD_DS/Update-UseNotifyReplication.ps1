@@ -465,6 +465,9 @@ if ($EnableSiteLinks) {
 
 #region Report Generation
 
+# Compute manual connections needing attention (used in report warnings)
+$ManualWithoutNotify = @($ConnectionsManual | Where-Object { -not ($_.OverrideNotify -and $_.NotifyEnabled) })
+
 # Build HTML report
 $htmlContent = @"
 <!-- Report generated $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') by Update-UseNotifyReplication.ps1 -->
@@ -577,7 +580,7 @@ $htmlContent = @"
                 <div class="metric-value">$($ReplicationConnections.Count)</div>
                 <div class="metric-label">Replication Connections</div>
             </div>
-            <div class="metric $(if ($ConnectionsManual.Count -eq 0) { 'good' } else { 'warning' })">
+            <div class="metric $(if ($ManualWithoutNotify.Count -eq 0) { 'good' } else { 'warning' })">
                 <div class="metric-value">$($ConnectionsManual.Count)</div>
                 <div class="metric-label">Manual Connections</div>
             </div>
@@ -614,15 +617,20 @@ $(if ($SiteLinksDisabled.Count -gt 0) {
 "@
 })
 
-$(if ($ConnectionsManual.Count -gt 0) {
+$(if ($ManualWithoutNotify.Count -gt 0) {
 @"
         <div class="recommendation warning">
-            <h4>Manual Connections Detected</h4>
-            <p><strong>$($ConnectionsManual.Count) manual connection(s)</strong> exist in this topology. Manual connections do not inherit
-            Use_Notify from site links and require OVERRIDE_NOTIFY_DEFAULT (0x4) | USE_NOTIFY (0x8) set explicitly.</p>
-            <p>Run with <code>-EnableSiteLinks</code> to set notify flags on manual connections that lack them.
-            In most environments, KCC-managed connections are preferred; consider removing manual connections
-            and letting KCC manage the topology.</p>
+            <h4>Manual Connections Need Attention</h4>
+            <p><strong>$($ManualWithoutNotify.Count) manual connection(s)</strong> do not have Use_Notify enabled. Manual connections do not inherit
+            notification settings from site links and require OVERRIDE_NOTIFY_DEFAULT (0x4) | USE_NOTIFY (0x8) set explicitly.</p>
+            <p>Run with <code>-EnableSiteLinks</code> to set notify flags on manual connections that lack them.</p>
+        </div>
+"@
+} elseif ($ConnectionsManual.Count -gt 0) {
+@"
+        <div class="recommendation">
+            <h4>Manual Connections Configured</h4>
+            <p>$($ConnectionsManual.Count) manual connection(s) exist and all have Use_Notify enabled.</p>
         </div>
 "@
 })
