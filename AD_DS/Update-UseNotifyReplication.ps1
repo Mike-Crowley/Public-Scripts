@@ -80,6 +80,8 @@
 .PARAMETER EnableSiteLinks
     Enable Use_Notify on site links that don't have it configured.
     KCC-generated connections inherit this setting automatically.
+    Manual connections that lack notify are also updated (OVERRIDE_NOTIFY_DEFAULT | USE_NOTIFY).
+    This only sets behavior flags; it does not create, delete, or retarget any connection objects.
 
 .PARAMETER GetRegistrySettings
     Query domain controllers for NTDS notification timer registry settings and AvoidPdcOnWan.
@@ -528,8 +530,10 @@ $(if ($ConnectionsManual.Count -gt 0) {
         <div class="recommendation warning">
             <h4>Manual Connections Detected</h4>
             <p><strong>$($ConnectionsManual.Count) manual connection(s)</strong> exist in this topology. Manual connections do not inherit
-            Use_Notify from site links. Consider removing them and letting KCC manage connections automatically. The KCC produces
-            an optimal topology and its connections inherit notify behavior from site links.</p>
+            Use_Notify from site links and require OVERRIDE_NOTIFY_DEFAULT (0x4) | USE_NOTIFY (0x8) set explicitly.</p>
+            <p>Run with <code>-EnableSiteLinks</code> to set notify flags on manual connections that lack them.
+            In most environments, KCC-managed connections are preferred; consider removing manual connections
+            and letting KCC manage the topology.</p>
         </div>
 "@
 })
@@ -815,14 +819,38 @@ if ($EnableSiteLinks) {
         Write-Host "  All site links already have Use_Notify enabled." -ForegroundColor Green
     }
 
+    # Enable notify on manual connections that lack it.
+    # Manual connections do not inherit from site links; they need OVERRIDE_NOTIFY_DEFAULT (0x4) |
+    # USE_NOTIFY (0x8) = 0xC set explicitly. This only changes behavior flags on existing connections
+    # and does NOT alter the replication topology (no connections are created, deleted, or retargeted).
+    $ManualWithoutNotify = $ConnectionsManual | Where-Object { -not ($_.OverrideNotify -and $_.NotifyEnabled) }
+
+    if ($ManualWithoutNotify) {
+        $BackupData += "MANUAL CONNECTIONS (before changes):"
+        $BackupData += ($ManualWithoutNotify | Select-Object Name, FromServer, ToServer, ParentSite, DistinguishedName, Options, OptionsHex | Format-List | Out-String)
+
+        foreach ($conn in $ManualWithoutNotify) {
+            $newOptions = $conn.Options -bor $CONN_OVERRIDE_NOTIFY_DEFAULT -bor $CONN_USE_NOTIFY
+            $target = "$($conn.FromServer) -> $($conn.ToServer) [$($conn.ParentSite)]"
+            if ($PSCmdlet.ShouldProcess($target, "Set connection options from 0x$($conn.Options.ToString('X')) to 0x$($newOptions.ToString('X'))")) {
+                try {
+                    Set-ADObject -Identity $conn.DistinguishedName -Replace @{ 'options' = $newOptions }
+                    Write-Host "  Updated manual connection: $target" -ForegroundColor Cyan
+                }
+                catch {
+                    Write-Error "Failed to update manual connection $($target): $_"
+                }
+            }
+        }
+    }
+    elseif ($ConnectionsManual.Count -gt 0) {
+        Write-Host "  All manual connections already have Use_Notify enabled." -ForegroundColor Green
+    }
+
     # Save backup
     if ($BackupData.Count -gt 4) {
         $BackupData | Out-File -FilePath $BackupPath -Encoding UTF8 -Force
         Write-Host "Backup saved to: $BackupPath" -ForegroundColor Yellow
-    }
-
-    if ($ConnectionsManual.Count -gt 0) {
-        Write-Warning "$($ConnectionsManual.Count) manual connection(s) detected. Manual connections do not inherit Use_Notify from site links. Consider removing them and letting KCC manage connections automatically."
     }
 }
 
