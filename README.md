@@ -44,6 +44,24 @@ PowerShell tools for identity security, Microsoft 365, and Windows infrastructur
 
 Many of these scripts were originally shared on the [TechNet Gallery](https://learn.microsoft.com/en-us/teamblog/technet-gallery-retirement) and [Microsoft forums](https://social.msdn.microsoft.com/Profile/mike%20crowley), where Mike was among the top contributors and earned [Microsoft MVP](https://mvp.microsoft.com/en-US/faq) status eight consecutive years (2010–2018).
 
+Most scripts have companion blog posts with deeper context at [mikecrowley.us](https://mikecrowley.us/tag/powershell).
+
+## Contents
+
+| Section | Description |
+|---|---|
+| [OSINT](#osint) | Entra credential enumeration, federation cert inspection, AutoDiscover recon, Shodan |
+| [Microsoft Graph](#microsoft-graph) | OATH token import, sign-in reporting, Teams chat export, Graph mail |
+| [Okta](#okta) | SMS factor auditing for MFA migration |
+| [Exchange](#exchange) | App access policy audit, AutoDiscover delegates, recipient export |
+| [Azure](#azure) | File share duplicate detection |
+| [SharePoint Online](#sharepoint-online) | Duplicate file detection, storage analytics, recycle bin restore |
+| [Active Directory](#active-directory) | GUID conversion, ACE resolution, site link replication, password testing |
+| [Windows](#windows) | RDP connection parsing |
+| [Utilities](#utilities) | TOTP generation, object comparison, DLP pattern matching, font extraction |
+| [Gists](#gists) | Smaller standalone scripts |
+| [Other Repos](#other-repos) | PSNamecheap module |
+
 ## OSINT
 
 + ~~[Get-EntraCredentialType.ps1](./OSINT/Get-EntraCredentialType.ps1)~~ — *Deprecated. Use Get-EntraCredentialInfo instead.*
@@ -202,7 +220,7 @@ A few smaller things live here: https://gist.github.com/Mike-Crowley
 
 + [Verify-SmbSigning.ps1](https://gist.github.com/Mike-Crowley/4aa9d0913ef0518e79034e5cdc56daf4)
 
-  + Makes an SMB connection to a remote server, captures the traffic with Wireshark (tshark), and then parses the capture to report on the use of SMB signing.
+  + Makes an SMB connection to a remote server, captures the traffic with Wireshark (tshark), and then parses the capture to report on SMB signing.
 
 ## Other Repos
 
@@ -210,4 +228,4 @@ A few smaller things live here: https://gist.github.com/Mike-Crowley
 
 ---
 
-<span style="font-size:large;">Visit https://mikecrowley.us/tag/powershell for additional functions and scripts.</span>
+<span style="font-size:large;">Visit <a href="https://mikecrowley.us/tag/powershell">mikecrowley.us</a> for blog posts with deeper context on many of these scripts.</span>
