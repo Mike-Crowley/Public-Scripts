@@ -56,7 +56,7 @@ Most scripts have companion blog posts with deeper context at [mikecrowley.us](h
 | [Exchange](#exchange) | App access policy audit, AutoDiscover delegates, recipient export |
 | [Azure](#azure) | File share duplicate detection |
 | [SharePoint Online](#sharepoint-online) | Duplicate file detection, storage analytics, recycle bin restore |
-| [Active Directory](#active-directory) | GUID conversion, ACE resolution, site link replication, password testing |
+| [Active Directory](#active-directory) | GUID conversion, ACE resolution, site link replication, RC4/AES Kerberos audit, password testing |
 | [Windows](#windows) | RDP connection parsing |
 | [Utilities](#utilities) | TOTP generation, object comparison, DLP pattern matching, font extraction |
 | [Gists](#gists) | Smaller standalone scripts |
@@ -169,6 +169,10 @@ Most scripts have companion blog posts with deeper context at [mikecrowley.us](h
 + [Update-UseNotifyReplication.ps1](./AD_DS/Update-UseNotifyReplication.ps1)
 
   + Evaluate and optionally enable the Use_Notify option on AD Site Links and Replication Connections to reduce replication latency. Generates an HTML dashboard with health score, site link details (cost, schedule, sites), replication connections, and actionable recommendations. Use `-GetRegistrySettings` to query DC notification timers and AvoidPdcOnWan settings via WinRM.
+
++ [Find-Rc4Impact.ps1](./AD_DS/Find-Rc4Impact.ps1)
+
+  + Find enabled accounts that still lack AES Kerberos keys (and therefore rely on RC4) ahead of Microsoft's RC4 deprecation. Streams key-type presence for every account to disk via DSInternals replication — read-only, no secrets stored — filters to AES-less user/service accounts, and enriches the impact list with last-logon, OU, SPN count, and supported encryption types for remediation triage. Requires the DSInternals module and "Replicating Directory Changes (All)" (DCSync) rights.
 
 + [Get-ADSiteByIp.ps1](./AD_DS/Get-ADSiteByIp.ps1)
 
