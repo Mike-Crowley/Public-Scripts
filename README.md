@@ -64,8 +64,6 @@ Most scripts have companion blog posts with deeper context at [mikecrowley.us](h
 
 ## OSINT
 
-+ ~~[Get-EntraCredentialType.ps1](./OSINT/Get-EntraCredentialType.ps1)~~ — *Deprecated. Use Get-EntraCredentialInfo instead.*
-
 + [Get-EntraCredentialInfo.ps1](./OSINT/Get-EntraCredentialInfo.ps1)
 
   + Query Entra for the CredentialType and openid-configuration of a user for a combined output.
