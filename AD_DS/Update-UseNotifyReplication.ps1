@@ -242,6 +242,34 @@ function Get-ReplicationConnectionStatus {
     }
 }
 
+# Fast TCP reachability probe with an explicit timeout. Used to skip unreachable DCs
+# before attempting a WinRM/Invoke-Command call, which otherwise blocks for the full
+# WSMan connect timeout (can be minutes) when a port is firewalled/dropped.
+function Test-TcpPort {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string]$ComputerName,
+        [int]$Port = 5985,
+        [int]$TimeoutMs = 3000
+    )
+
+    $client = [System.Net.Sockets.TcpClient]::new()
+    try {
+        $async = $client.BeginConnect($ComputerName, $Port, $null, $null)
+        if ($async.AsyncWaitHandle.WaitOne($TimeoutMs, $false) -and $client.Connected) {
+            $client.EndConnect($async)
+            return $true
+        }
+        return $false
+    }
+    catch {
+        return $false
+    }
+    finally {
+        $client.Close()
+    }
+}
+
 function Get-DCRegistrySettings {
     [CmdletBinding()]
     param()
@@ -263,9 +291,21 @@ function Get-DCRegistrySettings {
             Error                       = $null
         }
 
+        # Fast pre-flight: skip DCs where WinRM (TCP 5985) isn't reachable, so a firewalled
+        # or offline DC fails in ~3s instead of blocking on the full WSMan connect timeout.
+        # Invoke-Command's default transport is HTTP/5985.
+        if (-not (Test-TcpPort -ComputerName $DC.HostName -Port 5985 -TimeoutMs 3000)) {
+            $result.Error = 'WinRM (TCP 5985) not reachable within 3s'
+            $result
+            continue
+        }
+
         try {
+            # Short open/operation timeouts so a half-open connection still fails fast.
+            $sessionOption = New-PSSessionOption -OpenTimeout 5000 -OperationTimeout 30000
+
             # Single remote session for both registry hives
-            $regData = Invoke-Command -ComputerName $DC.HostName -ScriptBlock {
+            $regData = Invoke-Command -ComputerName $DC.HostName -SessionOption $sessionOption -ScriptBlock {
                 @{
                     NTDS     = Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Services\NTDS\Parameters' -ErrorAction SilentlyContinue
                     Netlogon = Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters' -ErrorAction SilentlyContinue
@@ -371,7 +411,7 @@ $Sites = @(Get-ADReplicationSite -Filter *)
 # Partition notification delay settings (always queried; no WinRM required)
 Write-Verbose "Retrieving partition notification delay settings..."
 $PartitionSettings = @(Get-PartitionNotifySettings -ConfigurationDN $RootDSE.configurationNamingContext)
-$PartitionsCustom = $PartitionSettings | Where-Object { $_.IsCustom }
+$PartitionsCustom = @($PartitionSettings | Where-Object { $_.IsCustom })
 
 # Registry settings (optional)
 $RegistrySettings = $null
@@ -379,12 +419,15 @@ if ($GetRegistrySettings) {
     # Note: queries DCs in the current domain only. In a multi-domain forest,
     # run this from each domain or extend to enumerate all domains via $Forest.Domains.
     Write-Verbose "Retrieving DC registry settings (requires WinRM)..."
-    $RegistrySettings = Get-DCRegistrySettings
+    $RegistrySettings = @(Get-DCRegistrySettings)
 }
 
-$SiteLinksEnabled = $SiteLinks | Where-Object { $_.NotifyEnabled }
-$SiteLinksDisabled = $SiteLinks | Where-Object { -not $_.NotifyEnabled }
-$ConnectionsManual = $ReplicationConnections | Where-Object { $_.IsManual }
+# @() forces arrays so .Count is reliable. In Windows PowerShell 5.1, Where-Object
+# returning a single object yields a scalar PSCustomObject whose .Count is $null,
+# which would make the health score render blank / 0% when exactly one link matches.
+$SiteLinksEnabled = @($SiteLinks | Where-Object { $_.NotifyEnabled })
+$SiteLinksDisabled = @($SiteLinks | Where-Object { -not $_.NotifyEnabled })
+$ConnectionsManual = @($ReplicationConnections | Where-Object { $_.IsManual })
 
 # Health score based on site links (the efficient place to configure notify)
 $healthScore = if ($SiteLinks.Count -gt 0) { [math]::Round(($SiteLinksEnabled.Count / $SiteLinks.Count) * 100) } else { 100 }
@@ -448,9 +491,10 @@ if ($EnableSiteLinks) {
         Write-Host "  All manual connections already have Use_Notify enabled." -ForegroundColor Green
     }
 
-    # Save backup
-    if ($BackupData.Count -gt 4) {
-        $BackupData | Out-File -FilePath $BackupPath -Encoding UTF8 -Force
+    # Save backup. Skip under -WhatIf: no changes were made, so there is nothing to back up
+    # (and Out-File would otherwise honor $WhatIfPreference and silently write nothing).
+    if ($BackupData.Count -gt 4 -and -not $WhatIfPreference) {
+        $BackupData | Out-File -FilePath $BackupPath -Encoding UTF8 -Force -WhatIf:$false
         Write-Host "Backup saved to: $BackupPath" -ForegroundColor Yellow
     }
 
@@ -458,9 +502,9 @@ if ($EnableSiteLinks) {
     Write-Verbose "Re-querying AD for post-change report..."
     $SiteLinks = @(Get-SiteLinkStatus)
     $ReplicationConnections = @(Get-ReplicationConnectionStatus)
-    $SiteLinksEnabled = $SiteLinks | Where-Object { $_.NotifyEnabled }
-    $SiteLinksDisabled = $SiteLinks | Where-Object { -not $_.NotifyEnabled }
-    $ConnectionsManual = $ReplicationConnections | Where-Object { $_.IsManual }
+    $SiteLinksEnabled = @($SiteLinks | Where-Object { $_.NotifyEnabled })
+    $SiteLinksDisabled = @($SiteLinks | Where-Object { -not $_.NotifyEnabled })
+    $ConnectionsManual = @($ReplicationConnections | Where-Object { $_.IsManual })
     $healthScore = if ($SiteLinks.Count -gt 0) { [math]::Round(($SiteLinksEnabled.Count / $SiteLinks.Count) * 100) } else { 100 }
 }
 
@@ -592,8 +636,8 @@ $htmlContent = @"
                 <div class="metric-label">Custom Partition Delays</div>
             </div>
 $(if ($RegistrySettings) {
-    $dcsQueried = ($RegistrySettings | Where-Object { $null -eq $_.Error }).Count
-    $dcsWithErrors = ($RegistrySettings | Where-Object { $null -ne $_.Error }).Count
+    $dcsQueried = @($RegistrySettings | Where-Object { $null -eq $_.Error }).Count
+    $dcsWithErrors = @($RegistrySettings | Where-Object { $null -ne $_.Error }).Count
     "            <div class='metric $(if ($dcsWithErrors -eq 0) { 'good' } else { 'warning' })'>" +
     "                <div class='metric-value'>$dcsQueried/$($RegistrySettings.Count)</div>" +
     "                <div class='metric-label'>DCs Registry Queried</div>" +
@@ -788,8 +832,8 @@ $(if ($PartitionsCustom) {
 })
 
 $(if ($GetRegistrySettings -and $RegistrySettings) {
-    $DCsWithSettings = $RegistrySettings | Where-Object { $null -eq $_.Error }
-    $DCsWithErrors = $RegistrySettings | Where-Object { $null -ne $_.Error }
+    $DCsWithSettings = @($RegistrySettings | Where-Object { $null -eq $_.Error })
+    $DCsWithErrors = @($RegistrySettings | Where-Object { $null -ne $_.Error })
 @"
         <h2>Domain Controller Registry Settings</h2>
         <p class="section-desc">
@@ -880,11 +924,13 @@ $(if ($DCsWithErrors) {
 </html>
 "@
 
-# Save HTML report
+# Save HTML report. -WhatIf:$false forces the write even under -EnableSiteLinks -WhatIf:
+# generating a report is not a state change, so it must not be suppressed by $WhatIfPreference
+# (otherwise Out-File writes nothing and Start-Process then fails on the missing file).
 try {
-    $htmlContent | Out-File -FilePath $ReportPath -Encoding UTF8 -Force
+    $htmlContent | Out-File -FilePath $ReportPath -Encoding UTF8 -Force -WhatIf:$false
     Write-Host "Report saved to: $ReportPath" -ForegroundColor Green
-    Start-Process $ReportPath
+    if (Test-Path -LiteralPath $ReportPath) { Start-Process $ReportPath }
 }
 catch {
     Write-Error "Failed to save report: $_"
