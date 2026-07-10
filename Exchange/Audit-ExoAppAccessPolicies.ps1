@@ -58,6 +58,9 @@
     https://learn.microsoft.com/en-us/exchange/permissions-exo/application-rbac
 
 .LINK
+    https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/deactivate-app-registration
+
+.LINK
     https://learn.microsoft.com/en-us/powershell/module/exchangepowershell/new-applicationaccesspolicy
 
 .LINK
@@ -77,6 +80,7 @@ catch {
     throw "Microsoft Graph query failed. Verify consent for Application.Read.All and Directory.Read.All. Error: $_"
 }
 $TenantName = ($Org.value[0].displayName -replace '[^\w\-]', '')
+$TenantId = "$($Org.value[0].id)"
 
 #region Helpers
 
@@ -260,11 +264,26 @@ $Report = foreach ($Policy in $Policies) {
 
     # --- Application identity: the SERVICE PRINCIPAL is authoritative. Multi-tenant /
     # third-party apps have no application object in this tenant, only a service principal.
-    $spRes = Invoke-GraphSafe "v1.0/servicePrincipals(appId='$AppId')?`$select=id,appId,displayName"
+    $spRes = Invoke-GraphSafe "v1.0/servicePrincipals(appId='$AppId')?`$select=id,appId,displayName,accountEnabled"
     $appRes = Invoke-GraphSafe "v1.0/applications(appId='$AppId')?`$select=id,displayName"
 
     $SpLive = $spRes.Ok
     $EntraSpObjectId = if ($SpLive) { $spRes.Data.id } else { $null }
+    $SpAccountEnabled = if ($SpLive) { $spRes.Data.accountEnabled } else { $null }
+
+    # Deactivation state (https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/deactivate-app-registration):
+    # isDisabled lives on the APPLICATION object (global token block; beta endpoint),
+    # accountEnabled on the SERVICE PRINCIPAL (tenant-scoped sign-in block). Supplementary
+    # read - failure here must never affect classification.
+    $AppDeactivated = $null
+    $DisabledByMicrosoft = $null
+    if ($appRes.Ok) {
+        $disRes = Invoke-GraphSafe "beta/applications(appId='$AppId')?`$select=isDisabled,disabledByMicrosoftStatus"
+        if ($disRes.Ok) {
+            $AppDeactivated = [bool]$disRes.Data.isDisabled
+            if ($disRes.Data.disabledByMicrosoftStatus) { $DisabledByMicrosoft = "$($disRes.Data.disabledByMicrosoftStatus)" }
+        }
+    }
     $AppDisplayName = if ($SpLive) { "$($spRes.Data.displayName)".Trim() }
                       elseif ($appRes.Ok) { "$($appRes.Data.displayName)".Trim() }
                       else { $AppId }
@@ -451,6 +470,30 @@ $Report = foreach ($Policy in $Policies) {
         $Issues += 'Deny Policy'
         $MigrationStatus = 'Review'
         $MigrationBlockers = @('DenyAccess policy: RBAC has no deny equivalent. Do NOT create a scope on this group (that would invert the policy). Keep the policy for now or redesign scoping.') + $MigrationBlockers
+    }
+
+    # --- Deactivation / sign-in state. A blocked app gets no new tokens, so the policy has
+    # no live effect and this row is a retire-vs-migrate decision, not a plain migration.
+    $SignInBlocked = $false
+    if ($MigrationStatus -in @('Ready', 'Review')) {
+        if ($DisabledByMicrosoft) {
+            $SignInBlocked = $true
+            $Issues += 'Disabled by Microsoft'
+            $MigrationStatus = 'Review'
+            $MigrationBlockers += "App is disabled BY MICROSOFT (disabledByMicrosoftStatus = $DisabledByMicrosoft) - investigate for fraud/compromise before migrating anything."
+        }
+        if ($AppDeactivated -eq $true) {
+            $SignInBlocked = $true
+            $Issues += 'Deactivated'
+            $MigrationStatus = 'Review'
+            $MigrationBlockers += 'App registration is DEACTIVATED (isDisabled = true): no new tokens are issued, so this policy has no live effect. Retiring? Remove the policy and revoke remaining grants. Keeping? Reactivate (App registrations > Deactivated applications) before end-to-end testing.'
+        }
+        elseif ($SpLive -and $SpAccountEnabled -eq $false) {
+            $SignInBlocked = $true
+            $Issues += 'Sign-in Disabled'
+            $MigrationStatus = 'Review'
+            $MigrationBlockers += 'Enterprise application sign-in is DISABLED in this tenant (accountEnabled = false): no new tokens, so this policy has no live effect. Retiring? Remove the policy and revoke remaining grants. Keeping? Re-enable sign-in before end-to-end testing.'
+        }
     }
 
     # --- Resolve the policy target. The trailing GUID of the policy Identity is the
@@ -664,6 +707,12 @@ $Report = foreach ($Policy in $Policies) {
 
         $MigrationCommands += "# ==== $AppDisplayName ($AppId) -> $TargetName [$AccessRight] ===="
         $MigrationCommands += "# Steps 1-4 are additive and do not change existing access."
+        if ($SignInBlocked) {
+            $MigrationCommands += "# NOTE: this app cannot currently obtain tokens (deactivated / sign-in disabled)."
+            $MigrationCommands += "# Steps 1-3 can be staged and the Step 4 test cmdlet still evaluates, but the app"
+            $MigrationCommands += "# itself cannot be end-to-end tested until re-enabled. If it is being RETIRED, skip"
+            $MigrationCommands += "# migration: revoke its grants and remove the policy instead."
+        }
         $MigrationCommands += ""
         $MigrationCommands += "# Step 1: Exchange service principal pointer (idempotent)"
         if ($ExoSpExists) {
@@ -973,6 +1022,7 @@ foreach ($principalId in @($GrantHolders.Keys)) {
             SpObjectId  = $principalId
             DisplayName = $GrantHolders[$principalId].DisplayName
             Enabled     = $null
+            Deactivated = $false
             Perms       = @($GrantHolders[$principalId].Perms | Select-Object -Unique)
             Constraint  = 'Lookup failed'
             RiskTier    = 'high'
@@ -983,6 +1033,13 @@ foreach ($principalId in @($GrantHolders.Keys)) {
     if ($MsTenantIds -contains "$($info.Data.appOwnerOrganizationId)") { $MsFirstPartySkipped++; continue }
 
     $appId = $info.Data.appId
+
+    # App-level deactivation (isDisabled) is only readable for apps registered in THIS tenant.
+    $rowDeactivated = $false
+    if ("$($info.Data.appOwnerOrganizationId)" -eq $TenantId) {
+        $disRes = Invoke-GraphSafe "beta/applications(appId='$appId')?`$select=isDisabled"
+        if ($disRes.Ok -and $disRes.Data.isDisabled) { $rowDeactivated = $true }
+    }
     $perms = @($GrantHolders[$principalId].Perms | Select-Object -Unique)
     $graphEwsPerms = @($perms | Where-Object { $_ -match '^Graph:' -or $_ -eq 'EXO:full_access_as_app' })
     $protoPerms = @($perms | Where-Object { $_ -match '^EXO:(IMAP|POP|SMTP)' })
@@ -1015,11 +1072,16 @@ foreach ($principalId in @($GrantHolders.Keys)) {
         if ($t -eq 'medium') { $tier = 'medium' }
     }
 
+    if ($rowDeactivated -or $info.Data.accountEnabled -eq $false) {
+        $notes += 'App cannot obtain new tokens right now (deactivated / sign-in disabled) - lower urgency, but the standing grants become live again the moment it is re-enabled.'
+    }
+
     $SecurityRows += [PSCustomObject]@{
         AppId       = $appId
         SpObjectId  = $principalId
         DisplayName = if ($info.Data.displayName) { "$($info.Data.displayName)".Trim() } else { $GrantHolders[$principalId].DisplayName }
         Enabled     = $info.Data.accountEnabled
+        Deactivated = $rowDeactivated
         Perms       = $perms
         Constraint  = $constraint
         RiskTier    = $tier
@@ -1081,10 +1143,11 @@ $HtmlRows = foreach ($item in $SortedReport) {
     $issuesBadges = ''
     foreach ($iss in ($item.Issues -split ', ' | Where-Object { $_ })) {
         $cls = switch -Regex ($iss) {
-            'Orphaned|Target Missing|Deny|Error|Ambiguous|No EXO Recipient' { 'crit' }
+            'Orphaned|Target Missing|Deny|Error|Ambiguous|No EXO Recipient|Disabled by Microsoft' { 'crit' }
             'Delegated' { 'purp' }
             'Nested|Resolved By Name|Members Unverified' { 'warn' }
             'Single Mailbox|Finish Migration|RBAC Live' { 'info' }
+            'Deactivated|Sign-in Disabled' { 'neut' }
             default { 'warn' }
         }
         $issuesBadges += "<span class='badge $cls'>$(HtmlEnc $iss)</span>"
@@ -1176,7 +1239,9 @@ $SecurityRowsHtml = foreach ($row in $SecuritySorted) {
     }
     $permChips = ($row.Perms | ForEach-Object { "<span class='perm keep'>$(HtmlEnc $_)</span>" }) -join ''
     $links = "<a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/$($row.SpObjectId)/appId/$($row.AppId)' target='_blank' rel='noopener'>Enterprise app &#8599;</a>"
-    $disabledNote = if ($row.Enabled -eq $false) { " <span class='badge neut'>sign-in disabled</span>" } else { '' }
+    $disabledNote = ''
+    if ($row.Deactivated) { $disabledNote += " <span class='badge neut'>deactivated</span>" }
+    if ($row.Enabled -eq $false) { $disabledNote += " <span class='badge neut'>sign-in disabled</span>" }
     $rowCls = if ($row.Constraint -match '^Unconstrained') { 'status-blocked' } else { '' }
     @"
     <tr class="$rowCls">

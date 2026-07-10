@@ -116,7 +116,7 @@ Most scripts have companion blog posts with deeper context at [mikecrowley.us](h
 
 + [Audit-ExoAppAccessPolicies.ps1](./Exchange/Audit-ExoAppAccessPolicies.ps1)
 
-  + Audit all Exchange Online Application Access Policies and generate an HTML migration report (plus a companion .ps1) with ready-to-run, self-verifying PowerShell for converting each policy to RBAC for Applications. Cutover commands check every migrated role with `Test-ServicePrincipalAuthorization` and verify grant revocations before the legacy policy is removed. Also scans the tenant for apps holding Exchange application permissions with no mailbox scoping at all (unconstrained org-wide access), and flags DenyAccess policies, delegated-only apps, nested groups, IMAP/POP permissions with no RBAC equivalent, orphaned apps, and EWS-retirement exposure. Includes Entra portal deep links and collapsible per-app command blocks.
+  + Audit all Exchange Online Application Access Policies and generate an HTML migration report (plus a companion .ps1) with ready-to-run, self-verifying PowerShell for converting each policy to RBAC for Applications. Cutover commands check every migrated role with `Test-ServicePrincipalAuthorization` and verify grant revocations before the legacy policy is removed. Also scans the tenant for apps holding Exchange application permissions with no mailbox scoping at all (unconstrained org-wide access), and flags DenyAccess policies, delegated-only apps, nested groups, IMAP/POP permissions with no RBAC equivalent, orphaned apps, deactivated / sign-in-disabled apps, interrupted cutovers, and EWS-retirement exposure. Includes Entra portal deep links and collapsible per-app command blocks.
 
 + [Get-AlternateMailboxes.ps1](./Exchange/Get-AlternateMailboxes.ps1)
 
