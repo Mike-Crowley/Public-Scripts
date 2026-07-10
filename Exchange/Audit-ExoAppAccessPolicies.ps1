@@ -34,7 +34,7 @@
     None. This script does not accept pipeline input.
 
 .OUTPUTS
-    Saved to the desktop:
+    Saved to an 'AppAccessPolicyMigration' folder on the desktop:
       AppAccessPolicyMigration_<TenantName>_<yyyyMMdd_HHmmss>.html  (report)
       AppAccessPolicyMigration_<TenantName>_<yyyyMMdd_HHmmss>.ps1   (migration commands)
 
@@ -1669,7 +1669,9 @@ $Html = @"
 </html>
 "@
 
-$OutDir = [Environment]::GetFolderPath('Desktop')
+# Reports collect in a dedicated Desktop folder rather than littering the Desktop itself.
+$OutDir = Join-Path ([Environment]::GetFolderPath('Desktop')) 'AppAccessPolicyMigration'
+if (-not (Test-Path $OutDir)) { $null = New-Item -ItemType Directory -Path $OutDir }
 $RunStamp = Get-Date -Format 'yyyyMMdd_HHmmss'
 $ExportPath = Join-Path $OutDir "AppAccessPolicyMigration_$TenantName`_$RunStamp.html"
 $Html | Out-File -FilePath $ExportPath -Encoding UTF8
