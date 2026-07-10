@@ -1292,6 +1292,10 @@ $Html = @"
             font-size: 0.875rem;
         }
         tr:last-child td { border-bottom: none; }
+        /* An app row and its commands row are ONE group: no divider inside the group,
+           a full divider only after it - otherwise the pill reads as ambiguous. */
+        tbody tr:has(+ tr.commands-row) td { border-bottom: none; }
+        tr.commands-row td { padding-top: 0; }
         tr.status-blocked { background: rgba(178, 39, 39, 0.05); }
         tr.status-error { background: rgba(236, 131, 90, 0.07); }
         tr.status-review { background: rgba(250, 178, 25, 0.07); }
