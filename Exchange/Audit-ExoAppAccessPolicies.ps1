@@ -18,7 +18,11 @@
         are additive: they change nothing that exists.
       - Cutover (revoke Entra grants + remove policy) is LIVE code guarded by its own
         verification: it runs Test-ServicePrincipalAuthorization first and aborts unless
-        RBAC is confirmed; Remove-ApplicationAccessPolicy additionally prompts (built-in).
+        RBAC is confirmed InScope, and removes the (now-inert) policy only after every
+        grant revocation succeeded. Remove-ApplicationAccessPolicy is called with
+        -Confirm:$false because it does NOT reliably prompt in the modern REST-based EXO
+        module (the docs claim Remove-* cmdlets pause, but these don't) - the verification
+        is the real gate, not a phantom prompt.
       - Actions that would RESTORE tenant-wide access (removing a policy whose target was
         deleted) are gated behind an explicit opt-in variable.
       - Blocks whose policy target could only be matched by NAME (not object id) are
@@ -791,9 +795,11 @@ $Report = foreach ($Policy in $Policies) {
         $NeedsFlattenGate = ($Issues -contains 'Nested Groups') -or ($Issues -contains 'Members Unverified')
         $rolesList = ($RbacRoles | ForEach-Object { "'$(EscSq $_)'" }) -join ', '
         $MigrationCommands += "# ---- Step 5-6: CUTOVER. Verifies EVERY migrated role is live and InScope, revokes the"
-        $MigrationCommands += "# tenant-wide grants (each one checked), then removes the legacy policy (Remove-* prompts"
-        $MigrationCommands += "# for confirmation). Entra + RBAC grants are a union - scoping only takes effect after"
-        $MigrationCommands += "# the tenant-wide grant is revoked. The policy is only removed if ALL revocations succeed."
+        $MigrationCommands += "# tenant-wide grants (each one checked), then removes the now-inert legacy policy."
+        $MigrationCommands += "# Entra + RBAC grants are a union - scoping only takes effect after the tenant-wide grant"
+        $MigrationCommands += "# is revoked. Nothing here runs unverified: the policy is removed ONLY after RBAC is"
+        $MigrationCommands += "# confirmed InScope AND every revocation succeeded. Remove is explicit (-Confirm:`$false)"
+        $MigrationCommands += "# because Remove-ApplicationAccessPolicy does NOT reliably prompt in the modern EXO module."
         $MigrationCommands += "`$expectedRoles = @($rolesList)"
         if ($TestMailbox) {
             $MigrationCommands += "`$cutoverTestMailbox = '$(EscSq $TestMailbox)'   # in-scope member found by the audit; substitute if needed"
@@ -826,12 +832,12 @@ $Report = foreach ($Policy in $Policies) {
         $MigrationCommands += "        Write-Host '$(EscSq $AppDisplayName): legacy policy already removed - migration complete.'"
         $MigrationCommands += "    } else {"
         $MigrationCommands += "        Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'"
-        $MigrationCommands += "        Write-Host 'Then confirm removal of the legacy policy:'"
-        $MigrationCommands += "        Remove-ApplicationAccessPolicy -Identity '$PolicyIdSafe'"
+        $MigrationCommands += "        # The policy is now inert (it only constrained the Entra grants, which are gone)."
+        $MigrationCommands += "        Remove-ApplicationAccessPolicy -Identity '$PolicyIdSafe' -Confirm:`$false"
         $MigrationCommands += "        if (@(Get-ApplicationAccessPolicy | Where-Object { `$_.Identity -eq '$PolicyIdSafe' }).Count -eq 0) {"
         $MigrationCommands += "            Write-Host '$(EscSq $AppDisplayName): legacy policy removed - migration complete.'"
         $MigrationCommands += "        } else {"
-        $MigrationCommands += "            Write-Warning '$(EscSq $AppDisplayName): legacy policy still present (removal declined or failed) - rerun this cutover block to finish.'"
+        $MigrationCommands += "            Write-Warning '$(EscSq $AppDisplayName): legacy policy still present (removal failed) - rerun this cutover block to finish.'"
         $MigrationCommands += "        }"
         $MigrationCommands += "    }"
         $MigrationCommands += "}"
@@ -851,8 +857,8 @@ $Report = foreach ($Policy in $Policies) {
     }
     elseif ($MigrationStatus -eq 'Delete Only') {
         $MigrationCommands += "# App and service principal are gone from Entra ID - the policy is inert."
-        $MigrationCommands += "# Cross-check your app inventory, then remove (confirmation prompt follows):"
-        $MigrationCommands += "Remove-ApplicationAccessPolicy -Identity '$PolicyIdSafe'"
+        $MigrationCommands += "# Cross-check your app inventory, then remove it:"
+        $MigrationCommands += "Remove-ApplicationAccessPolicy -Identity '$PolicyIdSafe' -Confirm:`$false"
     }
     elseif ($IsDeny) {
         $MigrationCommands += "# DenyAccess policy - do NOT migrate with restrict-style commands (a scope on this"
@@ -870,26 +876,26 @@ $Report = foreach ($Policy in $Policies) {
         else {
             $MigrationCommands += "Test-ServicePrincipalAuthorization -Identity '$AppId' | Format-Table   # spot-check InScope with an in-scope mailbox via -Resource"
         }
-        $MigrationCommands += "# Confirm the application still works, then remove (confirmation prompt follows):"
-        $MigrationCommands += "Remove-ApplicationAccessPolicy -Identity '$PolicyIdSafe'"
+        $MigrationCommands += "# Confirm the application still works, then remove the now-inert policy:"
+        $MigrationCommands += "Remove-ApplicationAccessPolicy -Identity '$PolicyIdSafe' -Confirm:`$false"
         $MigrationCommands += "if (@(Get-ApplicationAccessPolicy | Where-Object { `$_.Identity -eq '$PolicyIdSafe' }).Count -eq 0) {"
         $MigrationCommands += "    Write-Host '$(EscSq $AppDisplayName): legacy policy removed - migration complete.'"
         $MigrationCommands += "} else {"
-        $MigrationCommands += "    Write-Warning '$(EscSq $AppDisplayName): legacy policy still present (removal declined or failed).'"
+        $MigrationCommands += "    Write-Warning '$(EscSq $AppDisplayName): legacy policy still present (removal failed).'"
         $MigrationCommands += "}"
     }
     elseif ($Issues -contains 'Delegated Only') {
         $MigrationCommands += "# Exchange permissions are DELEGATED only ($($DelegatedExchangeScopes -join ', '))."
         $MigrationCommands += "# Policies constrain app-only access, so this policy does nothing today. Removing it"
-        $MigrationCommands += "# changes no behavior (confirmation prompt follows):"
-        $MigrationCommands += "Remove-ApplicationAccessPolicy -Identity '$PolicyIdSafe'"
+        $MigrationCommands += "# changes no behavior:"
+        $MigrationCommands += "Remove-ApplicationAccessPolicy -Identity '$PolicyIdSafe' -Confirm:`$false"
     }
     elseif ($Issues -contains 'No Exchange Permissions') {
         $MigrationCommands += "# No Exchange application permissions -> this policy has no effect today."
         if ($KeepPerms.Count -gt 0) { $MigrationCommands += "# KEEP (not Exchange-related): $($KeepPerms -join ', ')" }
-        $MigrationCommands += "# Removing the policy changes no behavior (confirmation prompt follows). If the app is"
-        $MigrationCommands += "# granted Exchange permissions later, scope it with RBAC at that time."
-        $MigrationCommands += "Remove-ApplicationAccessPolicy -Identity '$PolicyIdSafe'"
+        $MigrationCommands += "# Removing the policy changes no behavior. If the app is granted Exchange permissions"
+        $MigrationCommands += "# later, scope it with RBAC at that time."
+        $MigrationCommands += "Remove-ApplicationAccessPolicy -Identity '$PolicyIdSafe' -Confirm:`$false"
     }
     elseif ($Issues -contains 'Unmappable Permission') {
         $MigrationCommands += "# This policy constrains permissions that have no RBAC role: $($KeepPerms -join ', ')"
@@ -903,8 +909,8 @@ $Report = foreach ($Policy in $Policies) {
         $MigrationCommands += "# Review the Exchange service principal and its mailbox permissions:"
         $MigrationCommands += "Get-ServicePrincipal -Identity '$AppId' | Format-List DisplayName, AppId, ObjectId"
         $MigrationCommands += "# Per suspect mailbox: Get-MailboxPermission -Identity '<mailbox>' | Where-Object { `$_.User -like '*$(EscSq $AppDisplayName)*' }"
-        $MigrationCommands += "# The policy itself can be removed after review (confirmation prompt follows):"
-        $MigrationCommands += "Remove-ApplicationAccessPolicy -Identity '$PolicyIdSafe'"
+        $MigrationCommands += "# The policy itself can be removed after review:"
+        $MigrationCommands += "Remove-ApplicationAccessPolicy -Identity '$PolicyIdSafe' -Confirm:`$false"
     }
     elseif ($Issues -contains 'No Service Principal') {
         $MigrationCommands += "# App registration exists but there is no enterprise application (service principal),"
@@ -930,7 +936,7 @@ $Report = foreach ($Policy in $Policies) {
         $MigrationCommands += "#    gated behind an explicit opt-in:"
         $MigrationCommands += "`$iUnderstandThisRestoresTenantWideAccess = `$false"
         $MigrationCommands += "if (`$iUnderstandThisRestoresTenantWideAccess) {"
-        $MigrationCommands += "    Remove-ApplicationAccessPolicy -Identity '$PolicyIdSafe'"
+        $MigrationCommands += "    Remove-ApplicationAccessPolicy -Identity '$PolicyIdSafe' -Confirm:`$false"
         $MigrationCommands += "}"
     }
     elseif ($Issues -contains 'Ambiguous Name') {
@@ -1573,10 +1579,12 @@ $Html = @"
             new policies; no firm retirement date announced yet). This report identifies current policies,
             generates migration commands, and audits the tenant for unconstrained Exchange app access.</p>
             <p><strong>Safety:</strong> Steps 1&ndash;4 are additive. Cutover blocks verify RBAC with
-            <code>Test-ServicePrincipalAuthorization</code> before revoking anything, and
-            <code>Remove-ApplicationAccessPolicy</code> prompts for confirmation. Actions that would restore
+            <code>Test-ServicePrincipalAuthorization</code> and confirm every grant revocation succeeded
+            before the (now-inert) policy is removed &mdash; nothing runs unverified. Actions that would restore
             tenant-wide access are gated behind an explicit opt-in variable. Name-matched targets are fully
-            commented out until verified.</p>
+            commented out until verified. (<code>Remove-ApplicationAccessPolicy</code> is called with
+            <code>-Confirm:$false</code> because it does not reliably prompt in the modern EXO module; the
+            verification above is the real gate.)</p>
         </div>
 
         <div class="summary">
@@ -1716,7 +1724,7 @@ $Html | Out-File -FilePath $ExportPath -Encoding UTF8
 Write-Host "Report saved to: $ExportPath" -ForegroundColor Green
 
 # Companion script: all generated command blocks. Steps 1-4 run as-is (additive); each
-# cutover verifies RBAC before revoking, and Remove-* prompts before deleting.
+# cutover verifies RBAC and confirms revocations succeeded before removing the inert policy.
 $CommandBlocks = $SortedReport | Where-Object { $_.MigrationCommands } | ForEach-Object { $_.MigrationCommands + "`n" }
 if ($CommandBlocks) {
     $ScriptPath = Join-Path $OutDir "AppAccessPolicyMigration_$TenantName`_$RunStamp.ps1"
@@ -1725,8 +1733,8 @@ if ($CommandBlocks) {
         "# Generated $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') for tenant $TenantName by Audit-ExoAppAccessPolicies.ps1"
         "# Prereqs: Connect-ExchangeOnline (Organization Management / Exchange Administrator);"
         "#          Connect-MgGraph -Scopes 'AppRoleAssignment.ReadWrite.All' (for the cutover revocations)."
-        "# Steps 1-4 are additive. Cutover blocks self-verify with Test-ServicePrincipalAuthorization"
-        "# and skip themselves if RBAC is not live; Remove-ApplicationAccessPolicy prompts."
+        "# Steps 1-4 are additive. Cutover blocks self-verify with Test-ServicePrincipalAuthorization,"
+        "# skip themselves if RBAC is not live, and remove the inert policy only after revocations succeed."
         "# Blocks for name-matched targets are fully commented out - verify the target first."
         ""
     ) + $CommandBlocks | Out-File -FilePath $ScriptPath -Encoding UTF8

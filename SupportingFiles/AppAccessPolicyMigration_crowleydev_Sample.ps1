@@ -1,9 +1,9 @@
 # Application Access Policy -> RBAC for Applications migration commands
-# Generated 2026-07-10 14:33:06 for tenant crowleydev by Audit-ExoAppAccessPolicies.ps1
+# Generated 2026-07-10 19:13:19 for tenant crowleydev by Audit-ExoAppAccessPolicies.ps1
 # Prereqs: Connect-ExchangeOnline (Organization Management / Exchange Administrator);
 #          Connect-MgGraph -Scopes 'AppRoleAssignment.ReadWrite.All' (for the cutover revocations).
-# Steps 1-4 are additive. Cutover blocks self-verify with Test-ServicePrincipalAuthorization
-# and skip themselves if RBAC is not live; Remove-ApplicationAccessPolicy prompts.
+# Steps 1-4 are additive. Cutover blocks self-verify with Test-ServicePrincipalAuthorization,
+# skip themselves if RBAC is not live, and remove the inert policy only after revocations succeed.
 # Blocks for name-matched targets are fully commented out - verify the target first.
 
 # ==== HR Notification Bot (ffffffff-0000-0000-0000-000000000004) -> HR Alerts [RestrictAccess] ====
@@ -39,9 +39,11 @@ Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-0000000000
 # Also confirm the application itself still works before continuing.
 
 # ---- Step 5-6: CUTOVER. Verifies EVERY migrated role is live and InScope, revokes the
-# tenant-wide grants (each one checked), then removes the legacy policy (Remove-* prompts
-# for confirmation). Entra + RBAC grants are a union - scoping only takes effect after
-# the tenant-wide grant is revoked. The policy is only removed if ALL revocations succeed.
+# tenant-wide grants (each one checked), then removes the now-inert legacy policy.
+# Entra + RBAC grants are a union - scoping only takes effect after the tenant-wide grant
+# is revoked. Nothing here runs unverified: the policy is removed ONLY after RBAC is
+# confirmed InScope AND every revocation succeeded. Remove is explicit (-Confirm:$false)
+# because Remove-ApplicationAccessPolicy does NOT reliably prompt in the modern EXO module.
 $expectedRoles = @('Application Mail.Send')
 $cutoverTestMailbox = 'hr-alerts@crowley.dev'   # in-scope member found by the audit; substitute if needed
 $auth = if ($cutoverTestMailbox -notlike '<*') { @(Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-000000000004' -Resource $cutoverTestMailbox -ErrorAction SilentlyContinue) } else { @() }
@@ -55,16 +57,16 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/abababab-0000-0000-0000-000000000004/appRoleAssignments/assign-000004-1' -ErrorAction Stop; Write-Host 'Revoked Graph:Mail.Send' } catch { if ("$_" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: Graph:Mail.Send' } else { $revokeFailed = $true; Write-Warning "Revocation FAILED (Graph:Mail.Send): $_" } }
     if ($revokeFailed) {
         Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000004:S-1-5-21-1004336348-1177238915-682003330-3260;eeeeeeee-0000-0000-0000-000000000001' }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000004:S-1-5-21-1004336348-1177238915-682003330-2622;eeeeeeee-0000-0000-0000-000000000001' }).Count -eq 0) {
         Write-Host 'HR Notification Bot: legacy policy already removed - migration complete.'
     } else {
         Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'
-        Write-Host 'Then confirm removal of the legacy policy:'
-        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000004:S-1-5-21-1004336348-1177238915-682003330-3260;eeeeeeee-0000-0000-0000-000000000001'
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000004:S-1-5-21-1004336348-1177238915-682003330-3260;eeeeeeee-0000-0000-0000-000000000001' }).Count -eq 0) {
+        # The policy is now inert (it only constrained the Entra grants, which are gone).
+        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000004:S-1-5-21-1004336348-1177238915-682003330-2622;eeeeeeee-0000-0000-0000-000000000001' -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000004:S-1-5-21-1004336348-1177238915-682003330-2622;eeeeeeee-0000-0000-0000-000000000001' }).Count -eq 0) {
             Write-Host 'HR Notification Bot: legacy policy removed - migration complete.'
         } else {
-            Write-Warning 'HR Notification Bot: legacy policy still present (removal declined or failed) - rerun this cutover block to finish.'
+            Write-Warning 'HR Notification Bot: legacy policy still present (removal failed) - rerun this cutover block to finish.'
         }
     }
 }
@@ -101,9 +103,11 @@ Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-0000000000
 # Also confirm the application itself still works before continuing.
 
 # ---- Step 5-6: CUTOVER. Verifies EVERY migrated role is live and InScope, revokes the
-# tenant-wide grants (each one checked), then removes the legacy policy (Remove-* prompts
-# for confirmation). Entra + RBAC grants are a union - scoping only takes effect after
-# the tenant-wide grant is revoked. The policy is only removed if ALL revocations succeed.
+# tenant-wide grants (each one checked), then removes the now-inert legacy policy.
+# Entra + RBAC grants are a union - scoping only takes effect after the tenant-wide grant
+# is revoked. Nothing here runs unverified: the policy is removed ONLY after RBAC is
+# confirmed InScope AND every revocation succeeded. Remove is explicit (-Confirm:$false)
+# because Remove-ApplicationAccessPolicy does NOT reliably prompt in the modern EXO module.
 $expectedRoles = @('Application Mail.Send')
 $cutoverTestMailbox = 'member2@crowley.dev'   # in-scope member found by the audit; substitute if needed
 $auth = if ($cutoverTestMailbox -notlike '<*') { @(Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-000000000002' -Resource $cutoverTestMailbox -ErrorAction SilentlyContinue) } else { @() }
@@ -117,16 +121,16 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/abababab-0000-0000-0000-000000000002/appRoleAssignments/assign-000002-1' -ErrorAction Stop; Write-Host 'Revoked Graph:Mail.Send' } catch { if ("$_" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: Graph:Mail.Send' } else { $revokeFailed = $true; Write-Warning "Revocation FAILED (Graph:Mail.Send): $_" } }
     if ($revokeFailed) {
         Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000002:S-1-5-21-1004336348-1177238915-682003330-1725;cccccccc-0000-0000-0000-000000000002' }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000002:S-1-5-21-1004336348-1177238915-682003330-3733;cccccccc-0000-0000-0000-000000000002' }).Count -eq 0) {
         Write-Host 'Invoice Mailer: legacy policy already removed - migration complete.'
     } else {
         Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'
-        Write-Host 'Then confirm removal of the legacy policy:'
-        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000002:S-1-5-21-1004336348-1177238915-682003330-1725;cccccccc-0000-0000-0000-000000000002'
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000002:S-1-5-21-1004336348-1177238915-682003330-1725;cccccccc-0000-0000-0000-000000000002' }).Count -eq 0) {
+        # The policy is now inert (it only constrained the Entra grants, which are gone).
+        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000002:S-1-5-21-1004336348-1177238915-682003330-3733;cccccccc-0000-0000-0000-000000000002' -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000002:S-1-5-21-1004336348-1177238915-682003330-3733;cccccccc-0000-0000-0000-000000000002' }).Count -eq 0) {
             Write-Host 'Invoice Mailer: legacy policy removed - migration complete.'
         } else {
-            Write-Warning 'Invoice Mailer: legacy policy still present (removal declined or failed) - rerun this cutover block to finish.'
+            Write-Warning 'Invoice Mailer: legacy policy still present (removal failed) - rerun this cutover block to finish.'
         }
     }
 }
@@ -167,9 +171,11 @@ Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-0000000000
 # Also confirm the application itself still works before continuing.
 
 # ---- Step 5-6: CUTOVER. Verifies EVERY migrated role is live and InScope, revokes the
-# tenant-wide grants (each one checked), then removes the legacy policy (Remove-* prompts
-# for confirmation). Entra + RBAC grants are a union - scoping only takes effect after
-# the tenant-wide grant is revoked. The policy is only removed if ALL revocations succeed.
+# tenant-wide grants (each one checked), then removes the now-inert legacy policy.
+# Entra + RBAC grants are a union - scoping only takes effect after the tenant-wide grant
+# is revoked. Nothing here runs unverified: the policy is removed ONLY after RBAC is
+# confirmed InScope AND every revocation succeeded. Remove is explicit (-Confirm:$false)
+# because Remove-ApplicationAccessPolicy does NOT reliably prompt in the modern EXO module.
 $expectedRoles = @('Application EWS.AccessAsApp', 'Application Mail.Read')
 $cutoverTestMailbox = 'member3@crowley.dev'   # in-scope member found by the audit; substitute if needed
 $auth = if ($cutoverTestMailbox -notlike '<*') { @(Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-000000000003' -Resource $cutoverTestMailbox -ErrorAction SilentlyContinue) } else { @() }
@@ -185,16 +191,16 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/abababab-0000-0000-0000-000000000003/appRoleAssignments/assign-000003-3' -ErrorAction Stop; Write-Host 'Revoked Graph:Mail.Read' } catch { if ("$_" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: Graph:Mail.Read' } else { $revokeFailed = $true; Write-Warning "Revocation FAILED (Graph:Mail.Read): $_" } }
     if ($revokeFailed) {
         Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000003:S-1-5-21-1004336348-1177238915-682003330-7625;cccccccc-0000-0000-0000-000000000003' }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000003:S-1-5-21-1004336348-1177238915-682003330-1468;cccccccc-0000-0000-0000-000000000003' }).Count -eq 0) {
         Write-Host 'Legacy EWS Archiver: legacy policy already removed - migration complete.'
     } else {
         Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'
-        Write-Host 'Then confirm removal of the legacy policy:'
-        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000003:S-1-5-21-1004336348-1177238915-682003330-7625;cccccccc-0000-0000-0000-000000000003'
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000003:S-1-5-21-1004336348-1177238915-682003330-7625;cccccccc-0000-0000-0000-000000000003' }).Count -eq 0) {
+        # The policy is now inert (it only constrained the Entra grants, which are gone).
+        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000003:S-1-5-21-1004336348-1177238915-682003330-1468;cccccccc-0000-0000-0000-000000000003' -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000003:S-1-5-21-1004336348-1177238915-682003330-1468;cccccccc-0000-0000-0000-000000000003' }).Count -eq 0) {
             Write-Host 'Legacy EWS Archiver: legacy policy removed - migration complete.'
         } else {
-            Write-Warning 'Legacy EWS Archiver: legacy policy still present (removal declined or failed) - rerun this cutover block to finish.'
+            Write-Warning 'Legacy EWS Archiver: legacy policy still present (removal failed) - rerun this cutover block to finish.'
         }
     }
 }
@@ -234,9 +240,11 @@ Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-0000000000
 # Also confirm the application itself still works before continuing.
 
 # ---- Step 5-6: CUTOVER. Verifies EVERY migrated role is live and InScope, revokes the
-# tenant-wide grants (each one checked), then removes the legacy policy (Remove-* prompts
-# for confirmation). Entra + RBAC grants are a union - scoping only takes effect after
-# the tenant-wide grant is revoked. The policy is only removed if ALL revocations succeed.
+# tenant-wide grants (each one checked), then removes the now-inert legacy policy.
+# Entra + RBAC grants are a union - scoping only takes effect after the tenant-wide grant
+# is revoked. Nothing here runs unverified: the policy is removed ONLY after RBAC is
+# confirmed InScope AND every revocation succeeded. Remove is explicit (-Confirm:$false)
+# because Remove-ApplicationAccessPolicy does NOT reliably prompt in the modern EXO module.
 $expectedRoles = @('Application Calendars.Read', 'Application Calendars.ReadWrite')
 $cutoverTestMailbox = 'member1@crowley.dev'   # in-scope member found by the audit; substitute if needed
 $auth = if ($cutoverTestMailbox -notlike '<*') { @(Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-000000000001' -Resource $cutoverTestMailbox -ErrorAction SilentlyContinue) } else { @() }
@@ -252,16 +260,16 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/abababab-0000-0000-0000-000000000001/appRoleAssignments/assign-000001-2' -ErrorAction Stop; Write-Host 'Revoked Graph:Calendars.ReadWrite' } catch { if ("$_" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: Graph:Calendars.ReadWrite' } else { $revokeFailed = $true; Write-Warning "Revocation FAILED (Graph:Calendars.ReadWrite): $_" } }
     if ($revokeFailed) {
         Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000001:S-1-5-21-1004336348-1177238915-682003330-7784;cccccccc-0000-0000-0000-000000000001' }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000001:S-1-5-21-1004336348-1177238915-682003330-6098;cccccccc-0000-0000-0000-000000000001' }).Count -eq 0) {
         Write-Host 'Room Booking Service: legacy policy already removed - migration complete.'
     } else {
         Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'
-        Write-Host 'Then confirm removal of the legacy policy:'
-        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000001:S-1-5-21-1004336348-1177238915-682003330-7784;cccccccc-0000-0000-0000-000000000001'
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000001:S-1-5-21-1004336348-1177238915-682003330-7784;cccccccc-0000-0000-0000-000000000001' }).Count -eq 0) {
+        # The policy is now inert (it only constrained the Entra grants, which are gone).
+        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000001:S-1-5-21-1004336348-1177238915-682003330-6098;cccccccc-0000-0000-0000-000000000001' -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000001:S-1-5-21-1004336348-1177238915-682003330-6098;cccccccc-0000-0000-0000-000000000001' }).Count -eq 0) {
             Write-Host 'Room Booking Service: legacy policy removed - migration complete.'
         } else {
-            Write-Warning 'Room Booking Service: legacy policy still present (removal declined or failed) - rerun this cutover block to finish.'
+            Write-Warning 'Room Booking Service: legacy policy still present (removal failed) - rerun this cutover block to finish.'
         }
     }
 }
@@ -299,9 +307,11 @@ Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-0000000000
 # Also confirm the application itself still works before continuing.
 
 # ---- Step 5-6: CUTOVER. Verifies EVERY migrated role is live and InScope, revokes the
-# tenant-wide grants (each one checked), then removes the legacy policy (Remove-* prompts
-# for confirmation). Entra + RBAC grants are a union - scoping only takes effect after
-# the tenant-wide grant is revoked. The policy is only removed if ALL revocations succeed.
+# tenant-wide grants (each one checked), then removes the now-inert legacy policy.
+# Entra + RBAC grants are a union - scoping only takes effect after the tenant-wide grant
+# is revoked. Nothing here runs unverified: the policy is removed ONLY after RBAC is
+# confirmed InScope AND every revocation succeeded. Remove is explicit (-Confirm:$false)
+# because Remove-ApplicationAccessPolicy does NOT reliably prompt in the modern EXO module.
 $expectedRoles = @('Application Mail.Read', 'Application Mail.Send')
 $cutoverTestMailbox = 'member7@crowley.dev'   # in-scope member found by the audit; substitute if needed
 $auth = if ($cutoverTestMailbox -notlike '<*') { @(Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-000000000008' -Resource $cutoverTestMailbox -ErrorAction SilentlyContinue) } else { @() }
@@ -316,16 +326,16 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/abababab-0000-0000-0000-000000000008/appRoleAssignments/assign-000008-2' -ErrorAction Stop; Write-Host 'Revoked Graph:Mail.Send' } catch { if ("$_" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: Graph:Mail.Send' } else { $revokeFailed = $true; Write-Warning "Revocation FAILED (Graph:Mail.Send): $_" } }
     if ($revokeFailed) {
         Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000008:S-1-5-21-1004336348-1177238915-682003330-1183;cccccccc-0000-0000-0000-000000000007' }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000008:S-1-5-21-1004336348-1177238915-682003330-8345;cccccccc-0000-0000-0000-000000000007' }).Count -eq 0) {
         Write-Host 'Ticketing Mail Connector: legacy policy already removed - migration complete.'
     } else {
         Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'
-        Write-Host 'Then confirm removal of the legacy policy:'
-        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000008:S-1-5-21-1004336348-1177238915-682003330-1183;cccccccc-0000-0000-0000-000000000007'
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000008:S-1-5-21-1004336348-1177238915-682003330-1183;cccccccc-0000-0000-0000-000000000007' }).Count -eq 0) {
+        # The policy is now inert (it only constrained the Entra grants, which are gone).
+        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000008:S-1-5-21-1004336348-1177238915-682003330-8345;cccccccc-0000-0000-0000-000000000007' -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000008:S-1-5-21-1004336348-1177238915-682003330-8345;cccccccc-0000-0000-0000-000000000007' }).Count -eq 0) {
             Write-Host 'Ticketing Mail Connector: legacy policy removed - migration complete.'
         } else {
-            Write-Warning 'Ticketing Mail Connector: legacy policy still present (removal declined or failed) - rerun this cutover block to finish.'
+            Write-Warning 'Ticketing Mail Connector: legacy policy still present (removal failed) - rerun this cutover block to finish.'
         }
     }
 }
@@ -334,9 +344,9 @@ if ($missingRoles.Count -gt 0) {
 
 # No Exchange application permissions -> this policy has no effect today.
 # KEEP (not Exchange-related): Graph:DeviceManagementManagedDevices.Read.All
-# Removing the policy changes no behavior (confirmation prompt follows). If the app is
-# granted Exchange permissions later, scope it with RBAC at that time.
-Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000010:S-1-5-21-1004336348-1177238915-682003330-6039;cccccccc-0000-0000-0000-000000000009'
+# Removing the policy changes no behavior. If the app is granted Exchange permissions
+# later, scope it with RBAC at that time.
+Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000010:S-1-5-21-1004336348-1177238915-682003330-2261;cccccccc-0000-0000-0000-000000000009' -Confirm:$false
 
 # App registration exists but there is no enterprise application (service principal),
 # so the app cannot get app-only tokens and the policy is dormant.
@@ -379,9 +389,11 @@ Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-0000000000
 # Also confirm the application itself still works before continuing.
 
 # ---- Step 5-6: CUTOVER. Verifies EVERY migrated role is live and InScope, revokes the
-# tenant-wide grants (each one checked), then removes the legacy policy (Remove-* prompts
-# for confirmation). Entra + RBAC grants are a union - scoping only takes effect after
-# the tenant-wide grant is revoked. The policy is only removed if ALL revocations succeed.
+# tenant-wide grants (each one checked), then removes the now-inert legacy policy.
+# Entra + RBAC grants are a union - scoping only takes effect after the tenant-wide grant
+# is revoked. Nothing here runs unverified: the policy is removed ONLY after RBAC is
+# confirmed InScope AND every revocation succeeded. Remove is explicit (-Confirm:$false)
+# because Remove-ApplicationAccessPolicy does NOT reliably prompt in the modern EXO module.
 $expectedRoles = @('Application Mail.Send')
 $cutoverTestMailbox = 'member15@crowley.dev'   # in-scope member found by the audit; substitute if needed
 $auth = if ($cutoverTestMailbox -notlike '<*') { @(Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-000000000016' -Resource $cutoverTestMailbox -ErrorAction SilentlyContinue) } else { @() }
@@ -395,16 +407,16 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/abababab-0000-0000-0000-000000000016/appRoleAssignments/assign-000016-1' -ErrorAction Stop; Write-Host 'Revoked Graph:Mail.Send' } catch { if ("$_" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: Graph:Mail.Send' } else { $revokeFailed = $true; Write-Warning "Revocation FAILED (Graph:Mail.Send): $_" } }
     if ($revokeFailed) {
         Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000016:S-1-5-21-1004336348-1177238915-682003330-2970;cccccccc-0000-0000-0000-000000000015' }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000016:S-1-5-21-1004336348-1177238915-682003330-9645;cccccccc-0000-0000-0000-000000000015' }).Count -eq 0) {
         Write-Host 'Bulk Invite Tool: legacy policy already removed - migration complete.'
     } else {
         Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'
-        Write-Host 'Then confirm removal of the legacy policy:'
-        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000016:S-1-5-21-1004336348-1177238915-682003330-2970;cccccccc-0000-0000-0000-000000000015'
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000016:S-1-5-21-1004336348-1177238915-682003330-2970;cccccccc-0000-0000-0000-000000000015' }).Count -eq 0) {
+        # The policy is now inert (it only constrained the Entra grants, which are gone).
+        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000016:S-1-5-21-1004336348-1177238915-682003330-9645;cccccccc-0000-0000-0000-000000000015' -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000016:S-1-5-21-1004336348-1177238915-682003330-9645;cccccccc-0000-0000-0000-000000000015' }).Count -eq 0) {
             Write-Host 'Bulk Invite Tool: legacy policy removed - migration complete.'
         } else {
-            Write-Warning 'Bulk Invite Tool: legacy policy still present (removal declined or failed) - rerun this cutover block to finish.'
+            Write-Warning 'Bulk Invite Tool: legacy policy still present (removal failed) - rerun this cutover block to finish.'
         }
     }
 }
@@ -447,9 +459,11 @@ Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-0000000000
 # Also confirm the application itself still works before continuing.
 
 # ---- Step 5-6: CUTOVER. Verifies EVERY migrated role is live and InScope, revokes the
-# tenant-wide grants (each one checked), then removes the legacy policy (Remove-* prompts
-# for confirmation). Entra + RBAC grants are a union - scoping only takes effect after
-# the tenant-wide grant is revoked. The policy is only removed if ALL revocations succeed.
+# tenant-wide grants (each one checked), then removes the now-inert legacy policy.
+# Entra + RBAC grants are a union - scoping only takes effect after the tenant-wide grant
+# is revoked. Nothing here runs unverified: the policy is removed ONLY after RBAC is
+# confirmed InScope AND every revocation succeeded. Remove is explicit (-Confirm:$false)
+# because Remove-ApplicationAccessPolicy does NOT reliably prompt in the modern EXO module.
 $expectedRoles = @('Application Mail.Read')
 $cutoverTestMailbox = 'member14@crowley.dev'   # in-scope member found by the audit; substitute if needed
 $auth = if ($cutoverTestMailbox -notlike '<*') { @(Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-000000000015' -Resource $cutoverTestMailbox -ErrorAction SilentlyContinue) } else { @() }
@@ -463,16 +477,16 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/abababab-0000-0000-0000-000000000015/appRoleAssignments/assign-000015-1' -ErrorAction Stop; Write-Host 'Revoked Graph:Mail.Read' } catch { if ("$_" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: Graph:Mail.Read' } else { $revokeFailed = $true; Write-Warning "Revocation FAILED (Graph:Mail.Read): $_" } }
     if ($revokeFailed) {
         Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000015:S-1-5-21-1004336348-1177238915-682003330-7174;cccccccc-0000-0000-0000-000000000014' }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000015:S-1-5-21-1004336348-1177238915-682003330-6819;cccccccc-0000-0000-0000-000000000014' }).Count -eq 0) {
         Write-Host 'Contractor Portal: legacy policy already removed - migration complete.'
     } else {
         Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'
-        Write-Host 'Then confirm removal of the legacy policy:'
-        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000015:S-1-5-21-1004336348-1177238915-682003330-7174;cccccccc-0000-0000-0000-000000000014'
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000015:S-1-5-21-1004336348-1177238915-682003330-7174;cccccccc-0000-0000-0000-000000000014' }).Count -eq 0) {
+        # The policy is now inert (it only constrained the Entra grants, which are gone).
+        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000015:S-1-5-21-1004336348-1177238915-682003330-6819;cccccccc-0000-0000-0000-000000000014' -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000015:S-1-5-21-1004336348-1177238915-682003330-6819;cccccccc-0000-0000-0000-000000000014' }).Count -eq 0) {
             Write-Host 'Contractor Portal: legacy policy removed - migration complete.'
         } else {
-            Write-Warning 'Contractor Portal: legacy policy still present (removal declined or failed) - rerun this cutover block to finish.'
+            Write-Warning 'Contractor Portal: legacy policy still present (removal failed) - rerun this cutover block to finish.'
         }
     }
 }
@@ -511,9 +525,11 @@ Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-0000000000
 # Also confirm the application itself still works before continuing.
 
 # ---- Step 5-6: CUTOVER. Verifies EVERY migrated role is live and InScope, revokes the
-# tenant-wide grants (each one checked), then removes the legacy policy (Remove-* prompts
-# for confirmation). Entra + RBAC grants are a union - scoping only takes effect after
-# the tenant-wide grant is revoked. The policy is only removed if ALL revocations succeed.
+# tenant-wide grants (each one checked), then removes the now-inert legacy policy.
+# Entra + RBAC grants are a union - scoping only takes effect after the tenant-wide grant
+# is revoked. Nothing here runs unverified: the policy is removed ONLY after RBAC is
+# confirmed InScope AND every revocation succeeded. Remove is explicit (-Confirm:$false)
+# because Remove-ApplicationAccessPolicy does NOT reliably prompt in the modern EXO module.
 $expectedRoles = @('Application Mail.ReadWrite')
 $cutoverTestMailbox = 'member4@crowley.dev'   # in-scope member found by the audit; substitute if needed
 $auth = if ($cutoverTestMailbox -notlike '<*') { @(Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-000000000005' -Resource $cutoverTestMailbox -ErrorAction SilentlyContinue) } else { @() }
@@ -530,16 +546,16 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/abababab-0000-0000-0000-000000000005/appRoleAssignments/assign-000005-1' -ErrorAction Stop; Write-Host 'Revoked Graph:Mail.ReadWrite' } catch { if ("$_" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: Graph:Mail.ReadWrite' } else { $revokeFailed = $true; Write-Warning "Revocation FAILED (Graph:Mail.ReadWrite): $_" } }
     if ($revokeFailed) {
         Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000005:S-1-5-21-1004336348-1177238915-682003330-7117;cccccccc-0000-0000-0000-000000000004' }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000005:S-1-5-21-1004336348-1177238915-682003330-3592;cccccccc-0000-0000-0000-000000000004' }).Count -eq 0) {
         Write-Host 'CRM Mailbox Sync: legacy policy already removed - migration complete.'
     } else {
         Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'
-        Write-Host 'Then confirm removal of the legacy policy:'
-        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000005:S-1-5-21-1004336348-1177238915-682003330-7117;cccccccc-0000-0000-0000-000000000004'
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000005:S-1-5-21-1004336348-1177238915-682003330-7117;cccccccc-0000-0000-0000-000000000004' }).Count -eq 0) {
+        # The policy is now inert (it only constrained the Entra grants, which are gone).
+        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000005:S-1-5-21-1004336348-1177238915-682003330-3592;cccccccc-0000-0000-0000-000000000004' -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000005:S-1-5-21-1004336348-1177238915-682003330-3592;cccccccc-0000-0000-0000-000000000004' }).Count -eq 0) {
             Write-Host 'CRM Mailbox Sync: legacy policy removed - migration complete.'
         } else {
-            Write-Warning 'CRM Mailbox Sync: legacy policy still present (removal declined or failed) - rerun this cutover block to finish.'
+            Write-Warning 'CRM Mailbox Sync: legacy policy still present (removal failed) - rerun this cutover block to finish.'
         }
     }
 }
@@ -582,9 +598,11 @@ Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-0000000000
 # Also confirm the application itself still works before continuing.
 
 # ---- Step 5-6: CUTOVER. Verifies EVERY migrated role is live and InScope, revokes the
-# tenant-wide grants (each one checked), then removes the legacy policy (Remove-* prompts
-# for confirmation). Entra + RBAC grants are a union - scoping only takes effect after
-# the tenant-wide grant is revoked. The policy is only removed if ALL revocations succeed.
+# tenant-wide grants (each one checked), then removes the now-inert legacy policy.
+# Entra + RBAC grants are a union - scoping only takes effect after the tenant-wide grant
+# is revoked. Nothing here runs unverified: the policy is removed ONLY after RBAC is
+# confirmed InScope AND every revocation succeeded. Remove is explicit (-Confirm:$false)
+# because Remove-ApplicationAccessPolicy does NOT reliably prompt in the modern EXO module.
 $expectedRoles = @('Application Mail.Send')
 $cutoverTestMailbox = 'member13@crowley.dev'   # in-scope member found by the audit; substitute if needed
 $auth = if ($cutoverTestMailbox -notlike '<*') { @(Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-000000000014' -Resource $cutoverTestMailbox -ErrorAction SilentlyContinue) } else { @() }
@@ -598,16 +616,16 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/abababab-0000-0000-0000-000000000014/appRoleAssignments/assign-000014-1' -ErrorAction Stop; Write-Host 'Revoked Graph:Mail.Send' } catch { if ("$_" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: Graph:Mail.Send' } else { $revokeFailed = $true; Write-Warning "Revocation FAILED (Graph:Mail.Send): $_" } }
     if ($revokeFailed) {
         Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000014:S-1-5-21-1004336348-1177238915-682003330-2218;cccccccc-0000-0000-0000-000000000013' }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000014:S-1-5-21-1004336348-1177238915-682003330-8182;cccccccc-0000-0000-0000-000000000013' }).Count -eq 0) {
         Write-Host 'Marketing Blaster 2019: legacy policy already removed - migration complete.'
     } else {
         Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'
-        Write-Host 'Then confirm removal of the legacy policy:'
-        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000014:S-1-5-21-1004336348-1177238915-682003330-2218;cccccccc-0000-0000-0000-000000000013'
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000014:S-1-5-21-1004336348-1177238915-682003330-2218;cccccccc-0000-0000-0000-000000000013' }).Count -eq 0) {
+        # The policy is now inert (it only constrained the Entra grants, which are gone).
+        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000014:S-1-5-21-1004336348-1177238915-682003330-8182;cccccccc-0000-0000-0000-000000000013' -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000014:S-1-5-21-1004336348-1177238915-682003330-8182;cccccccc-0000-0000-0000-000000000013' }).Count -eq 0) {
             Write-Host 'Marketing Blaster 2019: legacy policy removed - migration complete.'
         } else {
-            Write-Warning 'Marketing Blaster 2019: legacy policy still present (removal declined or failed) - rerun this cutover block to finish.'
+            Write-Warning 'Marketing Blaster 2019: legacy policy still present (removal failed) - rerun this cutover block to finish.'
         }
     }
 }
@@ -617,12 +635,12 @@ if ($missingRoles.Count -gt 0) {
 # FINISH MIGRATION: RBAC is live (Application Calendars.ReadWrite) and the matching tenant-wide
 # Entra grants are gone, so this legacy policy constrains nothing. Verify, then remove it:
 Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-000000000007' -Resource 'member6@crowley.dev' | Format-Table   # expect InScope = True
-# Confirm the application still works, then remove (confirmation prompt follows):
-Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000007:S-1-5-21-1004336348-1177238915-682003330-3492;cccccccc-0000-0000-0000-000000000006'
-if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000007:S-1-5-21-1004336348-1177238915-682003330-3492;cccccccc-0000-0000-0000-000000000006' }).Count -eq 0) {
+# Confirm the application still works, then remove the now-inert policy:
+Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000007:S-1-5-21-1004336348-1177238915-682003330-1720;cccccccc-0000-0000-0000-000000000006' -Confirm:$false
+if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000007:S-1-5-21-1004336348-1177238915-682003330-1720;cccccccc-0000-0000-0000-000000000006' }).Count -eq 0) {
     Write-Host 'Meeting Room Panels: legacy policy removed - migration complete.'
 } else {
-    Write-Warning 'Meeting Room Panels: legacy policy still present (removal declined or failed).'
+    Write-Warning 'Meeting Room Panels: legacy policy still present (removal failed).'
 }
 
 # !! TARGET MATCHED BY NAME ONLY - VERIFY BEFORE RUNNING !!
@@ -660,9 +678,11 @@ if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-111
 # Also confirm the application itself still works before continuing.
 
 # ---- Step 5-6: CUTOVER. Verifies EVERY migrated role is live and InScope, revokes the
-# tenant-wide grants (each one checked), then removes the legacy policy (Remove-* prompts
-# for confirmation). Entra + RBAC grants are a union - scoping only takes effect after
-# the tenant-wide grant is revoked. The policy is only removed if ALL revocations succeed.
+# tenant-wide grants (each one checked), then removes the now-inert legacy policy.
+# Entra + RBAC grants are a union - scoping only takes effect after the tenant-wide grant
+# is revoked. Nothing here runs unverified: the policy is removed ONLY after RBAC is
+# confirmed InScope AND every revocation succeeded. Remove is explicit (-Confirm:$false)
+# because Remove-ApplicationAccessPolicy does NOT reliably prompt in the modern EXO module.
 # $expectedRoles = @('Application Mail.Read')
 # $cutoverTestMailbox = 'member5@crowley.dev'   # in-scope member found by the audit; substitute if needed
 # $auth = if ($cutoverTestMailbox -notlike '<*') { @(Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-000000000006' -Resource $cutoverTestMailbox -ErrorAction SilentlyContinue) } else { @() }
@@ -676,16 +696,16 @@ if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-111
 #     try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/abababab-0000-0000-0000-000000000006/appRoleAssignments/assign-000006-1' -ErrorAction Stop; Write-Host 'Revoked Graph:Mail.Read' } catch { if ("$_" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: Graph:Mail.Read' } else { $revokeFailed = $true; Write-Warning "Revocation FAILED (Graph:Mail.Read): $_" } }
 #     if ($revokeFailed) {
 #         Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'
-#     } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000006:S-1-5-21-1004336348-1177238915-682003330-2530' }).Count -eq 0) {
+#     } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000006:S-1-5-21-1004336348-1177238915-682003330-2110' }).Count -eq 0) {
 #         Write-Host 'Payroll Ingest: legacy policy already removed - migration complete.'
 #     } else {
 #         Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'
-#         Write-Host 'Then confirm removal of the legacy policy:'
-#         Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000006:S-1-5-21-1004336348-1177238915-682003330-2530'
-#         if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000006:S-1-5-21-1004336348-1177238915-682003330-2530' }).Count -eq 0) {
+        # The policy is now inert (it only constrained the Entra grants, which are gone).
+#         Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000006:S-1-5-21-1004336348-1177238915-682003330-2110' -Confirm:$false
+#         if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000006:S-1-5-21-1004336348-1177238915-682003330-2110' }).Count -eq 0) {
 #             Write-Host 'Payroll Ingest: legacy policy removed - migration complete.'
 #         } else {
-#             Write-Warning 'Payroll Ingest: legacy policy still present (removal declined or failed) - rerun this cutover block to finish.'
+#             Write-Warning 'Payroll Ingest: legacy policy still present (removal failed) - rerun this cutover block to finish.'
 #         }
 #     }
 # }
@@ -697,19 +717,19 @@ if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-111
 # Review the Exchange service principal and its mailbox permissions:
 Get-ServicePrincipal -Identity 'ffffffff-0000-0000-0000-000000000011' | Format-List DisplayName, AppId, ObjectId
 # Per suspect mailbox: Get-MailboxPermission -Identity '<mailbox>' | Where-Object { $_.User -like '*POS Mail Poller*' }
-# The policy itself can be removed after review (confirmation prompt follows):
-Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000011:S-1-5-21-1004336348-1177238915-682003330-4193;cccccccc-0000-0000-0000-000000000010'
+# The policy itself can be removed after review:
+Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000011:S-1-5-21-1004336348-1177238915-682003330-1857;cccccccc-0000-0000-0000-000000000010' -Confirm:$false
 
 # Exchange permissions are DELEGATED only (Mail.Send, Calendars.Read).
 # Policies constrain app-only access, so this policy does nothing today. Removing it
-# changes no behavior (confirmation prompt follows):
-Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000009:S-1-5-21-1004336348-1177238915-682003330-1006;cccccccc-0000-0000-0000-000000000008'
+# changes no behavior:
+Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000009:S-1-5-21-1004336348-1177238915-682003330-9429;cccccccc-0000-0000-0000-000000000008' -Confirm:$false
 
 # DenyAccess policy - do NOT migrate with restrict-style commands (a scope on this
 # group would GRANT access to exactly the mailboxes currently denied).
 # Review what is denied and who is in the target (links in this row), then either keep
 # this policy or redesign scoping so the allow-side groups exclude these recipients.
-Get-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000013:S-1-5-21-1004336348-1177238915-682003330-5630;cccccccc-0000-0000-0000-000000000012' | Format-List
+Get-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000013:S-1-5-21-1004336348-1177238915-682003330-1672;cccccccc-0000-0000-0000-000000000012' | Format-List
 
 # This policy constrains permissions that have no RBAC role: Graph:Calendars.ReadBasic
 # KEEP THE POLICY - removing it would widen those permissions to every mailbox.
@@ -734,7 +754,7 @@ Invoke-MgGraphRequest -Uri "v1.0/groups?`$filter=displayName eq 'kiosk'&`$select
 #    gated behind an explicit opt-in:
 $iUnderstandThisRestoresTenantWideAccess = $false
 if ($iUnderstandThisRestoresTenantWideAccess) {
-    Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000019:S-1-5-21-1004336348-1177238915-682003330-4622;cccccccc-0000-0000-0000-000000000777'
+    Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000019:S-1-5-21-1004336348-1177238915-682003330-2539;cccccccc-0000-0000-0000-000000000777' -Confirm:$false
 }
 
 # The policy's target no longer resolves. A RestrictAccess policy with an empty/deleted
@@ -745,13 +765,13 @@ if ($iUnderstandThisRestoresTenantWideAccess) {
 #    gated behind an explicit opt-in:
 $iUnderstandThisRestoresTenantWideAccess = $false
 if ($iUnderstandThisRestoresTenantWideAccess) {
-    Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000022:S-1-5-21-1004336348-1177238915-682003330-2129;eeeeeeee-0000-0000-0000-000000000002'
+    Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000022:S-1-5-21-1004336348-1177238915-682003330-6027;eeeeeeee-0000-0000-0000-000000000002' -Confirm:$false
 }
 
 # A Graph lookup failed during this run (see the note in this row) - the state of this
 # policy is UNKNOWN. Rerun the audit; if it persists, check Graph consent and throttling.
 
 # App and service principal are gone from Entra ID - the policy is inert.
-# Cross-check your app inventory, then remove (confirmation prompt follows):
-Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000018:S-1-5-21-1004336348-1177238915-682003330-2874;cccccccc-0000-0000-0000-000000000002'
+# Cross-check your app inventory, then remove it:
+Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000018:S-1-5-21-1004336348-1177238915-682003330-8475;cccccccc-0000-0000-0000-000000000002' -Confirm:$false
 
