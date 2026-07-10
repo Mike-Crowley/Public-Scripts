@@ -293,6 +293,17 @@ $Report = foreach ($Policy in $Policies) {
 
     $ExoSpExists = $ExchangeServicePrincipals.ContainsKey($AppId)
 
+    # Actual (live) RBAC application role assignments in Exchange for this app. Detects
+    # half-finished migrations: grants already revoked but the legacy policy left behind.
+    $LiveRbacRoles = @()
+    if ($ExoSpExists) {
+        try {
+            $LiveRbacRoles = @(Test-ServicePrincipalAuthorization -Identity $AppId -ErrorAction Stop |
+                ForEach-Object { "$($_.RoleName)" } | Where-Object { $_ } | Select-Object -Unique)
+        }
+        catch { }
+    }
+
     # --- Granted APPLICATION permissions (appRoleAssignments on the service principal) ---
     $MigratedPerms = @()      # display strings for permissions replaced by RBAC roles
     $KeepPerms = @()          # display strings for permissions NOT replaced by RBAC - must be kept
@@ -405,6 +416,13 @@ $Report = foreach ($Policy in $Policies) {
             $MigrationStatus = 'Review'
             $MigrationBlockers += 'Only IMAP/POP app permissions: policies do not constrain IMAP/POP (they cover Graph/REST/EWS) and RBAC has no equivalent. Mailbox reach is controlled via Add-MailboxPermission on the Exchange service principal.'
         }
+        elseif ($LiveRbacRoles.Count -gt 0) {
+            # Grants revoked + RBAC assignments live = an interrupted cutover. The policy
+            # constrains nothing now (it only ever constrained Entra grants).
+            $Issues += 'Finish Migration'
+            $MigrationStatus = 'Review'
+            $MigrationBlockers += "Live RBAC role assignments exist ($($LiveRbacRoles -join ', ')) and no matching tenant-wide Entra grants remain. Migration is nearly complete - remove the legacy policy to finish."
+        }
         elseif ($DelegatedLookupOk -and $DelegatedExchangeScopes.Count -gt 0) {
             $Issues += 'Delegated Only'
             $MigrationStatus = 'Review'
@@ -421,6 +439,11 @@ $Report = foreach ($Policy in $Policies) {
     if ($HasImapPop -and $RbacRoles.Count -gt 0) {
         $Issues += 'IMAP/POP'
         $MigrationBlockers += 'App also holds IMAP/POP permissions, which RBAC cannot replace. Keep them; IMAP/POP mailbox access is controlled via Add-MailboxPermission on the Exchange service principal.'
+    }
+    if ($RbacRoles.Count -gt 0 -and $LiveRbacRoles.Count -gt 0 -and $MigrationStatus -in @('Ready', 'Review')) {
+        # Tenant-wide grants remain AND RBAC assignments exist - likely a partial cutover.
+        $Issues += 'RBAC Live'
+        $MigrationBlockers += "Live RBAC assignments already exist ($($LiveRbacRoles -join ', ')) while tenant-wide grants remain. If a previous cutover was interrupted, rerun this block's cutover to finish revoking and remove the policy."
     }
 
     # --- Deny check AFTER relevance so those notes are preserved; deny dominates below ---
@@ -670,10 +693,12 @@ $Report = foreach ($Policy in $Policies) {
         $MigrationCommands += "    Write-Warning `"Scope '$scopeName' already exists with a DIFFERENT filter: `$(`$scope.RecipientFilter) - role assignments skipped; resolve the conflict first.`""
         $MigrationCommands += "}"
         $MigrationCommands += ""
-        $MigrationCommands += "# Step 3: RBAC role assignments (skipped automatically on a scope-name conflict)"
+        $MigrationCommands += "# Step 3: RBAC role assignments (idempotent - skips roles already assigned; skipped"
+        $MigrationCommands += "# entirely on a scope-name conflict)"
         $MigrationCommands += "if (-not `$scopeConflict) {"
+        $MigrationCommands += "    `$liveRoles = @(Test-ServicePrincipalAuthorization -Identity '$AppId' -ErrorAction SilentlyContinue | ForEach-Object { `$_.RoleName })"
         foreach ($role in $RbacRoles) {
-            $MigrationCommands += "    New-ManagementRoleAssignment -App '$AppId' -Role '$role' -CustomResourceScope '$scopeName'"
+            $MigrationCommands += "    if (`$liveRoles -notcontains '$role') { New-ManagementRoleAssignment -App '$AppId' -Role '$role' -CustomResourceScope '$scopeName' }"
         }
         $MigrationCommands += "}"
         if ($HasEws) { $MigrationCommands += $EwsRetirementWarning }
@@ -753,6 +778,18 @@ $Report = foreach ($Policy in $Policies) {
         $MigrationCommands += "# Review what is denied and who is in the target (links in this row), then either keep"
         $MigrationCommands += "# this policy or redesign scoping so the allow-side groups exclude these recipients."
         $MigrationCommands += "Get-ApplicationAccessPolicy -Identity '$PolicyIdSafe' | Format-List"
+    }
+    elseif ($Issues -contains 'Finish Migration') {
+        $MigrationCommands += "# FINISH MIGRATION: RBAC is live ($($LiveRbacRoles -join ', ')) and the matching tenant-wide"
+        $MigrationCommands += "# Entra grants are gone, so this legacy policy constrains nothing. Verify, then remove it:"
+        if ($TestMailbox) {
+            $MigrationCommands += "Test-ServicePrincipalAuthorization -Identity '$AppId' -Resource '$(EscSq $TestMailbox)' | Format-Table   # expect InScope = True"
+        }
+        else {
+            $MigrationCommands += "Test-ServicePrincipalAuthorization -Identity '$AppId' | Format-Table   # spot-check InScope with an in-scope mailbox via -Resource"
+        }
+        $MigrationCommands += "# Confirm the application still works, then remove (confirmation prompt follows):"
+        $MigrationCommands += "Remove-ApplicationAccessPolicy -Identity '$PolicyIdSafe'"
     }
     elseif ($Issues -contains 'Delegated Only') {
         $MigrationCommands += "# Exchange permissions are DELEGATED only ($($DelegatedExchangeScopes -join ', '))."
@@ -842,6 +879,7 @@ $Report = foreach ($Policy in $Policies) {
         KeepPerms          = $KeepPerms -join '; '
         DelegatedPerms     = $DelegatedExchangeScopes -join '; '
         RbacRoles          = $RbacRoles -join '; '
+        LiveRbacRoles      = $LiveRbacRoles -join '; '
         Issues             = $Issues -join ', '
         MigrationStatus    = $MigrationStatus
         MigrationBlockers  = $MigrationBlockers -join ' | '
@@ -1046,7 +1084,7 @@ $HtmlRows = foreach ($item in $SortedReport) {
             'Orphaned|Target Missing|Deny|Error|Ambiguous|No EXO Recipient' { 'crit' }
             'Delegated' { 'purp' }
             'Nested|Resolved By Name|Members Unverified' { 'warn' }
-            'Single Mailbox' { 'info' }
+            'Single Mailbox|Finish Migration|RBAC Live' { 'info' }
             default { 'warn' }
         }
         $issuesBadges += "<span class='badge $cls'>$(HtmlEnc $iss)</span>"
@@ -1068,10 +1106,16 @@ $HtmlRows = foreach ($item in $SortedReport) {
     }
     if (-not $permsList) { $permsList = "<span class='none'>None granted</span>" }
 
-    $rbacList = if ($item.RbacRoles) {
-        ($item.RbacRoles -split '; ' | ForEach-Object { "<span class='rbac-role'>$(HtmlEnc $_)</span>" }) -join ''
+    $rbacList = ''
+    if ($item.LiveRbacRoles) {
+        $rbacList += ($item.LiveRbacRoles -split '; ' | ForEach-Object { "<span class='rbac-role live' title='Assignment is LIVE in Exchange Online'>$(HtmlEnc $_) &#183; live</span>" }) -join ''
     }
-    else { "<span class='none'>N/A</span>" }
+    if ($item.RbacRoles) {
+        $liveSet = @($item.LiveRbacRoles -split '; ')
+        $rbacList += (@($item.RbacRoles -split '; ') | Where-Object { $liveSet -notcontains $_ } |
+            ForEach-Object { "<span class='rbac-role' title='Proposed - created by this row''s commands'>$(HtmlEnc $_)</span>" }) -join ''
+    }
+    if (-not $rbacList) { $rbacList = "<span class='none'>N/A</span>" }
 
     $commandsHtml = if ($item.MigrationCommands) {
         $lineCount = @($item.MigrationCommands -split "`n").Count
@@ -1330,6 +1374,7 @@ $Html = @"
         .perm.keep { background: var(--neut-bg); color: var(--neut-fg); border: 1px dashed var(--ink-3); }
         .perm.delegated { background: var(--purp-bg); color: var(--purp-fg); }
         .rbac-role { background: var(--good-bg); color: var(--good-fg); }
+        .rbac-role.live { background: var(--good-fg); color: #ffffff; }
         .none { color: var(--ink-3); font-style: italic; font-size: 0.75rem; }
 
         .blockers { margin-top: 0.5rem; font-size: 0.75rem; color: var(--crit-fg); }
