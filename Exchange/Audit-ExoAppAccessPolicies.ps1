@@ -23,12 +23,23 @@
         deleted) are gated behind an explicit opt-in variable.
       - Blocks whose policy target could only be matched by NAME (not object id) are
         emitted fully commented and must be verified by a human first.
+.PARAMETER UseDeviceCode
+    Sign in to Microsoft Graph and Exchange Online with device-code flow instead of the
+    default interactive browser prompt (maps to Connect-MgGraph -UseDeviceCode and
+    Connect-ExchangeOnline -Device). Useful for headless/remote sessions - but note that
+    some tenants restrict device-code sign-in via Conditional Access.
+
 .EXAMPLE
     .\Audit-ExoAppAccessPolicies.ps1
 
-    Connects to Microsoft Graph and Exchange Online (both via device code auth), audits
-    all Application Access Policies and Exchange app permissions, and saves an HTML
-    report plus a companion migration .ps1 to the desktop.
+    Signs in to Microsoft Graph and Exchange Online interactively (browser prompt),
+    audits all Application Access Policies and Exchange app permissions, and saves an
+    HTML report plus a companion migration .ps1 to the desktop.
+
+.EXAMPLE
+    .\Audit-ExoAppAccessPolicies.ps1 -UseDeviceCode
+
+    Same audit, but both sign-ins use device-code flow (for remote/headless sessions).
 
 .INPUTS
     None. This script does not accept pipeline input.
@@ -67,9 +78,22 @@
     https://learn.microsoft.com/en-us/powershell/exchange/recipientfilter-properties
 #>
 
+[CmdletBinding()]
+param(
+    # Device-code sign-in for headless/remote sessions. Interactive browser auth is the
+    # default because a growing number of tenants restrict device-code flow.
+    [switch]$UseDeviceCode
+)
+
 Disconnect-MgGraph -ErrorAction SilentlyContinue
-Connect-MgGraph -DeviceCode -NoWelcome -ContextScope Process -Scopes 'Application.Read.All', 'Directory.Read.All'
-Connect-ExchangeOnline -Device -ShowBanner:$false
+$graphConnect = @{ NoWelcome = $true; ContextScope = 'Process'; Scopes = @('Application.Read.All', 'Directory.Read.All') }
+$exoConnect = @{ ShowBanner = $false }
+if ($UseDeviceCode) {
+    $graphConnect['UseDeviceCode'] = $true
+    $exoConnect['Device'] = $true
+}
+Connect-MgGraph @graphConnect
+Connect-ExchangeOnline @exoConnect
 
 # Fail fast if Graph is not usable. A silent Graph failure later must never be
 # misclassified as "app not found" (which would generate policy-deletion guidance).
