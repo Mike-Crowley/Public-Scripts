@@ -370,7 +370,9 @@ $Report = foreach ($Policy in $Policies) {
                     $MigratedPerms += $display
                     $RbacRoles += $role
                     if ($role -eq 'Application EWS.AccessAsApp') { $HasEws = $true }
-                    $RevocationCmds += "    try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/$EntraSpObjectId/appRoleAssignments/$($assignment.id)' -ErrorAction Stop; Write-Host 'Revoked $display' } catch { `$revokeFailed = `$true; Write-Warning `"Revocation FAILED ($display): `$_`" }"
+                    # A 404 on the DELETE means the grant is already gone - the desired end
+                    # state - so reruns of the cutover stay green (idempotent).
+                    $RevocationCmds += "    try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/$EntraSpObjectId/appRoleAssignments/$($assignment.id)' -ErrorAction Stop; Write-Host 'Revoked $display' } catch { if (`"`$_`" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: $display' } else { `$revokeFailed = `$true; Write-Warning `"Revocation FAILED ($display): `$_`" } }"
                 }
                 else {
                     $KeepPerms += $display
@@ -796,10 +798,17 @@ $Report = foreach ($Policy in $Policies) {
         $MigrationCommands += $RevocationCmds
         $MigrationCommands += "    if (`$revokeFailed) {"
         $MigrationCommands += "        Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'"
+        $MigrationCommands += "    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { `$_.Identity -eq '$PolicyIdSafe' }).Count -eq 0) {"
+        $MigrationCommands += "        Write-Host '$(EscSq $AppDisplayName): legacy policy already removed - migration complete.'"
         $MigrationCommands += "    } else {"
         $MigrationCommands += "        Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'"
         $MigrationCommands += "        Write-Host 'Then confirm removal of the legacy policy:'"
         $MigrationCommands += "        Remove-ApplicationAccessPolicy -Identity '$PolicyIdSafe'"
+        $MigrationCommands += "        if (@(Get-ApplicationAccessPolicy | Where-Object { `$_.Identity -eq '$PolicyIdSafe' }).Count -eq 0) {"
+        $MigrationCommands += "            Write-Host '$(EscSq $AppDisplayName): legacy policy removed - migration complete.'"
+        $MigrationCommands += "        } else {"
+        $MigrationCommands += "            Write-Warning '$(EscSq $AppDisplayName): legacy policy still present (removal declined or failed) - rerun this cutover block to finish.'"
+        $MigrationCommands += "        }"
         $MigrationCommands += "    }"
         $MigrationCommands += "}"
         $MigrationCommands += "# Hygiene afterwards: App registrations > API permissions - delete the revoked rows"
@@ -839,6 +848,11 @@ $Report = foreach ($Policy in $Policies) {
         }
         $MigrationCommands += "# Confirm the application still works, then remove (confirmation prompt follows):"
         $MigrationCommands += "Remove-ApplicationAccessPolicy -Identity '$PolicyIdSafe'"
+        $MigrationCommands += "if (@(Get-ApplicationAccessPolicy | Where-Object { `$_.Identity -eq '$PolicyIdSafe' }).Count -eq 0) {"
+        $MigrationCommands += "    Write-Host '$(EscSq $AppDisplayName): legacy policy removed - migration complete.'"
+        $MigrationCommands += "} else {"
+        $MigrationCommands += "    Write-Warning '$(EscSq $AppDisplayName): legacy policy still present (removal declined or failed).'"
+        $MigrationCommands += "}"
     }
     elseif ($Issues -contains 'Delegated Only') {
         $MigrationCommands += "# Exchange permissions are DELEGATED only ($($DelegatedExchangeScopes -join ', '))."
