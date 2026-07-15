@@ -109,8 +109,30 @@ if (-not $UseDeviceCode -and $ExoHasDisableWam -and $Host.Name -ne 'ConsoleHost'
     $exoConnect['DisableWAM'] = $true
 }
 
+# Two sign-ins are unavoidable here: Graph PowerShell and the Exchange Online module are
+# different first-party client apps, so their tokens cannot be shared. Validate Graph
+# immediately after its sign-in - a broken Graph session should cost one sign-in, not two
+# (Graph credentials acquire tokens lazily, so Connect-MgGraph can "succeed" while the
+# first real call fails).
+Write-Host 'Sign-in 1 of 2: Microsoft Graph' -ForegroundColor Cyan
+if ($UseDeviceCode) {
+    Write-Host '  (Graph and Exchange Online each issue their own device code - complete this one first)'
+}
 Connect-MgGraph @graphConnect
 
+try {
+    $Org = Invoke-MgGraphRequest -Uri "v1.0/organization" -ErrorAction Stop
+}
+catch {
+    if ("$_" -match 'authentication failed|AuthenticationFailed|Object reference not set') {
+        throw "Microsoft Graph sign-in did not complete (device-code prompts can time out or be completed out of order). Rerun the script. Original error: $_"
+    }
+    throw "Microsoft Graph query failed. Verify consent for Application.Read.All and Directory.Read.All. Error: $_"
+}
+$TenantName = ($Org.value[0].displayName -replace '[^\w\-]', '')
+$TenantId = "$($Org.value[0].id)"
+
+Write-Host "Sign-in 2 of 2: Exchange Online ($($Org.value[0].displayName))" -ForegroundColor Cyan
 $WamCrashPattern = 'RuntimeBroker|Object reference not set|window handle'
 $ExoConnected = $false
 try {
@@ -153,16 +175,6 @@ if (-not $ExoConnected) {
     }
 }
 
-# Fail fast if Graph is not usable. A silent Graph failure later must never be
-# misclassified as "app not found" (which would generate policy-deletion guidance).
-try {
-    $Org = Invoke-MgGraphRequest -Uri "v1.0/organization" -ErrorAction Stop
-}
-catch {
-    throw "Microsoft Graph query failed. Verify consent for Application.Read.All and Directory.Read.All. Error: $_"
-}
-$TenantName = ($Org.value[0].displayName -replace '[^\w\-]', '')
-$TenantId = "$($Org.value[0].id)"
 
 #region Helpers
 
