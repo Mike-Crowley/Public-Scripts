@@ -1128,15 +1128,16 @@ foreach ($principalId in @($GrantHolders.Keys)) {
         # Keep the app visible rather than silently dropping it from the security table.
         $SecurityScanOk = $false
         $SecurityRows += [PSCustomObject]@{
-            AppId       = ''
-            SpObjectId  = $principalId
-            DisplayName = $GrantHolders[$principalId].DisplayName
-            Enabled     = $null
-            Deactivated = $false
-            Perms       = @($GrantHolders[$principalId].Perms | Select-Object -Unique)
-            Constraint  = 'Lookup failed'
-            RiskTier    = 'high'
-            Notes       = "Graph lookup for this service principal failed - constraint status UNKNOWN; rerun the audit. $($info.Error)"
+            AppId        = ''
+            SpObjectId   = $principalId
+            DisplayName  = $GrantHolders[$principalId].DisplayName
+            Enabled      = $null
+            Deactivated  = $false
+            IsHomeTenant = $false
+            Perms        = @($GrantHolders[$principalId].Perms | Select-Object -Unique)
+            Constraint   = 'Lookup failed'
+            RiskTier     = 'high'
+            Notes        = "Graph lookup for this service principal failed - constraint status UNKNOWN; rerun the audit. $($info.Error)"
         }
         continue
     }
@@ -1144,9 +1145,12 @@ foreach ($principalId in @($GrantHolders.Keys)) {
 
     $appId = $info.Data.appId
 
-    # App-level deactivation (isDisabled) is only readable for apps registered in THIS tenant.
+    # App-level deactivation (isDisabled) is only readable for apps registered in THIS
+    # tenant, which is also the only case where an App registration deep link is valid
+    # (third-party apps have only a service principal here, no registration to link to).
+    $isHomeTenant = ("$($info.Data.appOwnerOrganizationId)" -eq $TenantId)
     $rowDeactivated = $false
-    if ("$($info.Data.appOwnerOrganizationId)" -eq $TenantId) {
+    if ($isHomeTenant) {
         $disRes = Invoke-GraphSafe "beta/applications(appId='$appId')?`$select=isDisabled"
         if ($disRes.Ok -and $disRes.Data.isDisabled) { $rowDeactivated = $true }
     }
@@ -1190,12 +1194,13 @@ foreach ($principalId in @($GrantHolders.Keys)) {
         AppId       = $appId
         SpObjectId  = $principalId
         DisplayName = if ($info.Data.displayName) { "$($info.Data.displayName)".Trim() } else { $GrantHolders[$principalId].DisplayName }
-        Enabled     = $info.Data.accountEnabled
-        Deactivated = $rowDeactivated
-        Perms       = $perms
-        Constraint  = $constraint
-        RiskTier    = $tier
-        Notes       = $notes -join ' | '
+        Enabled      = $info.Data.accountEnabled
+        Deactivated  = $rowDeactivated
+        IsHomeTenant = $isHomeTenant
+        Perms        = $perms
+        Constraint   = $constraint
+        RiskTier     = $tier
+        Notes        = $notes -join ' | '
     }
 }
 
@@ -1348,7 +1353,12 @@ $SecurityRowsHtml = foreach ($row in $SecuritySorted) {
         default { "<span class='badge neut'>Low</span>" }
     }
     $permChips = ($row.Perms | ForEach-Object { "<span class='perm keep'>$(HtmlEnc $_)</span>" }) -join ''
-    $links = "<a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/$($row.SpObjectId)/appId/$($row.AppId)' target='_blank' rel='noopener'>Enterprise app &#8599;</a>"
+    # App registration link only for home-tenant apps (a registration exists here). It is
+    # the actionable one for a deactivated app - reactivate and API permissions live there.
+    $appRegLink = if ($row.IsHomeTenant -and $row.AppId) {
+        "<a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/$($row.AppId)' target='_blank' rel='noopener'>App registration &#8599;</a> "
+    } else { '' }
+    $links = $appRegLink + "<a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/$($row.SpObjectId)/appId/$($row.AppId)' target='_blank' rel='noopener'>Enterprise app &#8599;</a>"
     $disabledNote = ''
     if ($row.Deactivated) { $disabledNote += " <span class='badge neut'>deactivated</span>" }
     if ($row.Enabled -eq $false) { $disabledNote += " <span class='badge neut'>sign-in disabled</span>" }

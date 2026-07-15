@@ -269,7 +269,7 @@
 <body>
     <div class="container">
         <h1>Application Access Policy &rarr; RBAC Migration Report</h1>
-        <p class="subtitle"><strong>crowleydev</strong> &mdash; July 15, 2026 at 3:33:45 PM</p>
+        <p class="subtitle"><strong>crowleydev</strong> &mdash; July 15, 2026 at 5:28:55 PM</p>
 
         <div class="migration-note">
             <h3>Migration Required</h3>
@@ -399,13 +399,13 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri &#39;v1.0/servicePrincipals/abababab-0000-0000-0000-000000000004/appRoleAssignments/assign-000004-1&#39; -ErrorAction Stop; Write-Host &#39;Revoked Graph:Mail.Send&#39; } catch { if (&quot;$_&quot; -match &#39;Request_ResourceNotFound|\b404\b&#39;) { Write-Host &#39;Already revoked: Graph:Mail.Send&#39; } else { $revokeFailed = $true; Write-Warning &quot;Revocation FAILED (Graph:Mail.Send): $_&quot; } }
     if ($revokeFailed) {
         Write-Warning &#39;One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.&#39;
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000004:S-1-5-21-1004336348-1177238915-682003330-4091;eeeeeeee-0000-0000-0000-000000000001&#39; }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000004:S-1-5-21-1004336348-1177238915-682003330-5738;eeeeeeee-0000-0000-0000-000000000001&#39; }).Count -eq 0) {
         Write-Host &#39;HR Notification Bot: legacy policy already removed - migration complete.&#39;
     } else {
         Write-Host &#39;Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.&#39;
         # The policy is now inert (it only constrained the Entra grants, which are gone).
-        Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000004:S-1-5-21-1004336348-1177238915-682003330-4091;eeeeeeee-0000-0000-0000-000000000001&#39; -Confirm:$false
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000004:S-1-5-21-1004336348-1177238915-682003330-4091;eeeeeeee-0000-0000-0000-000000000001&#39; }).Count -eq 0) {
+        Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000004:S-1-5-21-1004336348-1177238915-682003330-5738;eeeeeeee-0000-0000-0000-000000000001&#39; -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000004:S-1-5-21-1004336348-1177238915-682003330-5738;eeeeeeee-0000-0000-0000-000000000001&#39; }).Count -eq 0) {
             Write-Host &#39;HR Notification Bot: legacy policy removed - migration complete.&#39;
         } else {
             Write-Warning &#39;HR Notification Bot: legacy policy still present (removal failed) - rerun this cutover block to finish.&#39;
@@ -480,13 +480,13 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri &#39;v1.0/servicePrincipals/abababab-0000-0000-0000-000000000002/appRoleAssignments/assign-000002-1&#39; -ErrorAction Stop; Write-Host &#39;Revoked Graph:Mail.Send&#39; } catch { if (&quot;$_&quot; -match &#39;Request_ResourceNotFound|\b404\b&#39;) { Write-Host &#39;Already revoked: Graph:Mail.Send&#39; } else { $revokeFailed = $true; Write-Warning &quot;Revocation FAILED (Graph:Mail.Send): $_&quot; } }
     if ($revokeFailed) {
         Write-Warning &#39;One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.&#39;
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000002:S-1-5-21-1004336348-1177238915-682003330-4716;cccccccc-0000-0000-0000-000000000002&#39; }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000002:S-1-5-21-1004336348-1177238915-682003330-4148;cccccccc-0000-0000-0000-000000000002&#39; }).Count -eq 0) {
         Write-Host &#39;Invoice Mailer: legacy policy already removed - migration complete.&#39;
     } else {
         Write-Host &#39;Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.&#39;
         # The policy is now inert (it only constrained the Entra grants, which are gone).
-        Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000002:S-1-5-21-1004336348-1177238915-682003330-4716;cccccccc-0000-0000-0000-000000000002&#39; -Confirm:$false
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000002:S-1-5-21-1004336348-1177238915-682003330-4716;cccccccc-0000-0000-0000-000000000002&#39; }).Count -eq 0) {
+        Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000002:S-1-5-21-1004336348-1177238915-682003330-4148;cccccccc-0000-0000-0000-000000000002&#39; -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000002:S-1-5-21-1004336348-1177238915-682003330-4148;cccccccc-0000-0000-0000-000000000002&#39; }).Count -eq 0) {
             Write-Host &#39;Invoice Mailer: legacy policy removed - migration complete.&#39;
         } else {
             Write-Warning &#39;Invoice Mailer: legacy policy still present (removal failed) - rerun this cutover block to finish.&#39;
@@ -567,13 +567,13 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri &#39;v1.0/servicePrincipals/abababab-0000-0000-0000-000000000003/appRoleAssignments/assign-000003-3&#39; -ErrorAction Stop; Write-Host &#39;Revoked Graph:Mail.Read&#39; } catch { if (&quot;$_&quot; -match &#39;Request_ResourceNotFound|\b404\b&#39;) { Write-Host &#39;Already revoked: Graph:Mail.Read&#39; } else { $revokeFailed = $true; Write-Warning &quot;Revocation FAILED (Graph:Mail.Read): $_&quot; } }
     if ($revokeFailed) {
         Write-Warning &#39;One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.&#39;
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000003:S-1-5-21-1004336348-1177238915-682003330-5832;cccccccc-0000-0000-0000-000000000003&#39; }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000003:S-1-5-21-1004336348-1177238915-682003330-4243;cccccccc-0000-0000-0000-000000000003&#39; }).Count -eq 0) {
         Write-Host &#39;Legacy EWS Archiver: legacy policy already removed - migration complete.&#39;
     } else {
         Write-Host &#39;Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.&#39;
         # The policy is now inert (it only constrained the Entra grants, which are gone).
-        Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000003:S-1-5-21-1004336348-1177238915-682003330-5832;cccccccc-0000-0000-0000-000000000003&#39; -Confirm:$false
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000003:S-1-5-21-1004336348-1177238915-682003330-5832;cccccccc-0000-0000-0000-000000000003&#39; }).Count -eq 0) {
+        Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000003:S-1-5-21-1004336348-1177238915-682003330-4243;cccccccc-0000-0000-0000-000000000003&#39; -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000003:S-1-5-21-1004336348-1177238915-682003330-4243;cccccccc-0000-0000-0000-000000000003&#39; }).Count -eq 0) {
             Write-Host &#39;Legacy EWS Archiver: legacy policy removed - migration complete.&#39;
         } else {
             Write-Warning &#39;Legacy EWS Archiver: legacy policy still present (removal failed) - rerun this cutover block to finish.&#39;
@@ -653,13 +653,13 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri &#39;v1.0/servicePrincipals/abababab-0000-0000-0000-000000000001/appRoleAssignments/assign-000001-2&#39; -ErrorAction Stop; Write-Host &#39;Revoked Graph:Calendars.ReadWrite&#39; } catch { if (&quot;$_&quot; -match &#39;Request_ResourceNotFound|\b404\b&#39;) { Write-Host &#39;Already revoked: Graph:Calendars.ReadWrite&#39; } else { $revokeFailed = $true; Write-Warning &quot;Revocation FAILED (Graph:Calendars.ReadWrite): $_&quot; } }
     if ($revokeFailed) {
         Write-Warning &#39;One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.&#39;
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000001:S-1-5-21-1004336348-1177238915-682003330-9123;cccccccc-0000-0000-0000-000000000001&#39; }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000001:S-1-5-21-1004336348-1177238915-682003330-8207;cccccccc-0000-0000-0000-000000000001&#39; }).Count -eq 0) {
         Write-Host &#39;Room Booking Service: legacy policy already removed - migration complete.&#39;
     } else {
         Write-Host &#39;Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.&#39;
         # The policy is now inert (it only constrained the Entra grants, which are gone).
-        Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000001:S-1-5-21-1004336348-1177238915-682003330-9123;cccccccc-0000-0000-0000-000000000001&#39; -Confirm:$false
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000001:S-1-5-21-1004336348-1177238915-682003330-9123;cccccccc-0000-0000-0000-000000000001&#39; }).Count -eq 0) {
+        Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000001:S-1-5-21-1004336348-1177238915-682003330-8207;cccccccc-0000-0000-0000-000000000001&#39; -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000001:S-1-5-21-1004336348-1177238915-682003330-8207;cccccccc-0000-0000-0000-000000000001&#39; }).Count -eq 0) {
             Write-Host &#39;Room Booking Service: legacy policy removed - migration complete.&#39;
         } else {
             Write-Warning &#39;Room Booking Service: legacy policy still present (removal failed) - rerun this cutover block to finish.&#39;
@@ -736,13 +736,13 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri &#39;v1.0/servicePrincipals/abababab-0000-0000-0000-000000000008/appRoleAssignments/assign-000008-2&#39; -ErrorAction Stop; Write-Host &#39;Revoked Graph:Mail.Send&#39; } catch { if (&quot;$_&quot; -match &#39;Request_ResourceNotFound|\b404\b&#39;) { Write-Host &#39;Already revoked: Graph:Mail.Send&#39; } else { $revokeFailed = $true; Write-Warning &quot;Revocation FAILED (Graph:Mail.Send): $_&quot; } }
     if ($revokeFailed) {
         Write-Warning &#39;One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.&#39;
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000008:S-1-5-21-1004336348-1177238915-682003330-8922;cccccccc-0000-0000-0000-000000000007&#39; }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000008:S-1-5-21-1004336348-1177238915-682003330-6652;cccccccc-0000-0000-0000-000000000007&#39; }).Count -eq 0) {
         Write-Host &#39;Ticketing Mail Connector: legacy policy already removed - migration complete.&#39;
     } else {
         Write-Host &#39;Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.&#39;
         # The policy is now inert (it only constrained the Entra grants, which are gone).
-        Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000008:S-1-5-21-1004336348-1177238915-682003330-8922;cccccccc-0000-0000-0000-000000000007&#39; -Confirm:$false
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000008:S-1-5-21-1004336348-1177238915-682003330-8922;cccccccc-0000-0000-0000-000000000007&#39; }).Count -eq 0) {
+        Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000008:S-1-5-21-1004336348-1177238915-682003330-6652;cccccccc-0000-0000-0000-000000000007&#39; -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000008:S-1-5-21-1004336348-1177238915-682003330-6652;cccccccc-0000-0000-0000-000000000007&#39; }).Count -eq 0) {
             Write-Host &#39;Ticketing Mail Connector: legacy policy removed - migration complete.&#39;
         } else {
             Write-Warning &#39;Ticketing Mail Connector: legacy policy still present (removal failed) - rerun this cutover block to finish.&#39;
@@ -773,7 +773,7 @@ if ($missingRoles.Count -gt 0) {
 # KEEP (not Exchange-related): Graph:DeviceManagementManagedDevices.Read.All
 # Removing the policy changes no behavior. If the app is granted Exchange permissions
 # later, scope it with RBAC at that time.
-Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000010:S-1-5-21-1004336348-1177238915-682003330-9736;cccccccc-0000-0000-0000-000000000009&#39; -Confirm:$false</pre></details></td>
+Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000010:S-1-5-21-1004336348-1177238915-682003330-3282;cccccccc-0000-0000-0000-000000000009&#39; -Confirm:$false</pre></details></td>
     </tr>
     <tr class="status-review">
         <td>
@@ -868,13 +868,13 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri &#39;v1.0/servicePrincipals/abababab-0000-0000-0000-000000000016/appRoleAssignments/assign-000016-1&#39; -ErrorAction Stop; Write-Host &#39;Revoked Graph:Mail.Send&#39; } catch { if (&quot;$_&quot; -match &#39;Request_ResourceNotFound|\b404\b&#39;) { Write-Host &#39;Already revoked: Graph:Mail.Send&#39; } else { $revokeFailed = $true; Write-Warning &quot;Revocation FAILED (Graph:Mail.Send): $_&quot; } }
     if ($revokeFailed) {
         Write-Warning &#39;One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.&#39;
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000016:S-1-5-21-1004336348-1177238915-682003330-7827;cccccccc-0000-0000-0000-000000000015&#39; }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000016:S-1-5-21-1004336348-1177238915-682003330-9658;cccccccc-0000-0000-0000-000000000015&#39; }).Count -eq 0) {
         Write-Host &#39;Bulk Invite Tool: legacy policy already removed - migration complete.&#39;
     } else {
         Write-Host &#39;Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.&#39;
         # The policy is now inert (it only constrained the Entra grants, which are gone).
-        Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000016:S-1-5-21-1004336348-1177238915-682003330-7827;cccccccc-0000-0000-0000-000000000015&#39; -Confirm:$false
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000016:S-1-5-21-1004336348-1177238915-682003330-7827;cccccccc-0000-0000-0000-000000000015&#39; }).Count -eq 0) {
+        Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000016:S-1-5-21-1004336348-1177238915-682003330-9658;cccccccc-0000-0000-0000-000000000015&#39; -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000016:S-1-5-21-1004336348-1177238915-682003330-9658;cccccccc-0000-0000-0000-000000000015&#39; }).Count -eq 0) {
             Write-Host &#39;Bulk Invite Tool: legacy policy removed - migration complete.&#39;
         } else {
             Write-Warning &#39;Bulk Invite Tool: legacy policy still present (removal failed) - rerun this cutover block to finish.&#39;
@@ -955,13 +955,13 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri &#39;v1.0/servicePrincipals/abababab-0000-0000-0000-000000000015/appRoleAssignments/assign-000015-1&#39; -ErrorAction Stop; Write-Host &#39;Revoked Graph:Mail.Read&#39; } catch { if (&quot;$_&quot; -match &#39;Request_ResourceNotFound|\b404\b&#39;) { Write-Host &#39;Already revoked: Graph:Mail.Read&#39; } else { $revokeFailed = $true; Write-Warning &quot;Revocation FAILED (Graph:Mail.Read): $_&quot; } }
     if ($revokeFailed) {
         Write-Warning &#39;One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.&#39;
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000015:S-1-5-21-1004336348-1177238915-682003330-4939;cccccccc-0000-0000-0000-000000000014&#39; }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000015:S-1-5-21-1004336348-1177238915-682003330-5770;cccccccc-0000-0000-0000-000000000014&#39; }).Count -eq 0) {
         Write-Host &#39;Contractor Portal: legacy policy already removed - migration complete.&#39;
     } else {
         Write-Host &#39;Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.&#39;
         # The policy is now inert (it only constrained the Entra grants, which are gone).
-        Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000015:S-1-5-21-1004336348-1177238915-682003330-4939;cccccccc-0000-0000-0000-000000000014&#39; -Confirm:$false
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000015:S-1-5-21-1004336348-1177238915-682003330-4939;cccccccc-0000-0000-0000-000000000014&#39; }).Count -eq 0) {
+        Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000015:S-1-5-21-1004336348-1177238915-682003330-5770;cccccccc-0000-0000-0000-000000000014&#39; -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000015:S-1-5-21-1004336348-1177238915-682003330-5770;cccccccc-0000-0000-0000-000000000014&#39; }).Count -eq 0) {
             Write-Host &#39;Contractor Portal: legacy policy removed - migration complete.&#39;
         } else {
             Write-Warning &#39;Contractor Portal: legacy policy still present (removal failed) - rerun this cutover block to finish.&#39;
@@ -1041,13 +1041,13 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri &#39;v1.0/servicePrincipals/abababab-0000-0000-0000-000000000005/appRoleAssignments/assign-000005-1&#39; -ErrorAction Stop; Write-Host &#39;Revoked Graph:Mail.ReadWrite&#39; } catch { if (&quot;$_&quot; -match &#39;Request_ResourceNotFound|\b404\b&#39;) { Write-Host &#39;Already revoked: Graph:Mail.ReadWrite&#39; } else { $revokeFailed = $true; Write-Warning &quot;Revocation FAILED (Graph:Mail.ReadWrite): $_&quot; } }
     if ($revokeFailed) {
         Write-Warning &#39;One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.&#39;
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000005:S-1-5-21-1004336348-1177238915-682003330-7180;cccccccc-0000-0000-0000-000000000004&#39; }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000005:S-1-5-21-1004336348-1177238915-682003330-2282;cccccccc-0000-0000-0000-000000000004&#39; }).Count -eq 0) {
         Write-Host &#39;CRM Mailbox Sync: legacy policy already removed - migration complete.&#39;
     } else {
         Write-Host &#39;Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.&#39;
         # The policy is now inert (it only constrained the Entra grants, which are gone).
-        Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000005:S-1-5-21-1004336348-1177238915-682003330-7180;cccccccc-0000-0000-0000-000000000004&#39; -Confirm:$false
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000005:S-1-5-21-1004336348-1177238915-682003330-7180;cccccccc-0000-0000-0000-000000000004&#39; }).Count -eq 0) {
+        Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000005:S-1-5-21-1004336348-1177238915-682003330-2282;cccccccc-0000-0000-0000-000000000004&#39; -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000005:S-1-5-21-1004336348-1177238915-682003330-2282;cccccccc-0000-0000-0000-000000000004&#39; }).Count -eq 0) {
             Write-Host &#39;CRM Mailbox Sync: legacy policy removed - migration complete.&#39;
         } else {
             Write-Warning &#39;CRM Mailbox Sync: legacy policy still present (removal failed) - rerun this cutover block to finish.&#39;
@@ -1128,13 +1128,13 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri &#39;v1.0/servicePrincipals/abababab-0000-0000-0000-000000000014/appRoleAssignments/assign-000014-1&#39; -ErrorAction Stop; Write-Host &#39;Revoked Graph:Mail.Send&#39; } catch { if (&quot;$_&quot; -match &#39;Request_ResourceNotFound|\b404\b&#39;) { Write-Host &#39;Already revoked: Graph:Mail.Send&#39; } else { $revokeFailed = $true; Write-Warning &quot;Revocation FAILED (Graph:Mail.Send): $_&quot; } }
     if ($revokeFailed) {
         Write-Warning &#39;One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.&#39;
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000014:S-1-5-21-1004336348-1177238915-682003330-8324;cccccccc-0000-0000-0000-000000000013&#39; }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000014:S-1-5-21-1004336348-1177238915-682003330-2461;cccccccc-0000-0000-0000-000000000013&#39; }).Count -eq 0) {
         Write-Host &#39;Marketing Blaster 2019: legacy policy already removed - migration complete.&#39;
     } else {
         Write-Host &#39;Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.&#39;
         # The policy is now inert (it only constrained the Entra grants, which are gone).
-        Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000014:S-1-5-21-1004336348-1177238915-682003330-8324;cccccccc-0000-0000-0000-000000000013&#39; -Confirm:$false
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000014:S-1-5-21-1004336348-1177238915-682003330-8324;cccccccc-0000-0000-0000-000000000013&#39; }).Count -eq 0) {
+        Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000014:S-1-5-21-1004336348-1177238915-682003330-2461;cccccccc-0000-0000-0000-000000000013&#39; -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000014:S-1-5-21-1004336348-1177238915-682003330-2461;cccccccc-0000-0000-0000-000000000013&#39; }).Count -eq 0) {
             Write-Host &#39;Marketing Blaster 2019: legacy policy removed - migration complete.&#39;
         } else {
             Write-Warning &#39;Marketing Blaster 2019: legacy policy still present (removal failed) - rerun this cutover block to finish.&#39;
@@ -1165,8 +1165,8 @@ if ($missingRoles.Count -gt 0) {
 # Entra grants are gone, so this legacy policy constrains nothing. Verify, then remove it:
 Test-ServicePrincipalAuthorization -Identity &#39;ffffffff-0000-0000-0000-000000000007&#39; -Resource &#39;member6@crowley.dev&#39; | Format-Table   # expect InScope = True
 # Confirm the application still works, then remove the now-inert policy:
-Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000007:S-1-5-21-1004336348-1177238915-682003330-2916;cccccccc-0000-0000-0000-000000000006&#39; -Confirm:$false
-if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000007:S-1-5-21-1004336348-1177238915-682003330-2916;cccccccc-0000-0000-0000-000000000006&#39; }).Count -eq 0) {
+Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000007:S-1-5-21-1004336348-1177238915-682003330-3411;cccccccc-0000-0000-0000-000000000006&#39; -Confirm:$false
+if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000007:S-1-5-21-1004336348-1177238915-682003330-3411;cccccccc-0000-0000-0000-000000000006&#39; }).Count -eq 0) {
     Write-Host &#39;Meeting Room Panels: legacy policy removed - migration complete.&#39;
 } else {
     Write-Warning &#39;Meeting Room Panels: legacy policy still present (removal failed).&#39;
@@ -1242,13 +1242,13 @@ if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111
 #     try { Invoke-MgGraphRequest -Method DELETE -Uri &#39;v1.0/servicePrincipals/abababab-0000-0000-0000-000000000006/appRoleAssignments/assign-000006-1&#39; -ErrorAction Stop; Write-Host &#39;Revoked Graph:Mail.Read&#39; } catch { if (&quot;$_&quot; -match &#39;Request_ResourceNotFound|\b404\b&#39;) { Write-Host &#39;Already revoked: Graph:Mail.Read&#39; } else { $revokeFailed = $true; Write-Warning &quot;Revocation FAILED (Graph:Mail.Read): $_&quot; } }
 #     if ($revokeFailed) {
 #         Write-Warning &#39;One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.&#39;
-#     } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000006:S-1-5-21-1004336348-1177238915-682003330-6199&#39; }).Count -eq 0) {
+#     } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000006:S-1-5-21-1004336348-1177238915-682003330-1081&#39; }).Count -eq 0) {
 #         Write-Host &#39;Payroll Ingest: legacy policy already removed - migration complete.&#39;
 #     } else {
 #         Write-Host &#39;Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.&#39;
         # The policy is now inert (it only constrained the Entra grants, which are gone).
-#         Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000006:S-1-5-21-1004336348-1177238915-682003330-6199&#39; -Confirm:$false
-#         if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000006:S-1-5-21-1004336348-1177238915-682003330-6199&#39; }).Count -eq 0) {
+#         Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000006:S-1-5-21-1004336348-1177238915-682003330-1081&#39; -Confirm:$false
+#         if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000006:S-1-5-21-1004336348-1177238915-682003330-1081&#39; }).Count -eq 0) {
 #             Write-Host &#39;Payroll Ingest: legacy policy removed - migration complete.&#39;
 #         } else {
 #             Write-Warning &#39;Payroll Ingest: legacy policy still present (removal failed) - rerun this cutover block to finish.&#39;
@@ -1281,7 +1281,7 @@ if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq &#39;11111111
 Get-ServicePrincipal -Identity &#39;ffffffff-0000-0000-0000-000000000011&#39; | Format-List DisplayName, AppId, ObjectId
 # Per suspect mailbox: Get-MailboxPermission -Identity &#39;&lt;mailbox&gt;&#39; | Where-Object { $_.User -like &#39;*POS Mail Poller*&#39; }
 # The policy itself can be removed after review:
-Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000011:S-1-5-21-1004336348-1177238915-682003330-5229;cccccccc-0000-0000-0000-000000000010&#39; -Confirm:$false</pre></details></td>
+Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000011:S-1-5-21-1004336348-1177238915-682003330-9114;cccccccc-0000-0000-0000-000000000010&#39; -Confirm:$false</pre></details></td>
     </tr>
     <tr class="status-review">
         <td>
@@ -1303,7 +1303,7 @@ Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-1111111111
         <td colspan="6"><details class='cmd'><summary>PowerShell <span class='cmd-meta'>4 lines</span><button type='button' class='copy-btn'>Copy</button></summary><pre class='commands'># Exchange permissions are DELEGATED only (Mail.Send, Calendars.Read).
 # Policies constrain app-only access, so this policy does nothing today. Removing it
 # changes no behavior:
-Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000009:S-1-5-21-1004336348-1177238915-682003330-4910;cccccccc-0000-0000-0000-000000000008&#39; -Confirm:$false</pre></details></td>
+Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000009:S-1-5-21-1004336348-1177238915-682003330-1474;cccccccc-0000-0000-0000-000000000008&#39; -Confirm:$false</pre></details></td>
     </tr>
     <tr class="status-review">
         <td>
@@ -1326,7 +1326,7 @@ Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-1111111111
 # group would GRANT access to exactly the mailboxes currently denied).
 # Review what is denied and who is in the target (links in this row), then either keep
 # this policy or redesign scoping so the allow-side groups exclude these recipients.
-Get-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000013:S-1-5-21-1004336348-1177238915-682003330-7345;cccccccc-0000-0000-0000-000000000012&#39; | Format-List</pre></details></td>
+Get-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000013:S-1-5-21-1004336348-1177238915-682003330-8511;cccccccc-0000-0000-0000-000000000012&#39; | Format-List</pre></details></td>
     </tr>
     <tr class="status-review">
         <td>
@@ -1419,7 +1419,7 @@ Invoke-MgGraphRequest -Uri &quot;v1.0/groups?`$filter=displayName eq &#39;kiosk&
 #    gated behind an explicit opt-in:
 $iUnderstandThisRestoresTenantWideAccess = $false
 if ($iUnderstandThisRestoresTenantWideAccess) {
-    Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000019:S-1-5-21-1004336348-1177238915-682003330-5750;cccccccc-0000-0000-0000-000000000777&#39; -Confirm:$false
+    Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000019:S-1-5-21-1004336348-1177238915-682003330-6960;cccccccc-0000-0000-0000-000000000777&#39; -Confirm:$false
 }</pre></details></td>
     </tr>
     <tr class="status-blocked">
@@ -1447,7 +1447,7 @@ if ($iUnderstandThisRestoresTenantWideAccess) {
 #    gated behind an explicit opt-in:
 $iUnderstandThisRestoresTenantWideAccess = $false
 if ($iUnderstandThisRestoresTenantWideAccess) {
-    Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000022:S-1-5-21-1004336348-1177238915-682003330-1811;eeeeeeee-0000-0000-0000-000000000002&#39; -Confirm:$false
+    Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000022:S-1-5-21-1004336348-1177238915-682003330-8023;eeeeeeee-0000-0000-0000-000000000002&#39; -Confirm:$false
 }</pre></details></td>
     </tr>
     <tr class="status-error">
@@ -1489,7 +1489,7 @@ if ($iUnderstandThisRestoresTenantWideAccess) {
     <tr class="commands-row status-delete">
         <td colspan="6"><details class='cmd'><summary>PowerShell <span class='cmd-meta'>3 lines</span><button type='button' class='copy-btn'>Copy</button></summary><pre class='commands'># App and service principal are gone from Entra ID - the policy is inert.
 # Cross-check your app inventory, then remove it:
-Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000018:S-1-5-21-1004336348-1177238915-682003330-4104;cccccccc-0000-0000-0000-000000000002&#39; -Confirm:$false</pre></details></td>
+Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000018:S-1-5-21-1004336348-1177238915-682003330-8010;cccccccc-0000-0000-0000-000000000002&#39; -Confirm:$false</pre></details></td>
     </tr>
             </tbody>
         </table>
@@ -1511,19 +1511,19 @@ Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-1111111111
             </thead>
             <tbody>
                     <tr class="status-blocked">
-        <td><strong>Data Lake Export</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000027</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000027/appId/ffffffff-0000-0000-0000-000000000027' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
+        <td><strong>Data Lake Export</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000027</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/ffffffff-0000-0000-0000-000000000027' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000027/appId/ffffffff-0000-0000-0000-000000000027' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
         <td><span class='status-badge unconstrained'>&#9888; Unconstrained</span><div class='blockers-neutral'>Tenant-wide mailbox access with no Application Access Policy and no RBAC scope</div></td>
         <td><span class='badge crit'>High</span></td>
         <td class="perms"><span class='perm keep'>Graph:Mail.ReadWrite</span><span class='perm keep'>Graph:Contacts.Read</span></td>
     </tr>
     <tr class="status-blocked">
-        <td><strong>Legacy Fax Ingest</strong> <span class='badge neut'>deactivated</span><br><span class="app-id">ffffffff-0000-0000-0000-000000000029</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000029/appId/ffffffff-0000-0000-0000-000000000029' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
+        <td><strong>Legacy Fax Ingest</strong> <span class='badge neut'>deactivated</span><br><span class="app-id">ffffffff-0000-0000-0000-000000000029</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/ffffffff-0000-0000-0000-000000000029' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000029/appId/ffffffff-0000-0000-0000-000000000029' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
         <td><span class='status-badge unconstrained'>&#9888; Unconstrained</span><div class='blockers-neutral'>Tenant-wide mailbox access with no Application Access Policy and no RBAC scope | App cannot obtain new tokens right now (deactivated / sign-in disabled) - lower urgency, but the standing grants become live again the moment it is re-enabled.</div></td>
         <td><span class='badge crit'>High</span></td>
         <td class="perms"><span class='perm keep'>EXO:full_access_as_app</span></td>
     </tr>
     <tr class="status-blocked">
-        <td><strong>Reception Kiosk</strong> <span class='badge neut'>sign-in disabled</span><br><span class="app-id">ffffffff-0000-0000-0000-000000000026</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000026/appId/ffffffff-0000-0000-0000-000000000026' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
+        <td><strong>Reception Kiosk</strong> <span class='badge neut'>sign-in disabled</span><br><span class="app-id">ffffffff-0000-0000-0000-000000000026</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/ffffffff-0000-0000-0000-000000000026' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000026/appId/ffffffff-0000-0000-0000-000000000026' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
         <td><span class='status-badge unconstrained'>&#9888; Unconstrained</span><div class='blockers-neutral'>Tenant-wide mailbox access with no Application Access Policy and no RBAC scope | App cannot obtain new tokens right now (deactivated / sign-in disabled) - lower urgency, but the standing grants become live again the moment it is re-enabled.</div></td>
         <td><span class='badge crit'>High</span></td>
         <td class="perms"><span class='perm keep'>Graph:Mail.Send</span></td>
@@ -1535,55 +1535,55 @@ Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-1111111111
         <td class="perms"><span class='perm keep'>Graph:Mail.Send</span></td>
     </tr>
     <tr class="status-blocked">
-        <td><strong>Warehouse Scanner</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000024</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000024/appId/ffffffff-0000-0000-0000-000000000024' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
+        <td><strong>Warehouse Scanner</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000024</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/ffffffff-0000-0000-0000-000000000024' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000024/appId/ffffffff-0000-0000-0000-000000000024' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
         <td><span class='status-badge unconstrained'>&#9888; Unconstrained (RBAC exists)</span><div class='blockers-neutral'>Appears to have an Exchange RBAC assignment, BUT the tenant-wide Entra grant is still in place - grants are a union, so the RBAC scope is not limiting anything. Verify the assignment (Get-ManagementRoleAssignment / Test-ServicePrincipalAuthorization) covers these permissions, then revoke the Entra grant.</div></td>
         <td><span class='badge crit'>High</span></td>
         <td class="perms"><span class='perm keep'>Graph:Mail.Read</span></td>
     </tr>
     <tr class="status-blocked">
-        <td><strong>Cafeteria Menu Bot</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000028</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000028/appId/ffffffff-0000-0000-0000-000000000028' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
+        <td><strong>Cafeteria Menu Bot</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000028</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/ffffffff-0000-0000-0000-000000000028' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000028/appId/ffffffff-0000-0000-0000-000000000028' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
         <td><span class='status-badge unconstrained'>&#9888; Unconstrained</span><div class='blockers-neutral'>Tenant-wide mailbox access with no Application Access Policy and no RBAC scope</div></td>
         <td><span class='badge warn'>Medium</span></td>
         <td class="perms"><span class='perm keep'>Graph:MailboxSettings.Read</span></td>
     </tr>
     <tr class="">
-        <td><strong>Night Batch Mailer</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000025</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000025/appId/ffffffff-0000-0000-0000-000000000025' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
+        <td><strong>Night Batch Mailer</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000025</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/ffffffff-0000-0000-0000-000000000025' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000025/appId/ffffffff-0000-0000-0000-000000000025' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
         <td><span class='status-badge review'>&#9888; Verify grants</span><div class='blockers-neutral'>IMAP/POP/SMTP reach = FullAccess grants to the service principal (verify with Get-MailboxPermission); policies do not apply</div></td>
         <td><span class='badge crit'>High</span></td>
         <td class="perms"><span class='perm keep'>EXO:SMTP.SendAsApp</span></td>
     </tr>
     <tr class="">
-        <td><strong>POS Mail Poller</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000011</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000011/appId/ffffffff-0000-0000-0000-000000000011' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
+        <td><strong>POS Mail Poller</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000011</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/ffffffff-0000-0000-0000-000000000011' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000011/appId/ffffffff-0000-0000-0000-000000000011' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
         <td><span class='status-badge review'>&#9888; Verify grants</span><div class='blockers-neutral'>IMAP/POP/SMTP reach = FullAccess grants to the service principal (verify with Get-MailboxPermission); policies do not apply</div></td>
         <td><span class='badge crit'>High</span></td>
         <td class="perms"><span class='perm keep'>EXO:IMAP.AccessAsApp</span></td>
     </tr>
     <tr class="">
-        <td><strong>Bulk Invite Tool</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000016</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000016/appId/ffffffff-0000-0000-0000-000000000016' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
+        <td><strong>Bulk Invite Tool</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000016</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/ffffffff-0000-0000-0000-000000000016' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000016/appId/ffffffff-0000-0000-0000-000000000016' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
         <td><span class='status-badge ready'>&#10003; Legacy policy</span><div class='blockers-neutral'>Constrained by a RestrictAccess Application Access Policy (see table above) - migrate to RBAC</div></td>
         <td><span class='badge crit'>High</span></td>
         <td class="perms"><span class='perm keep'>Graph:Mail.Send</span></td>
     </tr>
     <tr class="">
-        <td><strong>Contractor Portal</strong> <span class='badge neut'>sign-in disabled</span><br><span class="app-id">ffffffff-0000-0000-0000-000000000015</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000015/appId/ffffffff-0000-0000-0000-000000000015' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
+        <td><strong>Contractor Portal</strong> <span class='badge neut'>sign-in disabled</span><br><span class="app-id">ffffffff-0000-0000-0000-000000000015</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/ffffffff-0000-0000-0000-000000000015' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000015/appId/ffffffff-0000-0000-0000-000000000015' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
         <td><span class='status-badge ready'>&#10003; Legacy policy</span><div class='blockers-neutral'>Constrained by a RestrictAccess Application Access Policy (see table above) - migrate to RBAC | App cannot obtain new tokens right now (deactivated / sign-in disabled) - lower urgency, but the standing grants become live again the moment it is re-enabled.</div></td>
         <td><span class='badge crit'>High</span></td>
         <td class="perms"><span class='perm keep'>Graph:Mail.Read</span></td>
     </tr>
     <tr class="">
-        <td><strong>CRM Mailbox Sync</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000005</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000005/appId/ffffffff-0000-0000-0000-000000000005' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
+        <td><strong>CRM Mailbox Sync</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000005</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/ffffffff-0000-0000-0000-000000000005' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000005/appId/ffffffff-0000-0000-0000-000000000005' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
         <td><span class='status-badge ready'>&#10003; Legacy policy</span><div class='blockers-neutral'>Constrained by a RestrictAccess Application Access Policy (see table above) - migrate to RBAC</div></td>
         <td><span class='badge crit'>High</span></td>
         <td class="perms"><span class='perm keep'>Graph:Mail.ReadWrite</span></td>
     </tr>
     <tr class="">
-        <td><strong>Dept Alerts</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000020</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000020/appId/ffffffff-0000-0000-0000-000000000020' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
+        <td><strong>Dept Alerts</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000020</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/ffffffff-0000-0000-0000-000000000020' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000020/appId/ffffffff-0000-0000-0000-000000000020' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
         <td><span class='status-badge ready'>&#10003; Legacy policy</span><div class='blockers-neutral'>Constrained by a RestrictAccess Application Access Policy (see table above) - migrate to RBAC</div></td>
         <td><span class='badge crit'>High</span></td>
         <td class="perms"><span class='perm keep'>Graph:Mail.Send</span></td>
     </tr>
     <tr class="">
-        <td><strong>Flaky Importer</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000023</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000023/appId/ffffffff-0000-0000-0000-000000000023' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
+        <td><strong>Flaky Importer</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000023</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/ffffffff-0000-0000-0000-000000000023' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000023/appId/ffffffff-0000-0000-0000-000000000023' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
         <td><span class='status-badge ready'>&#10003; Legacy policy</span><div class='blockers-neutral'>Constrained by a RestrictAccess Application Access Policy (see table above) - migrate to RBAC</div></td>
         <td><span class='badge crit'>High</span></td>
         <td class="perms"><span class='perm keep'>Graph:Mail.Read</span></td>
@@ -1595,67 +1595,67 @@ Remove-ApplicationAccessPolicy -Identity &#39;11111111-1111-1111-1111-1111111111
         <td class="perms"><span class='perm keep'>Graph:Mail.ReadWrite</span></td>
     </tr>
     <tr class="">
-        <td><strong>HR Notification Bot</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000004</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000004/appId/ffffffff-0000-0000-0000-000000000004' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
+        <td><strong>HR Notification Bot</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000004</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/ffffffff-0000-0000-0000-000000000004' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000004/appId/ffffffff-0000-0000-0000-000000000004' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
         <td><span class='status-badge ready'>&#10003; Legacy policy</span><div class='blockers-neutral'>Constrained by a RestrictAccess Application Access Policy (see table above) - migrate to RBAC</div></td>
         <td><span class='badge crit'>High</span></td>
         <td class="perms"><span class='perm keep'>Graph:Mail.Send</span></td>
     </tr>
     <tr class="">
-        <td><strong>Invoice Mailer</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000002</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000002/appId/ffffffff-0000-0000-0000-000000000002' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
+        <td><strong>Invoice Mailer</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000002</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/ffffffff-0000-0000-0000-000000000002' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000002/appId/ffffffff-0000-0000-0000-000000000002' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
         <td><span class='status-badge ready'>&#10003; Legacy policy</span><div class='blockers-neutral'>Constrained by a RestrictAccess Application Access Policy (see table above) - migrate to RBAC</div></td>
         <td><span class='badge crit'>High</span></td>
         <td class="perms"><span class='perm keep'>Graph:Mail.Send</span></td>
     </tr>
     <tr class="">
-        <td><strong>Kiosk Mailer</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000021</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000021/appId/ffffffff-0000-0000-0000-000000000021' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
+        <td><strong>Kiosk Mailer</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000021</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/ffffffff-0000-0000-0000-000000000021' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000021/appId/ffffffff-0000-0000-0000-000000000021' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
         <td><span class='status-badge ready'>&#10003; Legacy policy</span><div class='blockers-neutral'>Constrained by a RestrictAccess Application Access Policy (see table above) - migrate to RBAC</div></td>
         <td><span class='badge crit'>High</span></td>
         <td class="perms"><span class='perm keep'>Graph:Mail.Send</span></td>
     </tr>
     <tr class="">
-        <td><strong>Legacy EWS Archiver</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000003</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000003/appId/ffffffff-0000-0000-0000-000000000003' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
+        <td><strong>Legacy EWS Archiver</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000003</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/ffffffff-0000-0000-0000-000000000003' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000003/appId/ffffffff-0000-0000-0000-000000000003' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
         <td><span class='status-badge ready'>&#10003; Legacy policy</span><div class='blockers-neutral'>Constrained by a RestrictAccess Application Access Policy (see table above) - migrate to RBAC | IMAP/POP/SMTP permissions are NOT covered by the policy: EXO:IMAP.AccessAsApp</div></td>
         <td><span class='badge crit'>High</span></td>
         <td class="perms"><span class='perm keep'>Graph:Mail.Read</span><span class='perm keep'>EXO:full_access_as_app</span><span class='perm keep'>EXO:IMAP.AccessAsApp</span></td>
     </tr>
     <tr class="">
-        <td><strong>Marketing Blaster 2019</strong> <span class='badge neut'>deactivated</span><br><span class="app-id">ffffffff-0000-0000-0000-000000000014</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000014/appId/ffffffff-0000-0000-0000-000000000014' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
+        <td><strong>Marketing Blaster 2019</strong> <span class='badge neut'>deactivated</span><br><span class="app-id">ffffffff-0000-0000-0000-000000000014</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/ffffffff-0000-0000-0000-000000000014' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000014/appId/ffffffff-0000-0000-0000-000000000014' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
         <td><span class='status-badge ready'>&#10003; Legacy policy</span><div class='blockers-neutral'>Constrained by a RestrictAccess Application Access Policy (see table above) - migrate to RBAC | App cannot obtain new tokens right now (deactivated / sign-in disabled) - lower urgency, but the standing grants become live again the moment it is re-enabled.</div></td>
         <td><span class='badge crit'>High</span></td>
         <td class="perms"><span class='perm keep'>Graph:Mail.Send</span></td>
     </tr>
     <tr class="">
-        <td><strong>Payroll Ingest</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000006</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000006/appId/ffffffff-0000-0000-0000-000000000006' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
+        <td><strong>Payroll Ingest</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000006</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/ffffffff-0000-0000-0000-000000000006' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000006/appId/ffffffff-0000-0000-0000-000000000006' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
         <td><span class='status-badge ready'>&#10003; Legacy policy</span><div class='blockers-neutral'>Constrained by a RestrictAccess Application Access Policy (see table above) - migrate to RBAC</div></td>
         <td><span class='badge crit'>High</span></td>
         <td class="perms"><span class='perm keep'>Graph:Mail.Read</span></td>
     </tr>
     <tr class="">
-        <td><strong>Team Vault</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000019</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000019/appId/ffffffff-0000-0000-0000-000000000019' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
+        <td><strong>Team Vault</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000019</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/ffffffff-0000-0000-0000-000000000019' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000019/appId/ffffffff-0000-0000-0000-000000000019' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
         <td><span class='status-badge ready'>&#10003; Legacy policy</span><div class='blockers-neutral'>Constrained by a RestrictAccess Application Access Policy (see table above) - migrate to RBAC</div></td>
         <td><span class='badge crit'>High</span></td>
         <td class="perms"><span class='perm keep'>Graph:Mail.Read</span></td>
     </tr>
     <tr class="">
-        <td><strong>Temp Worker Sync</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000022</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000022/appId/ffffffff-0000-0000-0000-000000000022' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
+        <td><strong>Temp Worker Sync</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000022</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/ffffffff-0000-0000-0000-000000000022' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000022/appId/ffffffff-0000-0000-0000-000000000022' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
         <td><span class='status-badge ready'>&#10003; Legacy policy</span><div class='blockers-neutral'>Constrained by a RestrictAccess Application Access Policy (see table above) - migrate to RBAC</div></td>
         <td><span class='badge crit'>High</span></td>
         <td class="perms"><span class='perm keep'>Graph:Mail.Read</span></td>
     </tr>
     <tr class="">
-        <td><strong>Ticketing Mail Connector</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000008</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000008/appId/ffffffff-0000-0000-0000-000000000008' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
+        <td><strong>Ticketing Mail Connector</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000008</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/ffffffff-0000-0000-0000-000000000008' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000008/appId/ffffffff-0000-0000-0000-000000000008' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
         <td><span class='status-badge ready'>&#10003; Legacy policy</span><div class='blockers-neutral'>Constrained by a RestrictAccess Application Access Policy (see table above) - migrate to RBAC</div></td>
         <td><span class='badge crit'>High</span></td>
         <td class="perms"><span class='perm keep'>Graph:Mail.Read</span><span class='perm keep'>Graph:Mail.Send</span></td>
     </tr>
     <tr class="">
-        <td><strong>Room Booking Service</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000001</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000001/appId/ffffffff-0000-0000-0000-000000000001' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
+        <td><strong>Room Booking Service</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000001</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/ffffffff-0000-0000-0000-000000000001' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000001/appId/ffffffff-0000-0000-0000-000000000001' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
         <td><span class='status-badge ready'>&#10003; Legacy policy</span><div class='blockers-neutral'>Constrained by a RestrictAccess Application Access Policy (see table above) - migrate to RBAC</div></td>
         <td><span class='badge warn'>Medium</span></td>
         <td class="perms"><span class='perm keep'>Graph:Calendars.Read</span><span class='perm keep'>Graph:Calendars.ReadWrite</span></td>
     </tr>
     <tr class="">
-        <td><strong>Wellness Calendar</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000012</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000012/appId/ffffffff-0000-0000-0000-000000000012' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
+        <td><strong>Wellness Calendar</strong><br><span class="app-id">ffffffff-0000-0000-0000-000000000012</span><br><a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/ffffffff-0000-0000-0000-000000000012' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/abababab-0000-0000-0000-000000000012/appId/ffffffff-0000-0000-0000-000000000012' target='_blank' rel='noopener'>Enterprise app &#8599;</a></td>
         <td><span class='status-badge ready'>&#10003; Legacy policy</span><div class='blockers-neutral'>Constrained by a RestrictAccess Application Access Policy (see table above) - migrate to RBAC</div></td>
         <td><span class='badge warn'>Medium</span></td>
         <td class="perms"><span class='perm keep'>Graph:Calendars.ReadBasic</span></td>
