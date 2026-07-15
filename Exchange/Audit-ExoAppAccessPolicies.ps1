@@ -98,32 +98,59 @@ if ($UseDeviceCode) {
 }
 
 # ExchangeOnlineManagement 3.7+ signs in through the Windows broker (WAM) by default,
-# and MSAL's broker crashes with a NullReferenceException in RuntimeBroker inside
-# windowless hosts (VS Code integrated console, ISE). Prefer browser auth in those
-# hosts, and if the broker still crashes, retry once with -DisableWAM (module 3.7.2+).
+# and MSAL's broker crashes (NullReferenceException in RuntimeBroker, or "window handle
+# must be configured") in windowless hosts like the VS Code integrated console and ISE.
+# -DisableWAM is the documented escape hatch, but 3.9.2 has been observed constructing
+# the broker anyway. Connect-MgGraph survives these hosts by silently falling back to
+# device code; this ladder gives Connect-ExchangeOnline the same resilience:
+#   interactive (browser preferred off-console) -> -DisableWAM retry -> device code.
 $ExoHasDisableWam = (Get-Command Connect-ExchangeOnline).Parameters.ContainsKey('DisableWAM')
 if (-not $UseDeviceCode -and $ExoHasDisableWam -and $Host.Name -ne 'ConsoleHost') {
     $exoConnect['DisableWAM'] = $true
 }
 
 Connect-MgGraph @graphConnect
+
+$WamCrashPattern = 'RuntimeBroker|Object reference not set|window handle'
+$ExoConnected = $false
 try {
     Connect-ExchangeOnline @exoConnect
+    $ExoConnected = $true
 }
 catch {
-    $wamCrash = "$_" -match 'RuntimeBroker|Object reference not set'
-    if ($wamCrash -and $ExoHasDisableWam -and -not $exoConnect.ContainsKey('DisableWAM')) {
+    if ("$_" -notmatch $WamCrashPattern) { throw }
+    if ($ExoHasDisableWam -and -not $exoConnect.ContainsKey('DisableWAM')) {
         Write-Warning 'Windows broker (WAM) sign-in failed in this host - retrying with browser auth (-DisableWAM).'
         $exoConnect['DisableWAM'] = $true
-        Connect-ExchangeOnline @exoConnect
+        try {
+            Connect-ExchangeOnline @exoConnect
+            $ExoConnected = $true
+        }
+        catch {
+            if ("$_" -notmatch $WamCrashPattern) { throw }
+        }
     }
-    elseif ($wamCrash) {
-        throw ("Connect-ExchangeOnline failed initializing the Windows broker (WAM), which is known to crash in " +
-               "windowless hosts like the VS Code integrated console. Fixes: run from a regular PowerShell console, " +
-               "update ExchangeOnlineManagement to 3.7.2 or later (adds -DisableWAM), or rerun with -UseDeviceCode. " +
-               "Original error: $_")
+}
+if (-not $ExoConnected) {
+    if ($PSVersionTable.PSEdition -eq 'Core') {
+        Write-Warning ('Exchange Online sign-in keeps hitting the WAM broker crash (it can occur even with -DisableWAM ' +
+            'in windowless hosts) - falling back to device-code sign-in, as Connect-MgGraph does automatically. ' +
+            'If Conditional Access blocks device code, run this script from a regular PowerShell 7 console instead.')
+        $null = $exoConnect.Remove('DisableWAM')
+        $exoConnect['Device'] = $true
+        try {
+            Connect-ExchangeOnline @exoConnect
+        }
+        catch {
+            throw ("The device-code fallback also failed (Conditional Access may block device-code sign-in). " +
+                   "Run this script from a regular PowerShell 7 console, where broker sign-in works. Original error: $_")
+        }
     }
-    else { throw }
+    else {
+        throw ('Connect-ExchangeOnline cannot initialize the Windows broker (WAM) in this host (VS Code integrated ' +
+               'console / ISE), and the device-code fallback (-Device) requires PowerShell 7. Run the script from a ' +
+               'regular PowerShell 7 console.')
+    }
 }
 
 # Fail fast if Graph is not usable. A silent Graph failure later must never be
