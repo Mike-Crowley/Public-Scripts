@@ -1,5 +1,5 @@
 # Application Access Policy -> RBAC for Applications migration commands
-# Generated 2026-07-10 19:13:19 for tenant crowleydev by Audit-ExoAppAccessPolicies.ps1
+# Generated 2026-07-15 15:33:45 for tenant crowleydev by Audit-ExoAppAccessPolicies.ps1
 # Prereqs: Connect-ExchangeOnline (Organization Management / Exchange Administrator);
 #          Connect-MgGraph -Scopes 'AppRoleAssignment.ReadWrite.All' (for the cutover revocations).
 # Steps 1-4 are additive. Cutover blocks self-verify with Test-ServicePrincipalAuthorization,
@@ -57,13 +57,13 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/abababab-0000-0000-0000-000000000004/appRoleAssignments/assign-000004-1' -ErrorAction Stop; Write-Host 'Revoked Graph:Mail.Send' } catch { if ("$_" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: Graph:Mail.Send' } else { $revokeFailed = $true; Write-Warning "Revocation FAILED (Graph:Mail.Send): $_" } }
     if ($revokeFailed) {
         Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000004:S-1-5-21-1004336348-1177238915-682003330-2622;eeeeeeee-0000-0000-0000-000000000001' }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000004:S-1-5-21-1004336348-1177238915-682003330-4091;eeeeeeee-0000-0000-0000-000000000001' }).Count -eq 0) {
         Write-Host 'HR Notification Bot: legacy policy already removed - migration complete.'
     } else {
         Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'
         # The policy is now inert (it only constrained the Entra grants, which are gone).
-        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000004:S-1-5-21-1004336348-1177238915-682003330-2622;eeeeeeee-0000-0000-0000-000000000001' -Confirm:$false
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000004:S-1-5-21-1004336348-1177238915-682003330-2622;eeeeeeee-0000-0000-0000-000000000001' }).Count -eq 0) {
+        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000004:S-1-5-21-1004336348-1177238915-682003330-4091;eeeeeeee-0000-0000-0000-000000000001' -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000004:S-1-5-21-1004336348-1177238915-682003330-4091;eeeeeeee-0000-0000-0000-000000000001' }).Count -eq 0) {
             Write-Host 'HR Notification Bot: legacy policy removed - migration complete.'
         } else {
             Write-Warning 'HR Notification Bot: legacy policy still present (removal failed) - rerun this cutover block to finish.'
@@ -121,13 +121,13 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/abababab-0000-0000-0000-000000000002/appRoleAssignments/assign-000002-1' -ErrorAction Stop; Write-Host 'Revoked Graph:Mail.Send' } catch { if ("$_" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: Graph:Mail.Send' } else { $revokeFailed = $true; Write-Warning "Revocation FAILED (Graph:Mail.Send): $_" } }
     if ($revokeFailed) {
         Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000002:S-1-5-21-1004336348-1177238915-682003330-3733;cccccccc-0000-0000-0000-000000000002' }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000002:S-1-5-21-1004336348-1177238915-682003330-4716;cccccccc-0000-0000-0000-000000000002' }).Count -eq 0) {
         Write-Host 'Invoice Mailer: legacy policy already removed - migration complete.'
     } else {
         Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'
         # The policy is now inert (it only constrained the Entra grants, which are gone).
-        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000002:S-1-5-21-1004336348-1177238915-682003330-3733;cccccccc-0000-0000-0000-000000000002' -Confirm:$false
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000002:S-1-5-21-1004336348-1177238915-682003330-3733;cccccccc-0000-0000-0000-000000000002' }).Count -eq 0) {
+        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000002:S-1-5-21-1004336348-1177238915-682003330-4716;cccccccc-0000-0000-0000-000000000002' -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000002:S-1-5-21-1004336348-1177238915-682003330-4716;cccccccc-0000-0000-0000-000000000002' }).Count -eq 0) {
             Write-Host 'Invoice Mailer: legacy policy removed - migration complete.'
         } else {
             Write-Warning 'Invoice Mailer: legacy policy still present (removal failed) - rerun this cutover block to finish.'
@@ -191,13 +191,13 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/abababab-0000-0000-0000-000000000003/appRoleAssignments/assign-000003-3' -ErrorAction Stop; Write-Host 'Revoked Graph:Mail.Read' } catch { if ("$_" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: Graph:Mail.Read' } else { $revokeFailed = $true; Write-Warning "Revocation FAILED (Graph:Mail.Read): $_" } }
     if ($revokeFailed) {
         Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000003:S-1-5-21-1004336348-1177238915-682003330-1468;cccccccc-0000-0000-0000-000000000003' }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000003:S-1-5-21-1004336348-1177238915-682003330-5832;cccccccc-0000-0000-0000-000000000003' }).Count -eq 0) {
         Write-Host 'Legacy EWS Archiver: legacy policy already removed - migration complete.'
     } else {
         Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'
         # The policy is now inert (it only constrained the Entra grants, which are gone).
-        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000003:S-1-5-21-1004336348-1177238915-682003330-1468;cccccccc-0000-0000-0000-000000000003' -Confirm:$false
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000003:S-1-5-21-1004336348-1177238915-682003330-1468;cccccccc-0000-0000-0000-000000000003' }).Count -eq 0) {
+        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000003:S-1-5-21-1004336348-1177238915-682003330-5832;cccccccc-0000-0000-0000-000000000003' -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000003:S-1-5-21-1004336348-1177238915-682003330-5832;cccccccc-0000-0000-0000-000000000003' }).Count -eq 0) {
             Write-Host 'Legacy EWS Archiver: legacy policy removed - migration complete.'
         } else {
             Write-Warning 'Legacy EWS Archiver: legacy policy still present (removal failed) - rerun this cutover block to finish.'
@@ -260,13 +260,13 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/abababab-0000-0000-0000-000000000001/appRoleAssignments/assign-000001-2' -ErrorAction Stop; Write-Host 'Revoked Graph:Calendars.ReadWrite' } catch { if ("$_" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: Graph:Calendars.ReadWrite' } else { $revokeFailed = $true; Write-Warning "Revocation FAILED (Graph:Calendars.ReadWrite): $_" } }
     if ($revokeFailed) {
         Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000001:S-1-5-21-1004336348-1177238915-682003330-6098;cccccccc-0000-0000-0000-000000000001' }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000001:S-1-5-21-1004336348-1177238915-682003330-9123;cccccccc-0000-0000-0000-000000000001' }).Count -eq 0) {
         Write-Host 'Room Booking Service: legacy policy already removed - migration complete.'
     } else {
         Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'
         # The policy is now inert (it only constrained the Entra grants, which are gone).
-        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000001:S-1-5-21-1004336348-1177238915-682003330-6098;cccccccc-0000-0000-0000-000000000001' -Confirm:$false
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000001:S-1-5-21-1004336348-1177238915-682003330-6098;cccccccc-0000-0000-0000-000000000001' }).Count -eq 0) {
+        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000001:S-1-5-21-1004336348-1177238915-682003330-9123;cccccccc-0000-0000-0000-000000000001' -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000001:S-1-5-21-1004336348-1177238915-682003330-9123;cccccccc-0000-0000-0000-000000000001' }).Count -eq 0) {
             Write-Host 'Room Booking Service: legacy policy removed - migration complete.'
         } else {
             Write-Warning 'Room Booking Service: legacy policy still present (removal failed) - rerun this cutover block to finish.'
@@ -326,13 +326,13 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/abababab-0000-0000-0000-000000000008/appRoleAssignments/assign-000008-2' -ErrorAction Stop; Write-Host 'Revoked Graph:Mail.Send' } catch { if ("$_" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: Graph:Mail.Send' } else { $revokeFailed = $true; Write-Warning "Revocation FAILED (Graph:Mail.Send): $_" } }
     if ($revokeFailed) {
         Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000008:S-1-5-21-1004336348-1177238915-682003330-8345;cccccccc-0000-0000-0000-000000000007' }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000008:S-1-5-21-1004336348-1177238915-682003330-8922;cccccccc-0000-0000-0000-000000000007' }).Count -eq 0) {
         Write-Host 'Ticketing Mail Connector: legacy policy already removed - migration complete.'
     } else {
         Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'
         # The policy is now inert (it only constrained the Entra grants, which are gone).
-        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000008:S-1-5-21-1004336348-1177238915-682003330-8345;cccccccc-0000-0000-0000-000000000007' -Confirm:$false
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000008:S-1-5-21-1004336348-1177238915-682003330-8345;cccccccc-0000-0000-0000-000000000007' }).Count -eq 0) {
+        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000008:S-1-5-21-1004336348-1177238915-682003330-8922;cccccccc-0000-0000-0000-000000000007' -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000008:S-1-5-21-1004336348-1177238915-682003330-8922;cccccccc-0000-0000-0000-000000000007' }).Count -eq 0) {
             Write-Host 'Ticketing Mail Connector: legacy policy removed - migration complete.'
         } else {
             Write-Warning 'Ticketing Mail Connector: legacy policy still present (removal failed) - rerun this cutover block to finish.'
@@ -346,7 +346,7 @@ if ($missingRoles.Count -gt 0) {
 # KEEP (not Exchange-related): Graph:DeviceManagementManagedDevices.Read.All
 # Removing the policy changes no behavior. If the app is granted Exchange permissions
 # later, scope it with RBAC at that time.
-Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000010:S-1-5-21-1004336348-1177238915-682003330-2261;cccccccc-0000-0000-0000-000000000009' -Confirm:$false
+Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000010:S-1-5-21-1004336348-1177238915-682003330-9736;cccccccc-0000-0000-0000-000000000009' -Confirm:$false
 
 # App registration exists but there is no enterprise application (service principal),
 # so the app cannot get app-only tokens and the policy is dormant.
@@ -407,13 +407,13 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/abababab-0000-0000-0000-000000000016/appRoleAssignments/assign-000016-1' -ErrorAction Stop; Write-Host 'Revoked Graph:Mail.Send' } catch { if ("$_" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: Graph:Mail.Send' } else { $revokeFailed = $true; Write-Warning "Revocation FAILED (Graph:Mail.Send): $_" } }
     if ($revokeFailed) {
         Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000016:S-1-5-21-1004336348-1177238915-682003330-9645;cccccccc-0000-0000-0000-000000000015' }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000016:S-1-5-21-1004336348-1177238915-682003330-7827;cccccccc-0000-0000-0000-000000000015' }).Count -eq 0) {
         Write-Host 'Bulk Invite Tool: legacy policy already removed - migration complete.'
     } else {
         Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'
         # The policy is now inert (it only constrained the Entra grants, which are gone).
-        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000016:S-1-5-21-1004336348-1177238915-682003330-9645;cccccccc-0000-0000-0000-000000000015' -Confirm:$false
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000016:S-1-5-21-1004336348-1177238915-682003330-9645;cccccccc-0000-0000-0000-000000000015' }).Count -eq 0) {
+        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000016:S-1-5-21-1004336348-1177238915-682003330-7827;cccccccc-0000-0000-0000-000000000015' -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000016:S-1-5-21-1004336348-1177238915-682003330-7827;cccccccc-0000-0000-0000-000000000015' }).Count -eq 0) {
             Write-Host 'Bulk Invite Tool: legacy policy removed - migration complete.'
         } else {
             Write-Warning 'Bulk Invite Tool: legacy policy still present (removal failed) - rerun this cutover block to finish.'
@@ -477,13 +477,13 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/abababab-0000-0000-0000-000000000015/appRoleAssignments/assign-000015-1' -ErrorAction Stop; Write-Host 'Revoked Graph:Mail.Read' } catch { if ("$_" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: Graph:Mail.Read' } else { $revokeFailed = $true; Write-Warning "Revocation FAILED (Graph:Mail.Read): $_" } }
     if ($revokeFailed) {
         Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000015:S-1-5-21-1004336348-1177238915-682003330-6819;cccccccc-0000-0000-0000-000000000014' }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000015:S-1-5-21-1004336348-1177238915-682003330-4939;cccccccc-0000-0000-0000-000000000014' }).Count -eq 0) {
         Write-Host 'Contractor Portal: legacy policy already removed - migration complete.'
     } else {
         Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'
         # The policy is now inert (it only constrained the Entra grants, which are gone).
-        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000015:S-1-5-21-1004336348-1177238915-682003330-6819;cccccccc-0000-0000-0000-000000000014' -Confirm:$false
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000015:S-1-5-21-1004336348-1177238915-682003330-6819;cccccccc-0000-0000-0000-000000000014' }).Count -eq 0) {
+        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000015:S-1-5-21-1004336348-1177238915-682003330-4939;cccccccc-0000-0000-0000-000000000014' -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000015:S-1-5-21-1004336348-1177238915-682003330-4939;cccccccc-0000-0000-0000-000000000014' }).Count -eq 0) {
             Write-Host 'Contractor Portal: legacy policy removed - migration complete.'
         } else {
             Write-Warning 'Contractor Portal: legacy policy still present (removal failed) - rerun this cutover block to finish.'
@@ -546,13 +546,13 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/abababab-0000-0000-0000-000000000005/appRoleAssignments/assign-000005-1' -ErrorAction Stop; Write-Host 'Revoked Graph:Mail.ReadWrite' } catch { if ("$_" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: Graph:Mail.ReadWrite' } else { $revokeFailed = $true; Write-Warning "Revocation FAILED (Graph:Mail.ReadWrite): $_" } }
     if ($revokeFailed) {
         Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000005:S-1-5-21-1004336348-1177238915-682003330-3592;cccccccc-0000-0000-0000-000000000004' }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000005:S-1-5-21-1004336348-1177238915-682003330-7180;cccccccc-0000-0000-0000-000000000004' }).Count -eq 0) {
         Write-Host 'CRM Mailbox Sync: legacy policy already removed - migration complete.'
     } else {
         Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'
         # The policy is now inert (it only constrained the Entra grants, which are gone).
-        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000005:S-1-5-21-1004336348-1177238915-682003330-3592;cccccccc-0000-0000-0000-000000000004' -Confirm:$false
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000005:S-1-5-21-1004336348-1177238915-682003330-3592;cccccccc-0000-0000-0000-000000000004' }).Count -eq 0) {
+        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000005:S-1-5-21-1004336348-1177238915-682003330-7180;cccccccc-0000-0000-0000-000000000004' -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000005:S-1-5-21-1004336348-1177238915-682003330-7180;cccccccc-0000-0000-0000-000000000004' }).Count -eq 0) {
             Write-Host 'CRM Mailbox Sync: legacy policy removed - migration complete.'
         } else {
             Write-Warning 'CRM Mailbox Sync: legacy policy still present (removal failed) - rerun this cutover block to finish.'
@@ -616,13 +616,13 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/abababab-0000-0000-0000-000000000014/appRoleAssignments/assign-000014-1' -ErrorAction Stop; Write-Host 'Revoked Graph:Mail.Send' } catch { if ("$_" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: Graph:Mail.Send' } else { $revokeFailed = $true; Write-Warning "Revocation FAILED (Graph:Mail.Send): $_" } }
     if ($revokeFailed) {
         Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000014:S-1-5-21-1004336348-1177238915-682003330-8182;cccccccc-0000-0000-0000-000000000013' }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000014:S-1-5-21-1004336348-1177238915-682003330-8324;cccccccc-0000-0000-0000-000000000013' }).Count -eq 0) {
         Write-Host 'Marketing Blaster 2019: legacy policy already removed - migration complete.'
     } else {
         Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'
         # The policy is now inert (it only constrained the Entra grants, which are gone).
-        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000014:S-1-5-21-1004336348-1177238915-682003330-8182;cccccccc-0000-0000-0000-000000000013' -Confirm:$false
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000014:S-1-5-21-1004336348-1177238915-682003330-8182;cccccccc-0000-0000-0000-000000000013' }).Count -eq 0) {
+        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000014:S-1-5-21-1004336348-1177238915-682003330-8324;cccccccc-0000-0000-0000-000000000013' -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000014:S-1-5-21-1004336348-1177238915-682003330-8324;cccccccc-0000-0000-0000-000000000013' }).Count -eq 0) {
             Write-Host 'Marketing Blaster 2019: legacy policy removed - migration complete.'
         } else {
             Write-Warning 'Marketing Blaster 2019: legacy policy still present (removal failed) - rerun this cutover block to finish.'
@@ -636,8 +636,8 @@ if ($missingRoles.Count -gt 0) {
 # Entra grants are gone, so this legacy policy constrains nothing. Verify, then remove it:
 Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-000000000007' -Resource 'member6@crowley.dev' | Format-Table   # expect InScope = True
 # Confirm the application still works, then remove the now-inert policy:
-Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000007:S-1-5-21-1004336348-1177238915-682003330-1720;cccccccc-0000-0000-0000-000000000006' -Confirm:$false
-if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000007:S-1-5-21-1004336348-1177238915-682003330-1720;cccccccc-0000-0000-0000-000000000006' }).Count -eq 0) {
+Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000007:S-1-5-21-1004336348-1177238915-682003330-2916;cccccccc-0000-0000-0000-000000000006' -Confirm:$false
+if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000007:S-1-5-21-1004336348-1177238915-682003330-2916;cccccccc-0000-0000-0000-000000000006' }).Count -eq 0) {
     Write-Host 'Meeting Room Panels: legacy policy removed - migration complete.'
 } else {
     Write-Warning 'Meeting Room Panels: legacy policy still present (removal failed).'
@@ -696,13 +696,13 @@ if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-111
 #     try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/abababab-0000-0000-0000-000000000006/appRoleAssignments/assign-000006-1' -ErrorAction Stop; Write-Host 'Revoked Graph:Mail.Read' } catch { if ("$_" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: Graph:Mail.Read' } else { $revokeFailed = $true; Write-Warning "Revocation FAILED (Graph:Mail.Read): $_" } }
 #     if ($revokeFailed) {
 #         Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'
-#     } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000006:S-1-5-21-1004336348-1177238915-682003330-2110' }).Count -eq 0) {
+#     } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000006:S-1-5-21-1004336348-1177238915-682003330-6199' }).Count -eq 0) {
 #         Write-Host 'Payroll Ingest: legacy policy already removed - migration complete.'
 #     } else {
 #         Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'
         # The policy is now inert (it only constrained the Entra grants, which are gone).
-#         Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000006:S-1-5-21-1004336348-1177238915-682003330-2110' -Confirm:$false
-#         if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000006:S-1-5-21-1004336348-1177238915-682003330-2110' }).Count -eq 0) {
+#         Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000006:S-1-5-21-1004336348-1177238915-682003330-6199' -Confirm:$false
+#         if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000006:S-1-5-21-1004336348-1177238915-682003330-6199' }).Count -eq 0) {
 #             Write-Host 'Payroll Ingest: legacy policy removed - migration complete.'
 #         } else {
 #             Write-Warning 'Payroll Ingest: legacy policy still present (removal failed) - rerun this cutover block to finish.'
@@ -718,18 +718,18 @@ if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-111
 Get-ServicePrincipal -Identity 'ffffffff-0000-0000-0000-000000000011' | Format-List DisplayName, AppId, ObjectId
 # Per suspect mailbox: Get-MailboxPermission -Identity '<mailbox>' | Where-Object { $_.User -like '*POS Mail Poller*' }
 # The policy itself can be removed after review:
-Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000011:S-1-5-21-1004336348-1177238915-682003330-1857;cccccccc-0000-0000-0000-000000000010' -Confirm:$false
+Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000011:S-1-5-21-1004336348-1177238915-682003330-5229;cccccccc-0000-0000-0000-000000000010' -Confirm:$false
 
 # Exchange permissions are DELEGATED only (Mail.Send, Calendars.Read).
 # Policies constrain app-only access, so this policy does nothing today. Removing it
 # changes no behavior:
-Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000009:S-1-5-21-1004336348-1177238915-682003330-9429;cccccccc-0000-0000-0000-000000000008' -Confirm:$false
+Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000009:S-1-5-21-1004336348-1177238915-682003330-4910;cccccccc-0000-0000-0000-000000000008' -Confirm:$false
 
 # DenyAccess policy - do NOT migrate with restrict-style commands (a scope on this
 # group would GRANT access to exactly the mailboxes currently denied).
 # Review what is denied and who is in the target (links in this row), then either keep
 # this policy or redesign scoping so the allow-side groups exclude these recipients.
-Get-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000013:S-1-5-21-1004336348-1177238915-682003330-1672;cccccccc-0000-0000-0000-000000000012' | Format-List
+Get-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000013:S-1-5-21-1004336348-1177238915-682003330-7345;cccccccc-0000-0000-0000-000000000012' | Format-List
 
 # This policy constrains permissions that have no RBAC role: Graph:Calendars.ReadBasic
 # KEEP THE POLICY - removing it would widen those permissions to every mailbox.
@@ -754,7 +754,7 @@ Invoke-MgGraphRequest -Uri "v1.0/groups?`$filter=displayName eq 'kiosk'&`$select
 #    gated behind an explicit opt-in:
 $iUnderstandThisRestoresTenantWideAccess = $false
 if ($iUnderstandThisRestoresTenantWideAccess) {
-    Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000019:S-1-5-21-1004336348-1177238915-682003330-2539;cccccccc-0000-0000-0000-000000000777' -Confirm:$false
+    Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000019:S-1-5-21-1004336348-1177238915-682003330-5750;cccccccc-0000-0000-0000-000000000777' -Confirm:$false
 }
 
 # The policy's target no longer resolves. A RestrictAccess policy with an empty/deleted
@@ -765,7 +765,7 @@ if ($iUnderstandThisRestoresTenantWideAccess) {
 #    gated behind an explicit opt-in:
 $iUnderstandThisRestoresTenantWideAccess = $false
 if ($iUnderstandThisRestoresTenantWideAccess) {
-    Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000022:S-1-5-21-1004336348-1177238915-682003330-6027;eeeeeeee-0000-0000-0000-000000000002' -Confirm:$false
+    Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000022:S-1-5-21-1004336348-1177238915-682003330-1811;eeeeeeee-0000-0000-0000-000000000002' -Confirm:$false
 }
 
 # A Graph lookup failed during this run (see the note in this row) - the state of this
@@ -773,5 +773,5 @@ if ($iUnderstandThisRestoresTenantWideAccess) {
 
 # App and service principal are gone from Entra ID - the policy is inert.
 # Cross-check your app inventory, then remove it:
-Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000018:S-1-5-21-1004336348-1177238915-682003330-8475;cccccccc-0000-0000-0000-000000000002' -Confirm:$false
+Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000018:S-1-5-21-1004336348-1177238915-682003330-4104;cccccccc-0000-0000-0000-000000000002' -Confirm:$false
 

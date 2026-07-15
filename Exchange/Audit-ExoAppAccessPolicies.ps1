@@ -303,7 +303,19 @@ try {
 }
 catch { $ExoSpCacheOk = $false }
 
-$Policies = Get-ApplicationAccessPolicy
+# In tenants where no policy has ever been created, Get-ApplicationAccessPolicy does not
+# return an empty result - it throws "object 'OU=...\*' couldn't be found" because the
+# policy container itself doesn't exist. Treat that as zero policies.
+try {
+    $Policies = @(Get-ApplicationAccessPolicy -ErrorAction Stop)
+}
+catch {
+    if ("$_" -match "couldn't be found|could not be found|ManagementObjectNotFound") {
+        Write-Host 'No Application Access Policies exist in this tenant.' -ForegroundColor Yellow
+        $Policies = @()
+    }
+    else { throw }
+}
 
 $ScopeRegistry = @{}    # target object GUID -> management scope name (reuse across apps sharing a target)
 $UsedScopeNames = @{}   # scope name -> target GUID (uniqueness)
@@ -1186,7 +1198,7 @@ function New-LinkHtml {
     $parts -join ' '
 }
 
-# Build policy table rows
+# Build policy table rows (with a friendly empty state for policy-free tenants)
 $HtmlRows = foreach ($item in $SortedReport) {
     $rowClass = switch ($item.MigrationStatus) {
         'Blocked' { 'status-blocked' }
@@ -1327,6 +1339,16 @@ $SecurityRowsHtml = foreach ($row in $SecuritySorted) {
 $SecurityScanNote = if (-not $SecurityScanOk) {
     "<p class='scan-warn'>&#9888; Parts of the security scan failed (Graph or Exchange query error) - this list may be incomplete. Rerun the audit to confirm.</p>"
 } else { '' }
+
+if (-not $HtmlRows) {
+    $HtmlRows = @"
+    <tr>
+        <td colspan="6" class="empty-state">No Application Access Policies exist in this tenant, so there is nothing to
+        migrate &mdash; but that also means nothing was ever scoped the legacy way. The
+        <a href="#security">unconstrained apps</a> section below is the part that matters here.</td>
+    </tr>
+"@
+}
 
 $Html = @"
 <!DOCTYPE html>
@@ -1518,6 +1540,8 @@ $Html = @"
         .none { color: var(--ink-3); font-style: italic; font-size: 0.75rem; }
 
         .blockers { margin-top: 0.5rem; font-size: 0.75rem; color: var(--crit-fg); }
+        .empty-state { padding: 2rem 1rem; text-align: center; color: var(--ink-2); }
+        .empty-state a { color: var(--link); }
         .blockers-neutral { margin-top: 0.5rem; font-size: 0.75rem; color: var(--ink-2); max-width: 42rem; }
         .scan-warn { color: var(--err-fg); font-size: 0.85rem; }
 
@@ -1664,7 +1688,7 @@ $Html = @"
             </tbody>
         </table>
 
-        <h2>Exchange App Permissions Without Mailbox Scoping</h2>
+        <h2 id="security">Exchange App Permissions Without Mailbox Scoping</h2>
         <p class="section-sub">Every non-Microsoft service principal holding Exchange <em>application</em> permissions.
         Admin consent alone grants <strong>org-wide</strong> mailbox access &mdash; scoping requires a policy or an RBAC
         assignment that the portal never prompts for (insecure by default). Rows marked Unconstrained can reach every
