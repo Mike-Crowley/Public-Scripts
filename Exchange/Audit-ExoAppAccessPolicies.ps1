@@ -331,6 +331,12 @@ function Resolve-PermissionName {
     if ($match) { return $match.value } else { return $PermissionId }
 }
 
+# Cache existing management scopes so generated blocks REUSE any scope whose filter
+# already covers the target - whatever its name. This honors hand-made or renamed
+# scopes instead of minting duplicates alongside them.
+$ExistingScopes = @()
+try { $ExistingScopes = @(Get-ManagementScope -ErrorAction Stop) } catch { }
+
 # Cache existing Exchange Service Principals. Track failure explicitly - an empty cache
 # from a failed call would silently break RBAC detection and the EXO SP column.
 $ExchangeServicePrincipals = @{}
@@ -786,23 +792,6 @@ $Report = foreach ($Policy in $Policies) {
 
     if ($CanGenerate) {
         $targetKey = if ($GroupInfo) { $GroupInfo.id } else { $TargetEdoid }
-        if ($ScopeRegistry.ContainsKey($targetKey)) {
-            $scopeName = $ScopeRegistry[$targetKey]
-        }
-        else {
-            $targetSafe = if ($GroupInfo -and $GroupInfo.mailNickname) { $GroupInfo.mailNickname }
-                          elseif ($GroupInfo) { $GroupInfo.displayName }
-                          elseif ($TargetEmail) { ($TargetEmail -split '@')[0] }
-                          else { $TargetName }
-            $targetSafe = ("$targetSafe".Trim() -replace '[^\w\-]', '_')
-            $scopeName = "AppRBAC_$targetSafe"
-            $n = 2
-            while ($UsedScopeNames.ContainsKey($scopeName) -and $UsedScopeNames[$scopeName] -ne $targetKey) {
-                $scopeName = "AppRBAC_${targetSafe}_$n"; $n++
-            }
-            $UsedScopeNames[$scopeName] = $targetKey
-            $ScopeRegistry[$targetKey] = $scopeName
-        }
 
         if ($GroupDN) {
             $filter = "MemberOfGroup -eq '$(EscDq (EscSq $GroupDN))'"
@@ -811,6 +800,38 @@ $Report = foreach ($Policy in $Policies) {
         else {
             $filter = "ExternalDirectoryObjectId -eq '$targetKey'"
             $filterKey = $targetKey
+        }
+
+        # Scope name resolution, in priority order:
+        #   1. a scope already chosen for this target earlier in this run
+        #   2. an EXISTING tenant scope whose filter covers this target (any name -
+        #      honors renamed / hand-made scopes; naming convention: AppRBAC-<Agency>-<Purpose>)
+        #   3. mint a new name in the convention: AppRBAC-<Target>, hyphen-separated
+        if ($ScopeRegistry.ContainsKey($targetKey)) {
+            $scopeName = $ScopeRegistry[$targetKey]
+        }
+        else {
+            $existingScope = $ExistingScopes |
+                Where-Object { $_.RecipientFilter -like "*$filterKey*" -or $_.RecipientFilter -like "*$(EscSq $filterKey)*" } |
+                Select-Object -First 1
+            if ($existingScope) {
+                $scopeName = "$($existingScope.Name)"
+            }
+            else {
+                $targetSafe = if ($GroupInfo -and $GroupInfo.mailNickname) { $GroupInfo.mailNickname }
+                              elseif ($GroupInfo) { $GroupInfo.displayName }
+                              elseif ($TargetEmail) { ($TargetEmail -split '@')[0] }
+                              else { $TargetName }
+                $targetSafe = ("$targetSafe".Trim() -replace '[^A-Za-z0-9]+', '-').Trim('-')
+                $scopeName = "AppRBAC-$targetSafe"
+                if ($scopeName.Length -gt 64) { $scopeName = $scopeName.Substring(0, 64).Trim('-') }   # scope name limit
+                $n = 2
+                while ($UsedScopeNames.ContainsKey($scopeName) -and $UsedScopeNames[$scopeName] -ne $targetKey) {
+                    $scopeName = "AppRBAC-$targetSafe-$n"; $n++
+                }
+            }
+            $UsedScopeNames[$scopeName] = $targetKey
+            $ScopeRegistry[$targetKey] = $scopeName
         }
 
         $MigrationCommands += "# ==== $AppDisplayName ($AppId) -> $TargetName [$AccessRight] ===="

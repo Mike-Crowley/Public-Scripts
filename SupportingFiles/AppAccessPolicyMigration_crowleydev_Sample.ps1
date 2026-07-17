@@ -1,5 +1,5 @@
 # Application Access Policy -> RBAC for Applications migration commands
-# Generated 2026-07-15 17:28:55 for tenant crowleydev by Audit-ExoAppAccessPolicies.ps1
+# Generated 2026-07-17 10:46:22 for tenant crowleydev by Audit-ExoAppAccessPolicies.ps1
 # Prereqs: Connect-ExchangeOnline (Organization Management / Exchange Administrator);
 #          Connect-MgGraph -Scopes 'AppRoleAssignment.ReadWrite.All' (for the cutover revocations).
 # Steps 1-4 are additive. Cutover blocks self-verify with Test-ServicePrincipalAuthorization,
@@ -19,19 +19,19 @@ if (-not (Get-ServicePrincipal -Identity 'ffffffff-0000-0000-0000-000000000004' 
 # group instead and use: "MemberOfGroup -eq '<group DN>'"
 $scope = $null
 $scopeConflict = $false
-$scope = Get-ManagementScope -Identity 'AppRBAC_hr-alerts' -ErrorAction SilentlyContinue
+$scope = Get-ManagementScope -Identity 'AppRBAC-hr-alerts' -ErrorAction SilentlyContinue
 if (-not $scope) {
-    New-ManagementScope -Name 'AppRBAC_hr-alerts' -RecipientRestrictionFilter "ExternalDirectoryObjectId -eq 'eeeeeeee-0000-0000-0000-000000000001'"
+    New-ManagementScope -Name 'AppRBAC-hr-alerts' -RecipientRestrictionFilter "ExternalDirectoryObjectId -eq 'eeeeeeee-0000-0000-0000-000000000001'"
 } elseif ($scope.RecipientFilter -notlike '*eeeeeeee-0000-0000-0000-000000000001*') {
     $scopeConflict = $true
-    Write-Warning "Scope 'AppRBAC_hr-alerts' already exists with a DIFFERENT filter: $($scope.RecipientFilter) - role assignments skipped; resolve the conflict first."
+    Write-Warning "Scope 'AppRBAC-hr-alerts' already exists with a DIFFERENT filter: $($scope.RecipientFilter) - role assignments skipped; resolve the conflict first."
 }
 
 # Step 3: RBAC role assignments (idempotent - skips roles already assigned; skipped
 # entirely on a scope-name conflict)
 if (-not $scopeConflict) {
     $liveRoles = @(Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-000000000004' -ErrorAction SilentlyContinue | ForEach-Object { $_.RoleName })
-    if ($liveRoles -notcontains 'Application Mail.Send') { New-ManagementRoleAssignment -App 'ffffffff-0000-0000-0000-000000000004' -Role 'Application Mail.Send' -CustomResourceScope 'AppRBAC_hr-alerts' }
+    if ($liveRoles -notcontains 'Application Mail.Send') { New-ManagementRoleAssignment -App 'ffffffff-0000-0000-0000-000000000004' -Role 'Application Mail.Send' -CustomResourceScope 'AppRBAC-hr-alerts' }
 }
 
 # Step 4: VERIFY - expect InScope = True for an in-scope mailbox
@@ -57,13 +57,13 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/abababab-0000-0000-0000-000000000004/appRoleAssignments/assign-000004-1' -ErrorAction Stop; Write-Host 'Revoked Graph:Mail.Send' } catch { if ("$_" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: Graph:Mail.Send' } else { $revokeFailed = $true; Write-Warning "Revocation FAILED (Graph:Mail.Send): $_" } }
     if ($revokeFailed) {
         Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000004:S-1-5-21-1004336348-1177238915-682003330-5738;eeeeeeee-0000-0000-0000-000000000001' }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000004:S-1-5-21-1004336348-1177238915-682003330-7124;eeeeeeee-0000-0000-0000-000000000001' }).Count -eq 0) {
         Write-Host 'HR Notification Bot: legacy policy already removed - migration complete.'
     } else {
         Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'
         # The policy is now inert (it only constrained the Entra grants, which are gone).
-        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000004:S-1-5-21-1004336348-1177238915-682003330-5738;eeeeeeee-0000-0000-0000-000000000001' -Confirm:$false
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000004:S-1-5-21-1004336348-1177238915-682003330-5738;eeeeeeee-0000-0000-0000-000000000001' }).Count -eq 0) {
+        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000004:S-1-5-21-1004336348-1177238915-682003330-7124;eeeeeeee-0000-0000-0000-000000000001' -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000004:S-1-5-21-1004336348-1177238915-682003330-7124;eeeeeeee-0000-0000-0000-000000000001' }).Count -eq 0) {
             Write-Host 'HR Notification Bot: legacy policy removed - migration complete.'
         } else {
             Write-Warning 'HR Notification Bot: legacy policy still present (removal failed) - rerun this cutover block to finish.'
@@ -83,19 +83,19 @@ if ($missingRoles.Count -gt 0) {
 # NOTE: MemberOfGroup covers DIRECT members only - nested group members are out of scope.
 $scope = $null
 $scopeConflict = $false
-$scope = Get-ManagementScope -Identity 'AppRBAC_ap-team' -ErrorAction SilentlyContinue
+$scope = Get-ManagementScope -Identity 'AppRBAC-ap-team' -ErrorAction SilentlyContinue
 if (-not $scope) {
-    New-ManagementScope -Name 'AppRBAC_ap-team' -RecipientRestrictionFilter "MemberOfGroup -eq 'CN=AP Team,OU=crowleydev.onmicrosoft.com,OU=Microsoft Exchange Hosted Organizations,DC=EURPR01A001,DC=prod,DC=outlook,DC=com'"
+    New-ManagementScope -Name 'AppRBAC-ap-team' -RecipientRestrictionFilter "MemberOfGroup -eq 'CN=AP Team,OU=crowleydev.onmicrosoft.com,OU=Microsoft Exchange Hosted Organizations,DC=EURPR01A001,DC=prod,DC=outlook,DC=com'"
 } elseif ($scope.RecipientFilter -notlike '*CN=AP Team,OU=crowleydev.onmicrosoft.com,OU=Microsoft Exchange Hosted Organizations,DC=EURPR01A001,DC=prod,DC=outlook,DC=com*') {
     $scopeConflict = $true
-    Write-Warning "Scope 'AppRBAC_ap-team' already exists with a DIFFERENT filter: $($scope.RecipientFilter) - role assignments skipped; resolve the conflict first."
+    Write-Warning "Scope 'AppRBAC-ap-team' already exists with a DIFFERENT filter: $($scope.RecipientFilter) - role assignments skipped; resolve the conflict first."
 }
 
 # Step 3: RBAC role assignments (idempotent - skips roles already assigned; skipped
 # entirely on a scope-name conflict)
 if (-not $scopeConflict) {
     $liveRoles = @(Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-000000000002' -ErrorAction SilentlyContinue | ForEach-Object { $_.RoleName })
-    if ($liveRoles -notcontains 'Application Mail.Send') { New-ManagementRoleAssignment -App 'ffffffff-0000-0000-0000-000000000002' -Role 'Application Mail.Send' -CustomResourceScope 'AppRBAC_ap-team' }
+    if ($liveRoles -notcontains 'Application Mail.Send') { New-ManagementRoleAssignment -App 'ffffffff-0000-0000-0000-000000000002' -Role 'Application Mail.Send' -CustomResourceScope 'AppRBAC-ap-team' }
 }
 
 # Step 4: VERIFY - expect InScope = True for an in-scope mailbox
@@ -121,13 +121,13 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/abababab-0000-0000-0000-000000000002/appRoleAssignments/assign-000002-1' -ErrorAction Stop; Write-Host 'Revoked Graph:Mail.Send' } catch { if ("$_" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: Graph:Mail.Send' } else { $revokeFailed = $true; Write-Warning "Revocation FAILED (Graph:Mail.Send): $_" } }
     if ($revokeFailed) {
         Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000002:S-1-5-21-1004336348-1177238915-682003330-4148;cccccccc-0000-0000-0000-000000000002' }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000002:S-1-5-21-1004336348-1177238915-682003330-4861;cccccccc-0000-0000-0000-000000000002' }).Count -eq 0) {
         Write-Host 'Invoice Mailer: legacy policy already removed - migration complete.'
     } else {
         Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'
         # The policy is now inert (it only constrained the Entra grants, which are gone).
-        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000002:S-1-5-21-1004336348-1177238915-682003330-4148;cccccccc-0000-0000-0000-000000000002' -Confirm:$false
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000002:S-1-5-21-1004336348-1177238915-682003330-4148;cccccccc-0000-0000-0000-000000000002' }).Count -eq 0) {
+        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000002:S-1-5-21-1004336348-1177238915-682003330-4861;cccccccc-0000-0000-0000-000000000002' -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000002:S-1-5-21-1004336348-1177238915-682003330-4861;cccccccc-0000-0000-0000-000000000002' }).Count -eq 0) {
             Write-Host 'Invoice Mailer: legacy policy removed - migration complete.'
         } else {
             Write-Warning 'Invoice Mailer: legacy policy still present (removal failed) - rerun this cutover block to finish.'
@@ -149,20 +149,20 @@ if (-not (Get-ServicePrincipal -Identity 'ffffffff-0000-0000-0000-000000000003' 
 # NOTE: MemberOfGroup covers DIRECT members only - nested group members are out of scope.
 $scope = $null
 $scopeConflict = $false
-$scope = Get-ManagementScope -Identity 'AppRBAC_records-mgmt' -ErrorAction SilentlyContinue
+$scope = Get-ManagementScope -Identity 'AppRBAC-records-mgmt' -ErrorAction SilentlyContinue
 if (-not $scope) {
-    New-ManagementScope -Name 'AppRBAC_records-mgmt' -RecipientRestrictionFilter "MemberOfGroup -eq 'CN=Records Management,OU=crowleydev.onmicrosoft.com,OU=Microsoft Exchange Hosted Organizations,DC=EURPR01A001,DC=prod,DC=outlook,DC=com'"
+    New-ManagementScope -Name 'AppRBAC-records-mgmt' -RecipientRestrictionFilter "MemberOfGroup -eq 'CN=Records Management,OU=crowleydev.onmicrosoft.com,OU=Microsoft Exchange Hosted Organizations,DC=EURPR01A001,DC=prod,DC=outlook,DC=com'"
 } elseif ($scope.RecipientFilter -notlike '*CN=Records Management,OU=crowleydev.onmicrosoft.com,OU=Microsoft Exchange Hosted Organizations,DC=EURPR01A001,DC=prod,DC=outlook,DC=com*') {
     $scopeConflict = $true
-    Write-Warning "Scope 'AppRBAC_records-mgmt' already exists with a DIFFERENT filter: $($scope.RecipientFilter) - role assignments skipped; resolve the conflict first."
+    Write-Warning "Scope 'AppRBAC-records-mgmt' already exists with a DIFFERENT filter: $($scope.RecipientFilter) - role assignments skipped; resolve the conflict first."
 }
 
 # Step 3: RBAC role assignments (idempotent - skips roles already assigned; skipped
 # entirely on a scope-name conflict)
 if (-not $scopeConflict) {
     $liveRoles = @(Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-000000000003' -ErrorAction SilentlyContinue | ForEach-Object { $_.RoleName })
-    if ($liveRoles -notcontains 'Application EWS.AccessAsApp') { New-ManagementRoleAssignment -App 'ffffffff-0000-0000-0000-000000000003' -Role 'Application EWS.AccessAsApp' -CustomResourceScope 'AppRBAC_records-mgmt' }
-    if ($liveRoles -notcontains 'Application Mail.Read') { New-ManagementRoleAssignment -App 'ffffffff-0000-0000-0000-000000000003' -Role 'Application Mail.Read' -CustomResourceScope 'AppRBAC_records-mgmt' }
+    if ($liveRoles -notcontains 'Application EWS.AccessAsApp') { New-ManagementRoleAssignment -App 'ffffffff-0000-0000-0000-000000000003' -Role 'Application EWS.AccessAsApp' -CustomResourceScope 'AppRBAC-records-mgmt' }
+    if ($liveRoles -notcontains 'Application Mail.Read') { New-ManagementRoleAssignment -App 'ffffffff-0000-0000-0000-000000000003' -Role 'Application Mail.Read' -CustomResourceScope 'AppRBAC-records-mgmt' }
 }
 # WARNING: EWS is blocked for non-Microsoft apps starting Oct 1, 2026 (EWSAllowedAppIDs allowlist) and removed after Apr 2027. Plan a Microsoft Graph migration for this app.
 
@@ -191,13 +191,13 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/abababab-0000-0000-0000-000000000003/appRoleAssignments/assign-000003-3' -ErrorAction Stop; Write-Host 'Revoked Graph:Mail.Read' } catch { if ("$_" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: Graph:Mail.Read' } else { $revokeFailed = $true; Write-Warning "Revocation FAILED (Graph:Mail.Read): $_" } }
     if ($revokeFailed) {
         Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000003:S-1-5-21-1004336348-1177238915-682003330-4243;cccccccc-0000-0000-0000-000000000003' }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000003:S-1-5-21-1004336348-1177238915-682003330-5974;cccccccc-0000-0000-0000-000000000003' }).Count -eq 0) {
         Write-Host 'Legacy EWS Archiver: legacy policy already removed - migration complete.'
     } else {
         Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'
         # The policy is now inert (it only constrained the Entra grants, which are gone).
-        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000003:S-1-5-21-1004336348-1177238915-682003330-4243;cccccccc-0000-0000-0000-000000000003' -Confirm:$false
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000003:S-1-5-21-1004336348-1177238915-682003330-4243;cccccccc-0000-0000-0000-000000000003' }).Count -eq 0) {
+        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000003:S-1-5-21-1004336348-1177238915-682003330-5974;cccccccc-0000-0000-0000-000000000003' -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000003:S-1-5-21-1004336348-1177238915-682003330-5974;cccccccc-0000-0000-0000-000000000003' }).Count -eq 0) {
             Write-Host 'Legacy EWS Archiver: legacy policy removed - migration complete.'
         } else {
             Write-Warning 'Legacy EWS Archiver: legacy policy still present (removal failed) - rerun this cutover block to finish.'
@@ -219,20 +219,20 @@ if (-not (Get-ServicePrincipal -Identity 'ffffffff-0000-0000-0000-000000000001' 
 # NOTE: MemberOfGroup covers DIRECT members only - nested group members are out of scope.
 $scope = $null
 $scopeConflict = $false
-$scope = Get-ManagementScope -Identity 'AppRBAC_facilities-rooms' -ErrorAction SilentlyContinue
+$scope = Get-ManagementScope -Identity 'AppRBAC-facilities-rooms' -ErrorAction SilentlyContinue
 if (-not $scope) {
-    New-ManagementScope -Name 'AppRBAC_facilities-rooms' -RecipientRestrictionFilter "MemberOfGroup -eq 'CN=Facilities Rooms,OU=crowleydev.onmicrosoft.com,OU=Microsoft Exchange Hosted Organizations,DC=EURPR01A001,DC=prod,DC=outlook,DC=com'"
+    New-ManagementScope -Name 'AppRBAC-facilities-rooms' -RecipientRestrictionFilter "MemberOfGroup -eq 'CN=Facilities Rooms,OU=crowleydev.onmicrosoft.com,OU=Microsoft Exchange Hosted Organizations,DC=EURPR01A001,DC=prod,DC=outlook,DC=com'"
 } elseif ($scope.RecipientFilter -notlike '*CN=Facilities Rooms,OU=crowleydev.onmicrosoft.com,OU=Microsoft Exchange Hosted Organizations,DC=EURPR01A001,DC=prod,DC=outlook,DC=com*') {
     $scopeConflict = $true
-    Write-Warning "Scope 'AppRBAC_facilities-rooms' already exists with a DIFFERENT filter: $($scope.RecipientFilter) - role assignments skipped; resolve the conflict first."
+    Write-Warning "Scope 'AppRBAC-facilities-rooms' already exists with a DIFFERENT filter: $($scope.RecipientFilter) - role assignments skipped; resolve the conflict first."
 }
 
 # Step 3: RBAC role assignments (idempotent - skips roles already assigned; skipped
 # entirely on a scope-name conflict)
 if (-not $scopeConflict) {
     $liveRoles = @(Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-000000000001' -ErrorAction SilentlyContinue | ForEach-Object { $_.RoleName })
-    if ($liveRoles -notcontains 'Application Calendars.Read') { New-ManagementRoleAssignment -App 'ffffffff-0000-0000-0000-000000000001' -Role 'Application Calendars.Read' -CustomResourceScope 'AppRBAC_facilities-rooms' }
-    if ($liveRoles -notcontains 'Application Calendars.ReadWrite') { New-ManagementRoleAssignment -App 'ffffffff-0000-0000-0000-000000000001' -Role 'Application Calendars.ReadWrite' -CustomResourceScope 'AppRBAC_facilities-rooms' }
+    if ($liveRoles -notcontains 'Application Calendars.Read') { New-ManagementRoleAssignment -App 'ffffffff-0000-0000-0000-000000000001' -Role 'Application Calendars.Read' -CustomResourceScope 'AppRBAC-facilities-rooms' }
+    if ($liveRoles -notcontains 'Application Calendars.ReadWrite') { New-ManagementRoleAssignment -App 'ffffffff-0000-0000-0000-000000000001' -Role 'Application Calendars.ReadWrite' -CustomResourceScope 'AppRBAC-facilities-rooms' }
 }
 
 # Step 4: VERIFY - expect InScope = True for an in-scope mailbox
@@ -260,13 +260,13 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/abababab-0000-0000-0000-000000000001/appRoleAssignments/assign-000001-2' -ErrorAction Stop; Write-Host 'Revoked Graph:Calendars.ReadWrite' } catch { if ("$_" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: Graph:Calendars.ReadWrite' } else { $revokeFailed = $true; Write-Warning "Revocation FAILED (Graph:Calendars.ReadWrite): $_" } }
     if ($revokeFailed) {
         Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000001:S-1-5-21-1004336348-1177238915-682003330-8207;cccccccc-0000-0000-0000-000000000001' }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000001:S-1-5-21-1004336348-1177238915-682003330-2577;cccccccc-0000-0000-0000-000000000001' }).Count -eq 0) {
         Write-Host 'Room Booking Service: legacy policy already removed - migration complete.'
     } else {
         Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'
         # The policy is now inert (it only constrained the Entra grants, which are gone).
-        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000001:S-1-5-21-1004336348-1177238915-682003330-8207;cccccccc-0000-0000-0000-000000000001' -Confirm:$false
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000001:S-1-5-21-1004336348-1177238915-682003330-8207;cccccccc-0000-0000-0000-000000000001' }).Count -eq 0) {
+        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000001:S-1-5-21-1004336348-1177238915-682003330-2577;cccccccc-0000-0000-0000-000000000001' -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000001:S-1-5-21-1004336348-1177238915-682003330-2577;cccccccc-0000-0000-0000-000000000001' }).Count -eq 0) {
             Write-Host 'Room Booking Service: legacy policy removed - migration complete.'
         } else {
             Write-Warning 'Room Booking Service: legacy policy still present (removal failed) - rerun this cutover block to finish.'
@@ -286,20 +286,20 @@ if ($missingRoles.Count -gt 0) {
 # NOTE: MemberOfGroup covers DIRECT members only - nested group members are out of scope.
 $scope = $null
 $scopeConflict = $false
-$scope = Get-ManagementScope -Identity 'AppRBAC_helpdesk-intake' -ErrorAction SilentlyContinue
+$scope = Get-ManagementScope -Identity 'AppRBAC-helpdesk-intake' -ErrorAction SilentlyContinue
 if (-not $scope) {
-    New-ManagementScope -Name 'AppRBAC_helpdesk-intake' -RecipientRestrictionFilter "MemberOfGroup -eq 'CN=Helpdesk Intake,OU=crowleydev.onmicrosoft.com,OU=Microsoft Exchange Hosted Organizations,DC=EURPR01A001,DC=prod,DC=outlook,DC=com'"
+    New-ManagementScope -Name 'AppRBAC-helpdesk-intake' -RecipientRestrictionFilter "MemberOfGroup -eq 'CN=Helpdesk Intake,OU=crowleydev.onmicrosoft.com,OU=Microsoft Exchange Hosted Organizations,DC=EURPR01A001,DC=prod,DC=outlook,DC=com'"
 } elseif ($scope.RecipientFilter -notlike '*CN=Helpdesk Intake,OU=crowleydev.onmicrosoft.com,OU=Microsoft Exchange Hosted Organizations,DC=EURPR01A001,DC=prod,DC=outlook,DC=com*') {
     $scopeConflict = $true
-    Write-Warning "Scope 'AppRBAC_helpdesk-intake' already exists with a DIFFERENT filter: $($scope.RecipientFilter) - role assignments skipped; resolve the conflict first."
+    Write-Warning "Scope 'AppRBAC-helpdesk-intake' already exists with a DIFFERENT filter: $($scope.RecipientFilter) - role assignments skipped; resolve the conflict first."
 }
 
 # Step 3: RBAC role assignments (idempotent - skips roles already assigned; skipped
 # entirely on a scope-name conflict)
 if (-not $scopeConflict) {
     $liveRoles = @(Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-000000000008' -ErrorAction SilentlyContinue | ForEach-Object { $_.RoleName })
-    if ($liveRoles -notcontains 'Application Mail.Read') { New-ManagementRoleAssignment -App 'ffffffff-0000-0000-0000-000000000008' -Role 'Application Mail.Read' -CustomResourceScope 'AppRBAC_helpdesk-intake' }
-    if ($liveRoles -notcontains 'Application Mail.Send') { New-ManagementRoleAssignment -App 'ffffffff-0000-0000-0000-000000000008' -Role 'Application Mail.Send' -CustomResourceScope 'AppRBAC_helpdesk-intake' }
+    if ($liveRoles -notcontains 'Application Mail.Read') { New-ManagementRoleAssignment -App 'ffffffff-0000-0000-0000-000000000008' -Role 'Application Mail.Read' -CustomResourceScope 'AppRBAC-helpdesk-intake' }
+    if ($liveRoles -notcontains 'Application Mail.Send') { New-ManagementRoleAssignment -App 'ffffffff-0000-0000-0000-000000000008' -Role 'Application Mail.Send' -CustomResourceScope 'AppRBAC-helpdesk-intake' }
 }
 
 # Step 4: VERIFY - expect InScope = True for an in-scope mailbox
@@ -326,13 +326,13 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/abababab-0000-0000-0000-000000000008/appRoleAssignments/assign-000008-2' -ErrorAction Stop; Write-Host 'Revoked Graph:Mail.Send' } catch { if ("$_" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: Graph:Mail.Send' } else { $revokeFailed = $true; Write-Warning "Revocation FAILED (Graph:Mail.Send): $_" } }
     if ($revokeFailed) {
         Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000008:S-1-5-21-1004336348-1177238915-682003330-6652;cccccccc-0000-0000-0000-000000000007' }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000008:S-1-5-21-1004336348-1177238915-682003330-9384;cccccccc-0000-0000-0000-000000000007' }).Count -eq 0) {
         Write-Host 'Ticketing Mail Connector: legacy policy already removed - migration complete.'
     } else {
         Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'
         # The policy is now inert (it only constrained the Entra grants, which are gone).
-        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000008:S-1-5-21-1004336348-1177238915-682003330-6652;cccccccc-0000-0000-0000-000000000007' -Confirm:$false
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000008:S-1-5-21-1004336348-1177238915-682003330-6652;cccccccc-0000-0000-0000-000000000007' }).Count -eq 0) {
+        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000008:S-1-5-21-1004336348-1177238915-682003330-9384;cccccccc-0000-0000-0000-000000000007' -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000008:S-1-5-21-1004336348-1177238915-682003330-9384;cccccccc-0000-0000-0000-000000000007' }).Count -eq 0) {
             Write-Host 'Ticketing Mail Connector: legacy policy removed - migration complete.'
         } else {
             Write-Warning 'Ticketing Mail Connector: legacy policy still present (removal failed) - rerun this cutover block to finish.'
@@ -346,7 +346,7 @@ if ($missingRoles.Count -gt 0) {
 # KEEP (not Exchange-related): Graph:DeviceManagementManagedDevices.Read.All
 # Removing the policy changes no behavior. If the app is granted Exchange permissions
 # later, scope it with RBAC at that time.
-Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000010:S-1-5-21-1004336348-1177238915-682003330-3282;cccccccc-0000-0000-0000-000000000009' -Confirm:$false
+Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000010:S-1-5-21-1004336348-1177238915-682003330-9360;cccccccc-0000-0000-0000-000000000009' -Confirm:$false
 
 # App registration exists but there is no enterprise application (service principal),
 # so the app cannot get app-only tokens and the policy is dormant.
@@ -369,19 +369,19 @@ if (-not (Get-ServicePrincipal -Identity 'ffffffff-0000-0000-0000-000000000016' 
 # NOTE: MemberOfGroup covers DIRECT members only - nested group members are out of scope.
 $scope = $null
 $scopeConflict = $false
-$scope = Get-ManagementScope -Identity 'AppRBAC_invite-scope' -ErrorAction SilentlyContinue
+$scope = Get-ManagementScope -Identity 'AppRBAC-invite-scope' -ErrorAction SilentlyContinue
 if (-not $scope) {
-    New-ManagementScope -Name 'AppRBAC_invite-scope' -RecipientRestrictionFilter "MemberOfGroup -eq 'CN=Invite Scope,OU=crowleydev.onmicrosoft.com,OU=Microsoft Exchange Hosted Organizations,DC=EURPR01A001,DC=prod,DC=outlook,DC=com'"
+    New-ManagementScope -Name 'AppRBAC-invite-scope' -RecipientRestrictionFilter "MemberOfGroup -eq 'CN=Invite Scope,OU=crowleydev.onmicrosoft.com,OU=Microsoft Exchange Hosted Organizations,DC=EURPR01A001,DC=prod,DC=outlook,DC=com'"
 } elseif ($scope.RecipientFilter -notlike '*CN=Invite Scope,OU=crowleydev.onmicrosoft.com,OU=Microsoft Exchange Hosted Organizations,DC=EURPR01A001,DC=prod,DC=outlook,DC=com*') {
     $scopeConflict = $true
-    Write-Warning "Scope 'AppRBAC_invite-scope' already exists with a DIFFERENT filter: $($scope.RecipientFilter) - role assignments skipped; resolve the conflict first."
+    Write-Warning "Scope 'AppRBAC-invite-scope' already exists with a DIFFERENT filter: $($scope.RecipientFilter) - role assignments skipped; resolve the conflict first."
 }
 
 # Step 3: RBAC role assignments (idempotent - skips roles already assigned; skipped
 # entirely on a scope-name conflict)
 if (-not $scopeConflict) {
     $liveRoles = @(Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-000000000016' -ErrorAction SilentlyContinue | ForEach-Object { $_.RoleName })
-    if ($liveRoles -notcontains 'Application Mail.Send') { New-ManagementRoleAssignment -App 'ffffffff-0000-0000-0000-000000000016' -Role 'Application Mail.Send' -CustomResourceScope 'AppRBAC_invite-scope' }
+    if ($liveRoles -notcontains 'Application Mail.Send') { New-ManagementRoleAssignment -App 'ffffffff-0000-0000-0000-000000000016' -Role 'Application Mail.Send' -CustomResourceScope 'AppRBAC-invite-scope' }
 }
 
 # Step 4: VERIFY - expect InScope = True for an in-scope mailbox
@@ -407,13 +407,13 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/abababab-0000-0000-0000-000000000016/appRoleAssignments/assign-000016-1' -ErrorAction Stop; Write-Host 'Revoked Graph:Mail.Send' } catch { if ("$_" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: Graph:Mail.Send' } else { $revokeFailed = $true; Write-Warning "Revocation FAILED (Graph:Mail.Send): $_" } }
     if ($revokeFailed) {
         Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000016:S-1-5-21-1004336348-1177238915-682003330-9658;cccccccc-0000-0000-0000-000000000015' }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000016:S-1-5-21-1004336348-1177238915-682003330-5623;cccccccc-0000-0000-0000-000000000015' }).Count -eq 0) {
         Write-Host 'Bulk Invite Tool: legacy policy already removed - migration complete.'
     } else {
         Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'
         # The policy is now inert (it only constrained the Entra grants, which are gone).
-        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000016:S-1-5-21-1004336348-1177238915-682003330-9658;cccccccc-0000-0000-0000-000000000015' -Confirm:$false
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000016:S-1-5-21-1004336348-1177238915-682003330-9658;cccccccc-0000-0000-0000-000000000015' }).Count -eq 0) {
+        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000016:S-1-5-21-1004336348-1177238915-682003330-5623;cccccccc-0000-0000-0000-000000000015' -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000016:S-1-5-21-1004336348-1177238915-682003330-5623;cccccccc-0000-0000-0000-000000000015' }).Count -eq 0) {
             Write-Host 'Bulk Invite Tool: legacy policy removed - migration complete.'
         } else {
             Write-Warning 'Bulk Invite Tool: legacy policy still present (removal failed) - rerun this cutover block to finish.'
@@ -439,19 +439,19 @@ if (-not (Get-ServicePrincipal -Identity 'ffffffff-0000-0000-0000-000000000015' 
 # NOTE: MemberOfGroup covers DIRECT members only - nested group members are out of scope.
 $scope = $null
 $scopeConflict = $false
-$scope = Get-ManagementScope -Identity 'AppRBAC_contractor-mbx' -ErrorAction SilentlyContinue
+$scope = Get-ManagementScope -Identity 'AppRBAC-contractor-mbx' -ErrorAction SilentlyContinue
 if (-not $scope) {
-    New-ManagementScope -Name 'AppRBAC_contractor-mbx' -RecipientRestrictionFilter "MemberOfGroup -eq 'CN=Contractor Mailboxes,OU=crowleydev.onmicrosoft.com,OU=Microsoft Exchange Hosted Organizations,DC=EURPR01A001,DC=prod,DC=outlook,DC=com'"
+    New-ManagementScope -Name 'AppRBAC-contractor-mbx' -RecipientRestrictionFilter "MemberOfGroup -eq 'CN=Contractor Mailboxes,OU=crowleydev.onmicrosoft.com,OU=Microsoft Exchange Hosted Organizations,DC=EURPR01A001,DC=prod,DC=outlook,DC=com'"
 } elseif ($scope.RecipientFilter -notlike '*CN=Contractor Mailboxes,OU=crowleydev.onmicrosoft.com,OU=Microsoft Exchange Hosted Organizations,DC=EURPR01A001,DC=prod,DC=outlook,DC=com*') {
     $scopeConflict = $true
-    Write-Warning "Scope 'AppRBAC_contractor-mbx' already exists with a DIFFERENT filter: $($scope.RecipientFilter) - role assignments skipped; resolve the conflict first."
+    Write-Warning "Scope 'AppRBAC-contractor-mbx' already exists with a DIFFERENT filter: $($scope.RecipientFilter) - role assignments skipped; resolve the conflict first."
 }
 
 # Step 3: RBAC role assignments (idempotent - skips roles already assigned; skipped
 # entirely on a scope-name conflict)
 if (-not $scopeConflict) {
     $liveRoles = @(Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-000000000015' -ErrorAction SilentlyContinue | ForEach-Object { $_.RoleName })
-    if ($liveRoles -notcontains 'Application Mail.Read') { New-ManagementRoleAssignment -App 'ffffffff-0000-0000-0000-000000000015' -Role 'Application Mail.Read' -CustomResourceScope 'AppRBAC_contractor-mbx' }
+    if ($liveRoles -notcontains 'Application Mail.Read') { New-ManagementRoleAssignment -App 'ffffffff-0000-0000-0000-000000000015' -Role 'Application Mail.Read' -CustomResourceScope 'AppRBAC-contractor-mbx' }
 }
 
 # Step 4: VERIFY - expect InScope = True for an in-scope mailbox
@@ -477,13 +477,13 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/abababab-0000-0000-0000-000000000015/appRoleAssignments/assign-000015-1' -ErrorAction Stop; Write-Host 'Revoked Graph:Mail.Read' } catch { if ("$_" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: Graph:Mail.Read' } else { $revokeFailed = $true; Write-Warning "Revocation FAILED (Graph:Mail.Read): $_" } }
     if ($revokeFailed) {
         Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000015:S-1-5-21-1004336348-1177238915-682003330-5770;cccccccc-0000-0000-0000-000000000014' }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000015:S-1-5-21-1004336348-1177238915-682003330-1527;cccccccc-0000-0000-0000-000000000014' }).Count -eq 0) {
         Write-Host 'Contractor Portal: legacy policy already removed - migration complete.'
     } else {
         Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'
         # The policy is now inert (it only constrained the Entra grants, which are gone).
-        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000015:S-1-5-21-1004336348-1177238915-682003330-5770;cccccccc-0000-0000-0000-000000000014' -Confirm:$false
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000015:S-1-5-21-1004336348-1177238915-682003330-5770;cccccccc-0000-0000-0000-000000000014' }).Count -eq 0) {
+        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000015:S-1-5-21-1004336348-1177238915-682003330-1527;cccccccc-0000-0000-0000-000000000014' -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000015:S-1-5-21-1004336348-1177238915-682003330-1527;cccccccc-0000-0000-0000-000000000014' }).Count -eq 0) {
             Write-Host 'Contractor Portal: legacy policy removed - migration complete.'
         } else {
             Write-Warning 'Contractor Portal: legacy policy still present (removal failed) - rerun this cutover block to finish.'
@@ -505,19 +505,19 @@ if (-not (Get-ServicePrincipal -Identity 'ffffffff-0000-0000-0000-000000000005' 
 # NOTE: MemberOfGroup covers DIRECT members only - nested group members are out of scope.
 $scope = $null
 $scopeConflict = $false
-$scope = Get-ManagementScope -Identity 'AppRBAC_sales-dept' -ErrorAction SilentlyContinue
+$scope = Get-ManagementScope -Identity 'AppRBAC-sales-dept' -ErrorAction SilentlyContinue
 if (-not $scope) {
-    New-ManagementScope -Name 'AppRBAC_sales-dept' -RecipientRestrictionFilter "MemberOfGroup -eq 'CN=Sales Department,OU=crowleydev.onmicrosoft.com,OU=Microsoft Exchange Hosted Organizations,DC=EURPR01A001,DC=prod,DC=outlook,DC=com'"
+    New-ManagementScope -Name 'AppRBAC-sales-dept' -RecipientRestrictionFilter "MemberOfGroup -eq 'CN=Sales Department,OU=crowleydev.onmicrosoft.com,OU=Microsoft Exchange Hosted Organizations,DC=EURPR01A001,DC=prod,DC=outlook,DC=com'"
 } elseif ($scope.RecipientFilter -notlike '*CN=Sales Department,OU=crowleydev.onmicrosoft.com,OU=Microsoft Exchange Hosted Organizations,DC=EURPR01A001,DC=prod,DC=outlook,DC=com*') {
     $scopeConflict = $true
-    Write-Warning "Scope 'AppRBAC_sales-dept' already exists with a DIFFERENT filter: $($scope.RecipientFilter) - role assignments skipped; resolve the conflict first."
+    Write-Warning "Scope 'AppRBAC-sales-dept' already exists with a DIFFERENT filter: $($scope.RecipientFilter) - role assignments skipped; resolve the conflict first."
 }
 
 # Step 3: RBAC role assignments (idempotent - skips roles already assigned; skipped
 # entirely on a scope-name conflict)
 if (-not $scopeConflict) {
     $liveRoles = @(Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-000000000005' -ErrorAction SilentlyContinue | ForEach-Object { $_.RoleName })
-    if ($liveRoles -notcontains 'Application Mail.ReadWrite') { New-ManagementRoleAssignment -App 'ffffffff-0000-0000-0000-000000000005' -Role 'Application Mail.ReadWrite' -CustomResourceScope 'AppRBAC_sales-dept' }
+    if ($liveRoles -notcontains 'Application Mail.ReadWrite') { New-ManagementRoleAssignment -App 'ffffffff-0000-0000-0000-000000000005' -Role 'Application Mail.ReadWrite' -CustomResourceScope 'AppRBAC-sales-dept' }
 }
 
 # Step 4: VERIFY - expect InScope = True for an in-scope mailbox
@@ -546,13 +546,13 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/abababab-0000-0000-0000-000000000005/appRoleAssignments/assign-000005-1' -ErrorAction Stop; Write-Host 'Revoked Graph:Mail.ReadWrite' } catch { if ("$_" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: Graph:Mail.ReadWrite' } else { $revokeFailed = $true; Write-Warning "Revocation FAILED (Graph:Mail.ReadWrite): $_" } }
     if ($revokeFailed) {
         Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000005:S-1-5-21-1004336348-1177238915-682003330-2282;cccccccc-0000-0000-0000-000000000004' }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000005:S-1-5-21-1004336348-1177238915-682003330-5474;cccccccc-0000-0000-0000-000000000004' }).Count -eq 0) {
         Write-Host 'CRM Mailbox Sync: legacy policy already removed - migration complete.'
     } else {
         Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'
         # The policy is now inert (it only constrained the Entra grants, which are gone).
-        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000005:S-1-5-21-1004336348-1177238915-682003330-2282;cccccccc-0000-0000-0000-000000000004' -Confirm:$false
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000005:S-1-5-21-1004336348-1177238915-682003330-2282;cccccccc-0000-0000-0000-000000000004' }).Count -eq 0) {
+        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000005:S-1-5-21-1004336348-1177238915-682003330-5474;cccccccc-0000-0000-0000-000000000004' -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000005:S-1-5-21-1004336348-1177238915-682003330-5474;cccccccc-0000-0000-0000-000000000004' }).Count -eq 0) {
             Write-Host 'CRM Mailbox Sync: legacy policy removed - migration complete.'
         } else {
             Write-Warning 'CRM Mailbox Sync: legacy policy still present (removal failed) - rerun this cutover block to finish.'
@@ -578,19 +578,19 @@ if (-not (Get-ServicePrincipal -Identity 'ffffffff-0000-0000-0000-000000000014' 
 # NOTE: MemberOfGroup covers DIRECT members only - nested group members are out of scope.
 $scope = $null
 $scopeConflict = $false
-$scope = Get-ManagementScope -Identity 'AppRBAC_marketing-lists' -ErrorAction SilentlyContinue
+$scope = Get-ManagementScope -Identity 'AppRBAC-marketing-lists' -ErrorAction SilentlyContinue
 if (-not $scope) {
-    New-ManagementScope -Name 'AppRBAC_marketing-lists' -RecipientRestrictionFilter "MemberOfGroup -eq 'CN=Marketing Lists,OU=crowleydev.onmicrosoft.com,OU=Microsoft Exchange Hosted Organizations,DC=EURPR01A001,DC=prod,DC=outlook,DC=com'"
+    New-ManagementScope -Name 'AppRBAC-marketing-lists' -RecipientRestrictionFilter "MemberOfGroup -eq 'CN=Marketing Lists,OU=crowleydev.onmicrosoft.com,OU=Microsoft Exchange Hosted Organizations,DC=EURPR01A001,DC=prod,DC=outlook,DC=com'"
 } elseif ($scope.RecipientFilter -notlike '*CN=Marketing Lists,OU=crowleydev.onmicrosoft.com,OU=Microsoft Exchange Hosted Organizations,DC=EURPR01A001,DC=prod,DC=outlook,DC=com*') {
     $scopeConflict = $true
-    Write-Warning "Scope 'AppRBAC_marketing-lists' already exists with a DIFFERENT filter: $($scope.RecipientFilter) - role assignments skipped; resolve the conflict first."
+    Write-Warning "Scope 'AppRBAC-marketing-lists' already exists with a DIFFERENT filter: $($scope.RecipientFilter) - role assignments skipped; resolve the conflict first."
 }
 
 # Step 3: RBAC role assignments (idempotent - skips roles already assigned; skipped
 # entirely on a scope-name conflict)
 if (-not $scopeConflict) {
     $liveRoles = @(Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-000000000014' -ErrorAction SilentlyContinue | ForEach-Object { $_.RoleName })
-    if ($liveRoles -notcontains 'Application Mail.Send') { New-ManagementRoleAssignment -App 'ffffffff-0000-0000-0000-000000000014' -Role 'Application Mail.Send' -CustomResourceScope 'AppRBAC_marketing-lists' }
+    if ($liveRoles -notcontains 'Application Mail.Send') { New-ManagementRoleAssignment -App 'ffffffff-0000-0000-0000-000000000014' -Role 'Application Mail.Send' -CustomResourceScope 'AppRBAC-marketing-lists' }
 }
 
 # Step 4: VERIFY - expect InScope = True for an in-scope mailbox
@@ -616,13 +616,13 @@ if ($missingRoles.Count -gt 0) {
     try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/abababab-0000-0000-0000-000000000014/appRoleAssignments/assign-000014-1' -ErrorAction Stop; Write-Host 'Revoked Graph:Mail.Send' } catch { if ("$_" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: Graph:Mail.Send' } else { $revokeFailed = $true; Write-Warning "Revocation FAILED (Graph:Mail.Send): $_" } }
     if ($revokeFailed) {
         Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'
-    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000014:S-1-5-21-1004336348-1177238915-682003330-2461;cccccccc-0000-0000-0000-000000000013' }).Count -eq 0) {
+    } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000014:S-1-5-21-1004336348-1177238915-682003330-5463;cccccccc-0000-0000-0000-000000000013' }).Count -eq 0) {
         Write-Host 'Marketing Blaster 2019: legacy policy already removed - migration complete.'
     } else {
         Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'
         # The policy is now inert (it only constrained the Entra grants, which are gone).
-        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000014:S-1-5-21-1004336348-1177238915-682003330-2461;cccccccc-0000-0000-0000-000000000013' -Confirm:$false
-        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000014:S-1-5-21-1004336348-1177238915-682003330-2461;cccccccc-0000-0000-0000-000000000013' }).Count -eq 0) {
+        Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000014:S-1-5-21-1004336348-1177238915-682003330-5463;cccccccc-0000-0000-0000-000000000013' -Confirm:$false
+        if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000014:S-1-5-21-1004336348-1177238915-682003330-5463;cccccccc-0000-0000-0000-000000000013' }).Count -eq 0) {
             Write-Host 'Marketing Blaster 2019: legacy policy removed - migration complete.'
         } else {
             Write-Warning 'Marketing Blaster 2019: legacy policy still present (removal failed) - rerun this cutover block to finish.'
@@ -636,8 +636,8 @@ if ($missingRoles.Count -gt 0) {
 # Entra grants are gone, so this legacy policy constrains nothing. Verify, then remove it:
 Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-000000000007' -Resource 'member6@crowley.dev' | Format-Table   # expect InScope = True
 # Confirm the application still works, then remove the now-inert policy:
-Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000007:S-1-5-21-1004336348-1177238915-682003330-3411;cccccccc-0000-0000-0000-000000000006' -Confirm:$false
-if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000007:S-1-5-21-1004336348-1177238915-682003330-3411;cccccccc-0000-0000-0000-000000000006' }).Count -eq 0) {
+Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000007:S-1-5-21-1004336348-1177238915-682003330-4189;cccccccc-0000-0000-0000-000000000006' -Confirm:$false
+if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000007:S-1-5-21-1004336348-1177238915-682003330-4189;cccccccc-0000-0000-0000-000000000006' }).Count -eq 0) {
     Write-Host 'Meeting Room Panels: legacy policy removed - migration complete.'
 } else {
     Write-Warning 'Meeting Room Panels: legacy policy still present (removal failed).'
@@ -658,19 +658,19 @@ if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-111
 # NOTE: MemberOfGroup covers DIRECT members only - nested group members are out of scope.
 # $scope = $null
 # $scopeConflict = $false
-# $scope = Get-ManagementScope -Identity 'AppRBAC_payroll-users' -ErrorAction SilentlyContinue
+# $scope = Get-ManagementScope -Identity 'AppRBAC-payroll-users' -ErrorAction SilentlyContinue
 # if (-not $scope) {
-#     New-ManagementScope -Name 'AppRBAC_payroll-users' -RecipientRestrictionFilter "MemberOfGroup -eq 'CN=Payroll Users,OU=crowleydev.onmicrosoft.com,OU=Microsoft Exchange Hosted Organizations,DC=EURPR01A001,DC=prod,DC=outlook,DC=com'"
+#     New-ManagementScope -Name 'AppRBAC-payroll-users' -RecipientRestrictionFilter "MemberOfGroup -eq 'CN=Payroll Users,OU=crowleydev.onmicrosoft.com,OU=Microsoft Exchange Hosted Organizations,DC=EURPR01A001,DC=prod,DC=outlook,DC=com'"
 # } elseif ($scope.RecipientFilter -notlike '*CN=Payroll Users,OU=crowleydev.onmicrosoft.com,OU=Microsoft Exchange Hosted Organizations,DC=EURPR01A001,DC=prod,DC=outlook,DC=com*') {
 #     $scopeConflict = $true
-#     Write-Warning "Scope 'AppRBAC_payroll-users' already exists with a DIFFERENT filter: $($scope.RecipientFilter) - role assignments skipped; resolve the conflict first."
+#     Write-Warning "Scope 'AppRBAC-payroll-users' already exists with a DIFFERENT filter: $($scope.RecipientFilter) - role assignments skipped; resolve the conflict first."
 # }
 
 # Step 3: RBAC role assignments (idempotent - skips roles already assigned; skipped
 # entirely on a scope-name conflict)
 # if (-not $scopeConflict) {
 #     $liveRoles = @(Test-ServicePrincipalAuthorization -Identity 'ffffffff-0000-0000-0000-000000000006' -ErrorAction SilentlyContinue | ForEach-Object { $_.RoleName })
-#     if ($liveRoles -notcontains 'Application Mail.Read') { New-ManagementRoleAssignment -App 'ffffffff-0000-0000-0000-000000000006' -Role 'Application Mail.Read' -CustomResourceScope 'AppRBAC_payroll-users' }
+#     if ($liveRoles -notcontains 'Application Mail.Read') { New-ManagementRoleAssignment -App 'ffffffff-0000-0000-0000-000000000006' -Role 'Application Mail.Read' -CustomResourceScope 'AppRBAC-payroll-users' }
 # }
 
 # Step 4: VERIFY - expect InScope = True for an in-scope mailbox
@@ -696,13 +696,13 @@ if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-111
 #     try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/abababab-0000-0000-0000-000000000006/appRoleAssignments/assign-000006-1' -ErrorAction Stop; Write-Host 'Revoked Graph:Mail.Read' } catch { if ("$_" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: Graph:Mail.Read' } else { $revokeFailed = $true; Write-Warning "Revocation FAILED (Graph:Mail.Read): $_" } }
 #     if ($revokeFailed) {
 #         Write-Warning 'One or more revocations FAILED - the legacy policy was NOT removed. Fix the errors above and rerun this cutover block.'
-#     } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000006:S-1-5-21-1004336348-1177238915-682003330-1081' }).Count -eq 0) {
+#     } elseif (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000006:S-1-5-21-1004336348-1177238915-682003330-7921' }).Count -eq 0) {
 #         Write-Host 'Payroll Ingest: legacy policy already removed - migration complete.'
 #     } else {
 #         Write-Host 'Tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.'
         # The policy is now inert (it only constrained the Entra grants, which are gone).
-#         Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000006:S-1-5-21-1004336348-1177238915-682003330-1081' -Confirm:$false
-#         if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000006:S-1-5-21-1004336348-1177238915-682003330-1081' }).Count -eq 0) {
+#         Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000006:S-1-5-21-1004336348-1177238915-682003330-7921' -Confirm:$false
+#         if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000006:S-1-5-21-1004336348-1177238915-682003330-7921' }).Count -eq 0) {
 #             Write-Host 'Payroll Ingest: legacy policy removed - migration complete.'
 #         } else {
 #             Write-Warning 'Payroll Ingest: legacy policy still present (removal failed) - rerun this cutover block to finish.'
@@ -718,18 +718,18 @@ if (@(Get-ApplicationAccessPolicy | Where-Object { $_.Identity -eq '11111111-111
 Get-ServicePrincipal -Identity 'ffffffff-0000-0000-0000-000000000011' | Format-List DisplayName, AppId, ObjectId
 # Per suspect mailbox: Get-MailboxPermission -Identity '<mailbox>' | Where-Object { $_.User -like '*POS Mail Poller*' }
 # The policy itself can be removed after review:
-Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000011:S-1-5-21-1004336348-1177238915-682003330-9114;cccccccc-0000-0000-0000-000000000010' -Confirm:$false
+Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000011:S-1-5-21-1004336348-1177238915-682003330-5847;cccccccc-0000-0000-0000-000000000010' -Confirm:$false
 
 # Exchange permissions are DELEGATED only (Mail.Send, Calendars.Read).
 # Policies constrain app-only access, so this policy does nothing today. Removing it
 # changes no behavior:
-Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000009:S-1-5-21-1004336348-1177238915-682003330-1474;cccccccc-0000-0000-0000-000000000008' -Confirm:$false
+Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000009:S-1-5-21-1004336348-1177238915-682003330-6792;cccccccc-0000-0000-0000-000000000008' -Confirm:$false
 
 # DenyAccess policy - do NOT migrate with restrict-style commands (a scope on this
 # group would GRANT access to exactly the mailboxes currently denied).
 # Review what is denied and who is in the target (links in this row), then either keep
 # this policy or redesign scoping so the allow-side groups exclude these recipients.
-Get-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000013:S-1-5-21-1004336348-1177238915-682003330-8511;cccccccc-0000-0000-0000-000000000012' | Format-List
+Get-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000013:S-1-5-21-1004336348-1177238915-682003330-9343;cccccccc-0000-0000-0000-000000000012' | Format-List
 
 # This policy constrains permissions that have no RBAC role: Graph:Calendars.ReadBasic
 # KEEP THE POLICY - removing it would widen those permissions to every mailbox.
@@ -754,7 +754,7 @@ Invoke-MgGraphRequest -Uri "v1.0/groups?`$filter=displayName eq 'kiosk'&`$select
 #    gated behind an explicit opt-in:
 $iUnderstandThisRestoresTenantWideAccess = $false
 if ($iUnderstandThisRestoresTenantWideAccess) {
-    Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000019:S-1-5-21-1004336348-1177238915-682003330-6960;cccccccc-0000-0000-0000-000000000777' -Confirm:$false
+    Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000019:S-1-5-21-1004336348-1177238915-682003330-4459;cccccccc-0000-0000-0000-000000000777' -Confirm:$false
 }
 
 # The policy's target no longer resolves. A RestrictAccess policy with an empty/deleted
@@ -765,7 +765,7 @@ if ($iUnderstandThisRestoresTenantWideAccess) {
 #    gated behind an explicit opt-in:
 $iUnderstandThisRestoresTenantWideAccess = $false
 if ($iUnderstandThisRestoresTenantWideAccess) {
-    Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000022:S-1-5-21-1004336348-1177238915-682003330-8023;eeeeeeee-0000-0000-0000-000000000002' -Confirm:$false
+    Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000022:S-1-5-21-1004336348-1177238915-682003330-2357;eeeeeeee-0000-0000-0000-000000000002' -Confirm:$false
 }
 
 # A Graph lookup failed during this run (see the note in this row) - the state of this
@@ -773,5 +773,5 @@ if ($iUnderstandThisRestoresTenantWideAccess) {
 
 # App and service principal are gone from Entra ID - the policy is inert.
 # Cross-check your app inventory, then remove it:
-Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000018:S-1-5-21-1004336348-1177238915-682003330-8010;cccccccc-0000-0000-0000-000000000002' -Confirm:$false
+Remove-ApplicationAccessPolicy -Identity '11111111-1111-1111-1111-111111111111\ffffffff-0000-0000-0000-000000000018:S-1-5-21-1004336348-1177238915-682003330-9020;cccccccc-0000-0000-0000-000000000002' -Confirm:$false
 
