@@ -86,6 +86,10 @@ Most scripts have companion blog posts with deeper context at [mikecrowley.us](h
 
 ## Microsoft Graph
 
++ [Find-CaBaselineScopeImpact.ps1](./MicrosoftGraph/Find-CaBaselineScopeImpact.ps1)
+
+  + Identify applications that will break under Microsoft's Conditional Access baseline scopes enforcement change (rolling out since June 15, 2026): sign-ins requesting only baseline scopes (openid, profile, User.Read, and similar) no longer bypass All-resources policies that carry resource exclusions. Reads CA policies and delegated consent footprints instead of bulk sign-in logs, so it stays fast in very large tenants; flags at-risk public clients and excluded confidential clients with per-app recommended actions, severity from your actual policy controls, and Entra portal deep links. Also decodes the tenant's hidden "Baseline scope settings" selection (Enable / Customize / Disable / not set) via the private-preview settings API behind [aka.ms/BaselineScopesSettingsUX](https://aka.ms/BaselineScopesSettingsUX). Optional bounded sign-in sampling per flagged app (`-IncludeSignInSample`). Generates a timestamped HTML report plus CSV. See a sample report built from a fictional crowley.dev tenant: [live preview](https://html-preview.github.io/?url=https://raw.githubusercontent.com/Mike-Crowley/Public-Scripts/main/SupportingFiles/CaBaselineScopeImpact_crowleydev_Sample.html) / [source](./SupportingFiles/CaBaselineScopeImpact_crowleydev_Sample.html), with its [companion CSV](./SupportingFiles/CaBaselineScopeImpact_crowleydev_Sample.csv).
+
 + [Import-EntraHardwareOathToken.ps1](./MicrosoftGraph/Import-EntraHardwareOathToken.ps1)
 
   + Bulk-import hardware OATH tokens into Microsoft Entra ID via the Graph beta API. Automates the full create, assign, and activate workflow by computing TOTP verification codes from the seed, enabling seamless MFA provider migrations without end-user involvement. Depends on [Get-TOTP.ps1](./Utilities/Get-TOTP.ps1).
