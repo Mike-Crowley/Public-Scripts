@@ -56,7 +56,7 @@ Most scripts have companion blog posts with deeper context at [mikecrowley.us](h
 | [Exchange](#exchange) | App access policy audit + RBAC-for-Applications migration, AutoDiscover delegates, recipient export |
 | [Azure](#azure) | File share duplicate detection |
 | [SharePoint Online](#sharepoint-online) | Duplicate file detection, storage analytics, recycle bin restore |
-| [Active Directory](#active-directory) | GUID conversion, ACE resolution, site link replication, RC4/AES Kerberos audit, password testing |
+| [Active Directory](#active-directory) | GUID conversion, ACE resolution, site link replication, RC4/AES Kerberos audit, DNS record audit, password testing |
 | [Windows](#windows) | RDP connection parsing |
 | [Utilities](#utilities) | TOTP generation, object comparison, DLP pattern matching, font extraction |
 | [Gists](#gists) | Smaller standalone scripts |
@@ -171,6 +171,10 @@ Most scripts have companion blog posts with deeper context at [mikecrowley.us](h
 + [Update-UseNotifyReplication.ps1](./AD_DS/Update-UseNotifyReplication.ps1)
 
   + Evaluate and optionally enable the Use_Notify option on AD Site Links and Replication Connections to reduce replication latency. Generates an HTML dashboard with health score, site link details (cost, schedule, sites), replication connections, and actionable recommendations. Use `-GetRegistrySettings` to query DC notification timers and AvoidPdcOnWan settings via WinRM.
+
++ [Get-AdDnsNodeReport.ps1](./AD_DS/Get-AdDnsNodeReport.ps1)
+
+  + Audit AD-integrated DNS records by reading dnsNode objects straight from the directory - no DNS server API access or DnsServer module required, just read access to AD. Parses the binary dnsRecord attribute inline (per MS-DNSP), then flags stale dynamic records, records whose owner is not the matching computer account, and owners that can no longer update their own records - the conditions that quietly break scavenging or leave a name open to hijacking. Produces an Excel report with a dashboard (ImportExcel, optional) or CSV, and supports pipeline output via `-PassThru`. Read-only.
 
 + [Find-Rc4Impact.ps1](./AD_DS/Find-Rc4Impact.ps1)
 
