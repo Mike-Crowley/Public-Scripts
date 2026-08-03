@@ -553,7 +553,9 @@ else {
     }
 }
 
-$affectedRows = @($rows | Where-Object { $_.Verdict -like 'Affected*' } | Sort-Object @{ e = { $_.Ownership -eq 'Tenant-owned' }; Descending = $true }, App)
+# Default report order: severity first, then app name (headers re-sort client-side)
+$SevRankMap = @{ 'Critical' = 5; 'High' = 4; 'Medium' = 3; 'Low' = 2; 'Info' = 1 }
+$affectedRows = @($rows | Where-Object { $_.Verdict -like 'Affected*' } | Sort-Object @{ e = { $SevRankMap[$_.Severity] }; Descending = $true }, App)
 $monitorRows  = @($rows | Where-Object { $_.Verdict -eq 'Monitor' } | Sort-Object App)
 $possibleRows = @($rows | Where-Object { $_.Verdict -eq 'Possible' } | Sort-Object App)
 
@@ -660,25 +662,37 @@ function New-AppRowHtml {
     if ($flags) { $flagsHtml = "<div class='flags'>$(EscHtml ($flags -join ' | '))</div>" }
     $sampleCells = ''
     if ($IncludeSignInSample) {
-        $sampleCells = "<td>$(EscHtml $r.RecentSignIns)</td><td>$(EscHtml $r.RecentUsers)</td><td>$(EscHtml $r.LastSignIn)</td><td>$(EscHtml $r.CaFailures)</td>"
+        # data-v carries the numeric value for client-side sorting ('100+' -> 100, blank/failed -> -1)
+        $nums = foreach ($v in $r.RecentSignIns, $r.RecentUsers, $r.CaFailures) {
+            $d = "$v" -replace '[^0-9]', ''
+            if ($d -ne '') { [int]$d } else { -1 }
+        }
+        $sampleCells = "<td data-v='$($nums[0])'>$(EscHtml $r.RecentSignIns)</td><td data-v='$($nums[1])'>$(EscHtml $r.RecentUsers)</td><td>$(EscHtml $r.LastSignIn)</td><td data-v='$($nums[2])'>$(EscHtml $r.CaFailures)</td>"
     }
+    $rank = $SevRankMap[$r.Severity]
+    if ($null -eq $rank) { $rank = 0 }
     return "<tr><td><strong>$(EscHtml $r.App)</strong><div class='sub'>$(EscHtml $r.AppId)$links</div>$flagsHtml</td>" +
         "<td>$(EscHtml $r.ClientType)</td><td>$(EscHtml $r.Ownership)</td>" +
         "<td class='scopes'>$(EscHtml $r.ConsentedScopes)</td>" +
-        "<td>$(EscHtml $r.Verdict)<br>$sevBadge</td>$sampleCells<td class='action'>$(EscHtml $r.Action)</td></tr>`n"
+        "<td data-v='$rank'>$(EscHtml $r.Verdict)<br>$sevBadge</td>$sampleCells<td class='action'>$(EscHtml $r.Action)</td></tr>`n"
 }
 
+$colCount = 6
+if ($IncludeSignInSample) { $colCount = 10 }
 $appRowsHtml = ''
-foreach ($r in ($affectedRows + $monitorRows)) { $appRowsHtml += New-AppRowHtml $r }
+foreach ($r in $affectedRows) { $appRowsHtml += New-AppRowHtml $r }
+$monitorRowsHtml = ''
+foreach ($r in $monitorRows) { $monitorRowsHtml += New-AppRowHtml $r }
 $possibleRowsHtml = ''
 foreach ($r in $possibleRows) { $possibleRowsHtml += New-AppRowHtml $r }
 if (-not $appRowsHtml) {
-    $emptyMsg = 'No client apps with a baseline-scopes-only consent footprint were found.'
+    $emptyMsg = 'No affected client apps were found.'
     if (-not $changeTriggers) { $emptyMsg = 'App analysis skipped: no triggering policies exist.' }
-    $colCount = 6
-    if ($IncludeSignInSample) { $colCount = 10 }
     $appRowsHtml = "<tr><td colspan='$colCount' class='empty'>$emptyMsg</td></tr>"
 }
+if (-not $monitorRowsHtml)  { $monitorRowsHtml = "<tr><td colspan='$colCount' class='empty'>None found.</td></tr>" }
+if (-not $possibleRowsHtml) { $possibleRowsHtml = "<tr><td colspan='$colCount' class='empty'>None found.</td></tr>" }
+$appTableHead = "<thead><tr><th>Application</th><th>Client type</th><th>Ownership</th><th>Consented scopes</th><th>Verdict</th>$sampleCols<th>Recommended action</th></tr></thead>"
 
 $stateBannerHtml = ''
 switch ($baselineStateKind) {
@@ -735,6 +749,12 @@ $html = @"
   .badge.reportonly { background:#dbeafe; color:#1e3a5f; }
   .note { color:var(--sub); font-size:13px; margin:8px 0 0; }
   a { color:var(--accent); }
+  table.sortable thead th { cursor:pointer; user-select:none; white-space:nowrap; }
+  table.sortable thead th:hover { background:#e2e9f2; }
+  th.s-asc::after { content:' \25B2'; font-size:9px; }
+  th.s-desc::after { content:' \25BC'; font-size:9px; }
+  .tfilter { margin:0 0 8px; padding:7px 12px; border:1px solid var(--line); border-radius:8px; width:300px; font:inherit; font-size:13px; background:var(--card); }
+  summary { cursor:pointer; color:var(--sub); }
   section.guide { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:6px 20px 16px; margin-top:26px; }
   section.guide li { margin:6px 0; }
 </style>
@@ -770,19 +790,37 @@ $stateBannerHtml
 </table>
 <p class="note">After enforcement, sign-ins that request only baseline scopes are evaluated against these policies with Windows Azure Active Directory as the audience. Report-only policies do not enforce yet but show what would apply.</p>
 
-<h2>Client applications at risk</h2>
-<table>
-  <tr><th>Application</th><th>Client type</th><th>Ownership</th><th>Consented scopes</th><th>Verdict</th>$sampleCols<th>Recommended action</th></tr>
+<h2>Client applications at risk ($($affectedRows.Count))</h2>
+<input class="tfilter" data-target="tblAffected" type="search" placeholder="Filter apps...">
+<table class="sortable" id="tblAffected">
+  $appTableHead
+  <tbody>
   $appRowsHtml
+  </tbody>
 </table>
-<p class="note">$(EscHtml $scanNote) $(EscHtml $sampleNote) Confidential clients consented only to OIDC scopes were skipped as explicitly unaffected ($oidcOnlyConfidential found).</p>
+<p class="note">$(EscHtml $scanNote) $(EscHtml $sampleNote) Confidential clients consented only to OIDC scopes were skipped as explicitly unaffected ($oidcOnlyConfidential found). Click a column header to sort; sorted by severity, then name, by default.</p>
+
+<h2>Monitored apps ($($monitorRows.Count))</h2>
+<details>
+<summary>Confidential clients with baseline-directory-only footprints that are NOT excluded from any triggering policy. Their Microsoft Graph sign-ins are already CA-enforced today, so no change is expected; they matter only if someone later adds them to a policy exclusion. Expand to review.</summary>
+<input class="tfilter" data-target="tblMonitor" type="search" placeholder="Filter apps..." style="margin-top:10px">
+<table class="sortable" id="tblMonitor" style="margin-top:6px">
+  $appTableHead
+  <tbody>
+  $monitorRowsHtml
+  </tbody>
+</table>
+</details>
 
 <h2>Unverified ISV clients ($($possibleRows.Count))</h2>
 <details>
 <summary>These baseline-only ISV apps are not excluded from any triggering policy and their client type cannot be determined from this tenant. Most are web SSO integrations (confidential, unaffected); any that are native or desktop clients are affected. Expand to review; sign-in activity helps separate live apps from dormant entries.</summary>
-<table style="margin-top:10px">
-  <tr><th>Application</th><th>Client type</th><th>Ownership</th><th>Consented scopes</th><th>Verdict</th>$sampleCols<th>Recommended action</th></tr>
-  $(if ($possibleRowsHtml) { $possibleRowsHtml } else { "<tr><td colspan='10' class='empty'>None found.</td></tr>" })
+<input class="tfilter" data-target="tblPossible" type="search" placeholder="Filter apps..." style="margin-top:10px">
+<table class="sortable" id="tblPossible" style="margin-top:6px">
+  $appTableHead
+  <tbody>
+  $possibleRowsHtml
+  </tbody>
 </table>
 </details>
 
@@ -798,6 +836,48 @@ $stateBannerHtml
 </ul>
 </section>
 </main>
+<script>
+(function () {
+  function cellVal(row, idx) {
+    var cell = row.cells[idx];
+    if (!cell) { return ''; }
+    if (cell.hasAttribute('data-v')) { return parseFloat(cell.getAttribute('data-v')); }
+    var t = cell.textContent.trim();
+    var n = parseFloat(t.replace(/[^0-9.\-]/g, ''));
+    if (t !== '' && !isNaN(n) && /^[0-9]/.test(t)) { return n; }
+    return t.toLowerCase();
+  }
+  document.querySelectorAll('table.sortable thead th').forEach(function (th) {
+    th.addEventListener('click', function () {
+      var table = th.closest('table');
+      var tbody = table.tBodies[0];
+      var idx = Array.prototype.indexOf.call(th.parentNode.children, th);
+      var dir = th.dataset.dir === 'desc' ? 'asc' : 'desc';
+      table.querySelectorAll('thead th').forEach(function (h) { delete h.dataset.dir; h.classList.remove('s-asc', 's-desc'); });
+      th.dataset.dir = dir;
+      th.classList.add(dir === 'asc' ? 's-asc' : 's-desc');
+      var rows = Array.prototype.slice.call(tbody.rows);
+      rows.sort(function (a, b) {
+        var va = cellVal(a, idx), vb = cellVal(b, idx);
+        if (typeof va === 'number' && typeof vb === 'number') { return dir === 'asc' ? va - vb : vb - va; }
+        va = String(va); vb = String(vb);
+        return dir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+      });
+      rows.forEach(function (r) { tbody.appendChild(r); });
+    });
+  });
+  document.querySelectorAll('input.tfilter').forEach(function (inp) {
+    inp.addEventListener('input', function () {
+      var table = document.getElementById(inp.dataset.target);
+      if (!table) { return; }
+      var q = inp.value.toLowerCase();
+      Array.prototype.forEach.call(table.tBodies[0].rows, function (r) {
+        r.style.display = r.textContent.toLowerCase().indexOf(q) === -1 ? 'none' : '';
+      });
+    });
+  });
+})();
+</script>
 </body>
 </html>
 "@

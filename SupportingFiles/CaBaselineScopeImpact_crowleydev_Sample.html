@@ -32,6 +32,12 @@
   .badge.reportonly { background:#dbeafe; color:#1e3a5f; }
   .note { color:var(--sub); font-size:13px; margin:8px 0 0; }
   a { color:var(--accent); }
+  table.sortable thead th { cursor:pointer; user-select:none; white-space:nowrap; }
+  table.sortable thead th:hover { background:#e2e9f2; }
+  th.s-asc::after { content:' \25B2'; font-size:9px; }
+  th.s-desc::after { content:' \25BC'; font-size:9px; }
+  .tfilter { margin:0 0 8px; padding:7px 12px; border:1px solid var(--line); border-radius:8px; width:300px; font:inherit; font-size:13px; background:var(--card); }
+  summary { cursor:pointer; color:var(--sub); }
   section.guide { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:6px 20px 16px; margin-top:26px; }
   section.guide li { margin:6px 0; }
 </style>
@@ -39,7 +45,7 @@
 <body>
 <header>
   <h1>Conditional Access Baseline Scopes Enforcement - Impact Report</h1>
-  <div class="meta">crowley.dev &middot; Tenant c0ffee00-c0de-4bed-feed-5eed00000001 &middot; Generated 2026-08-03 13:02 &middot; Read-only analysis</div>
+  <div class="meta">crowley.dev &middot; Tenant c0ffee00-c0de-4bed-feed-5eed00000001 &middot; Generated 2026-08-03 13:45 &middot; Read-only analysis</div>
 </header>
 <main>
 <div class="banner">
@@ -80,27 +86,45 @@
 </table>
 <p class="note">After enforcement, sign-ins that request only baseline scopes are evaluated against these policies with Windows Azure Active Directory as the audience. Report-only policies do not enforce yet but show what would apply.</p>
 
-<h2>Client applications at risk</h2>
-<table>
-  <tr><th>Application</th><th>Client type</th><th>Ownership</th><th>Consented scopes</th><th>Verdict</th><th>Sign-ins (last 7 d)</th><th>Users</th><th>Last seen</th><th>CA failures</th><th>Recommended action</th></tr>
-  <tr><td><strong>Badge Photo Portal</strong><div class='sub'>a9000000-0000-0000-0000-000000000002 <a href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/5e000000-0000-0000-0000-000000000002/appId/a9000000-0000-0000-0000-000000000002' target='_blank'>Enterprise app</a> &middot; <a href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/a9000000-0000-0000-0000-000000000002' target='_blank'>App registration</a></div><div class='flags'>Excluded from policy</div></td><td>Confidential</td><td>Tenant-owned</td><td class='scopes'>People.Read User.Read</td><td>Affected<br><span class='badge' style='background:#fcd34d;color:#402c00'>Medium</span></td><td>9</td><td>4</td><td>2026-08-03T12:15:00Z</td><td>1</td><td class='action'>Excluded confidential client consented only to baseline directory scopes: ask the developers to request OIDC scopes (openid, profile) instead of User.Read-style scopes. OIDC-only confidential clients are explicitly unaffected. Otherwise use Customize behavior.</td></tr>
-<tr><td><strong>Legacy Turnstile Sign-In</strong><div class='sub'>a9000000-0000-0000-0000-000000000007 <a href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/5e000000-0000-0000-0000-000000000007/appId/a9000000-0000-0000-0000-000000000007' target='_blank'>Enterprise app</a> &middot; <a href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/a9000000-0000-0000-0000-000000000007' target='_blank'>App registration</a></div><div class='flags'>Sign-in disabled</div></td><td>Public</td><td>Tenant-owned</td><td class='scopes'>openid User.Read</td><td>Affected<br><span class='badge' style='background:#fcd34d;color:#402c00'>Medium</span></td><td>0</td><td>0</td><td></td><td>0</td><td class='action'>Confirm the app can handle Conditional Access challenges (MFA / device claims). If it cannot, update it, or retain legacy behavior for the specific policy via the Customize behavior placeholder app.</td></tr>
-<tr><td><strong>Lobby Kiosk Check-In</strong><div class='sub'>a9000000-0000-0000-0000-000000000001 <a href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/5e000000-0000-0000-0000-000000000001/appId/a9000000-0000-0000-0000-000000000001' target='_blank'>Enterprise app</a> &middot; <a href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/a9000000-0000-0000-0000-000000000001' target='_blank'>App registration</a></div></td><td>Public</td><td>Tenant-owned</td><td class='scopes'>openid profile User.Read</td><td>Affected<br><span class='badge' style='background:#fcd34d;color:#402c00'>Medium</span></td><td>34</td><td>3</td><td>2026-08-03T14:15:00Z</td><td>2</td><td class='action'>Confirm the app can handle Conditional Access challenges (MFA / device claims). If it cannot, update it, or retain legacy behavior for the specific policy via the Customize behavior placeholder app.</td></tr>
-<tr><td><strong>Microsoft Azure CLI</strong><div class='sub'>04b07795-8ddb-461a-bbee-02f9e1bf7b46 <a href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/5e000000-0000-0000-0000-000000000008/appId/04b07795-8ddb-461a-bbee-02f9e1bf7b46' target='_blank'>Enterprise app</a></div></td><td>Public</td><td>Microsoft</td><td class='scopes'>offline_access openid profile User.Read</td><td>Affected<br><span class='badge' style='background:#fcd34d;color:#402c00'>Medium</span></td><td>12</td><td>5</td><td>2026-08-03T12:15:00Z</td><td>0</td><td class='action'>Interactive Microsoft client: users will start receiving the policy&#39;s challenge. Breaks where the policy blocks access or requires a managed device and devices are unmanaged, or where this client runs headless/automated. Review who uses it and from where.</td></tr>
-<tr><td><strong>TimeTrax Cloud</strong><div class='sub'>a9000000-0000-0000-0000-000000000006 <a href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/5e000000-0000-0000-0000-000000000006/appId/a9000000-0000-0000-0000-000000000006' target='_blank'>Enterprise app</a></div><div class='flags'>Excluded from policy</div></td><td>Unknown</td><td>ISV</td><td class='scopes'>openid User.Read</td><td>Affected (verify client type)<br><span class='badge' style='background:#fcd34d;color:#402c00'>Medium</span></td><td>3</td><td>1</td><td>2026-08-03T09:15:00Z</td><td>0</td><td class='action'>Verify with the vendor whether this client handles Conditional Access challenges. If it cannot, retain legacy behavior for the specific policy via the Customize behavior placeholder app until it is fixed.</td></tr>
-<tr><td><strong>Visual Studio Code</strong><div class='sub'>aebc6443-996d-45c2-90f0-388ff96faa56 <a href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/5e000000-0000-0000-0000-000000000009/appId/aebc6443-996d-45c2-90f0-388ff96faa56' target='_blank'>Enterprise app</a></div></td><td>Public</td><td>Microsoft</td><td class='scopes'>email offline_access openid profile</td><td>Affected<br><span class='badge' style='background:#fcd34d;color:#402c00'>Medium</span></td><td>100+</td><td>41</td><td>2026-08-03T14:15:00Z</td><td>6</td><td class='action'>Interactive Microsoft client: users will start receiving the policy&#39;s challenge. Breaks where the policy blocks access or requires a managed device and devices are unmanaged, or where this client runs headless/automated. Review who uses it and from where.</td></tr>
-<tr><td><strong>Cafeteria Menu Web</strong><div class='sub'>a9000000-0000-0000-0000-000000000003 <a href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/5e000000-0000-0000-0000-000000000003/appId/a9000000-0000-0000-0000-000000000003' target='_blank'>Enterprise app</a> &middot; <a href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/a9000000-0000-0000-0000-000000000003' target='_blank'>App registration</a></div></td><td>Confidential</td><td>Tenant-owned</td><td class='scopes'>User.Read</td><td>Monitor<br><span class='badge' style='background:#dbeafe;color:#1e3a5f'>Info</span></td><td></td><td></td><td></td><td></td><td class='action'>Not excluded from any triggering policy, so its Microsoft Graph sign-ins are already CA-enforced today; no change expected. Listed because its footprint is baseline-directory-only: if it is ever added to an exclusion, it lands in the affected set.</td></tr>
+<h2>Client applications at risk (6)</h2>
+<input class="tfilter" data-target="tblAffected" type="search" placeholder="Filter apps...">
+<table class="sortable" id="tblAffected">
+  <thead><tr><th>Application</th><th>Client type</th><th>Ownership</th><th>Consented scopes</th><th>Verdict</th><th>Sign-ins (last 7 d)</th><th>Users</th><th>Last seen</th><th>CA failures</th><th>Recommended action</th></tr></thead>
+  <tbody>
+  <tr><td><strong>Badge Photo Portal</strong><div class='sub'>a9000000-0000-0000-0000-000000000002 <a href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/5e000000-0000-0000-0000-000000000002/appId/a9000000-0000-0000-0000-000000000002' target='_blank'>Enterprise app</a> &middot; <a href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/a9000000-0000-0000-0000-000000000002' target='_blank'>App registration</a></div><div class='flags'>Excluded from policy</div></td><td>Confidential</td><td>Tenant-owned</td><td class='scopes'>People.Read User.Read</td><td data-v='3'>Affected<br><span class='badge' style='background:#fcd34d;color:#402c00'>Medium</span></td><td data-v='9'>9</td><td data-v='4'>4</td><td>2026-08-03T12:15:00Z</td><td data-v='1'>1</td><td class='action'>Excluded confidential client consented only to baseline directory scopes: ask the developers to request OIDC scopes (openid, profile) instead of User.Read-style scopes. OIDC-only confidential clients are explicitly unaffected. Otherwise use Customize behavior.</td></tr>
+<tr><td><strong>Legacy Turnstile Sign-In</strong><div class='sub'>a9000000-0000-0000-0000-000000000007 <a href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/5e000000-0000-0000-0000-000000000007/appId/a9000000-0000-0000-0000-000000000007' target='_blank'>Enterprise app</a> &middot; <a href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/a9000000-0000-0000-0000-000000000007' target='_blank'>App registration</a></div><div class='flags'>Sign-in disabled</div></td><td>Public</td><td>Tenant-owned</td><td class='scopes'>openid User.Read</td><td data-v='3'>Affected<br><span class='badge' style='background:#fcd34d;color:#402c00'>Medium</span></td><td data-v='0'>0</td><td data-v='0'>0</td><td></td><td data-v='0'>0</td><td class='action'>Confirm the app can handle Conditional Access challenges (MFA / device claims). If it cannot, update it, or retain legacy behavior for the specific policy via the Customize behavior placeholder app.</td></tr>
+<tr><td><strong>Lobby Kiosk Check-In</strong><div class='sub'>a9000000-0000-0000-0000-000000000001 <a href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/5e000000-0000-0000-0000-000000000001/appId/a9000000-0000-0000-0000-000000000001' target='_blank'>Enterprise app</a> &middot; <a href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/a9000000-0000-0000-0000-000000000001' target='_blank'>App registration</a></div></td><td>Public</td><td>Tenant-owned</td><td class='scopes'>openid profile User.Read</td><td data-v='3'>Affected<br><span class='badge' style='background:#fcd34d;color:#402c00'>Medium</span></td><td data-v='34'>34</td><td data-v='3'>3</td><td>2026-08-03T14:15:00Z</td><td data-v='2'>2</td><td class='action'>Confirm the app can handle Conditional Access challenges (MFA / device claims). If it cannot, update it, or retain legacy behavior for the specific policy via the Customize behavior placeholder app.</td></tr>
+<tr><td><strong>Microsoft Azure CLI</strong><div class='sub'>04b07795-8ddb-461a-bbee-02f9e1bf7b46 <a href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/5e000000-0000-0000-0000-000000000008/appId/04b07795-8ddb-461a-bbee-02f9e1bf7b46' target='_blank'>Enterprise app</a></div></td><td>Public</td><td>Microsoft</td><td class='scopes'>offline_access openid profile User.Read</td><td data-v='3'>Affected<br><span class='badge' style='background:#fcd34d;color:#402c00'>Medium</span></td><td data-v='12'>12</td><td data-v='5'>5</td><td>2026-08-03T12:15:00Z</td><td data-v='0'>0</td><td class='action'>Interactive Microsoft client: users will start receiving the policy&#39;s challenge. Breaks where the policy blocks access or requires a managed device and devices are unmanaged, or where this client runs headless/automated. Review who uses it and from where.</td></tr>
+<tr><td><strong>TimeTrax Cloud</strong><div class='sub'>a9000000-0000-0000-0000-000000000006 <a href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/5e000000-0000-0000-0000-000000000006/appId/a9000000-0000-0000-0000-000000000006' target='_blank'>Enterprise app</a></div><div class='flags'>Excluded from policy</div></td><td>Unknown</td><td>ISV</td><td class='scopes'>openid User.Read</td><td data-v='3'>Affected (verify client type)<br><span class='badge' style='background:#fcd34d;color:#402c00'>Medium</span></td><td data-v='3'>3</td><td data-v='1'>1</td><td>2026-08-03T09:15:00Z</td><td data-v='0'>0</td><td class='action'>Verify with the vendor whether this client handles Conditional Access challenges. If it cannot, retain legacy behavior for the specific policy via the Customize behavior placeholder app until it is fixed.</td></tr>
+<tr><td><strong>Visual Studio Code</strong><div class='sub'>aebc6443-996d-45c2-90f0-388ff96faa56 <a href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/5e000000-0000-0000-0000-000000000009/appId/aebc6443-996d-45c2-90f0-388ff96faa56' target='_blank'>Enterprise app</a></div></td><td>Public</td><td>Microsoft</td><td class='scopes'>email offline_access openid profile</td><td data-v='3'>Affected<br><span class='badge' style='background:#fcd34d;color:#402c00'>Medium</span></td><td data-v='100'>100+</td><td data-v='41'>41</td><td>2026-08-03T14:15:00Z</td><td data-v='6'>6</td><td class='action'>Interactive Microsoft client: users will start receiving the policy&#39;s challenge. Breaks where the policy blocks access or requires a managed device and devices are unmanaged, or where this client runs headless/automated. Review who uses it and from where.</td></tr>
 
+  </tbody>
 </table>
-<p class="note">All delegated consents (admin and per-user) were analyzed. Sign-in samples cover interactive sign-ins only, last 7 days, capped at 100 events and 40 apps. Confidential clients consented only to OIDC scopes were skipped as explicitly unaffected (1 found).</p>
+<p class="note">All delegated consents (admin and per-user) were analyzed. Sign-in samples cover interactive sign-ins only, last 7 days, capped at 100 events and 40 apps. Confidential clients consented only to OIDC scopes were skipped as explicitly unaffected (1 found). Click a column header to sort; sorted by severity, then name, by default.</p>
+
+<h2>Monitored apps (1)</h2>
+<details>
+<summary>Confidential clients with baseline-directory-only footprints that are NOT excluded from any triggering policy. Their Microsoft Graph sign-ins are already CA-enforced today, so no change is expected; they matter only if someone later adds them to a policy exclusion. Expand to review.</summary>
+<input class="tfilter" data-target="tblMonitor" type="search" placeholder="Filter apps..." style="margin-top:10px">
+<table class="sortable" id="tblMonitor" style="margin-top:6px">
+  <thead><tr><th>Application</th><th>Client type</th><th>Ownership</th><th>Consented scopes</th><th>Verdict</th><th>Sign-ins (last 7 d)</th><th>Users</th><th>Last seen</th><th>CA failures</th><th>Recommended action</th></tr></thead>
+  <tbody>
+  <tr><td><strong>Cafeteria Menu Web</strong><div class='sub'>a9000000-0000-0000-0000-000000000003 <a href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/5e000000-0000-0000-0000-000000000003/appId/a9000000-0000-0000-0000-000000000003' target='_blank'>Enterprise app</a> &middot; <a href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/a9000000-0000-0000-0000-000000000003' target='_blank'>App registration</a></div></td><td>Confidential</td><td>Tenant-owned</td><td class='scopes'>User.Read</td><td data-v='1'>Monitor<br><span class='badge' style='background:#dbeafe;color:#1e3a5f'>Info</span></td><td data-v='-1'></td><td data-v='-1'></td><td></td><td data-v='-1'></td><td class='action'>Not excluded from any triggering policy, so its Microsoft Graph sign-ins are already CA-enforced today; no change expected. Listed because its footprint is baseline-directory-only: if it is ever added to an exclusion, it lands in the affected set.</td></tr>
+
+  </tbody>
+</table>
+</details>
 
 <h2>Unverified ISV clients (1)</h2>
 <details>
 <summary>These baseline-only ISV apps are not excluded from any triggering policy and their client type cannot be determined from this tenant. Most are web SSO integrations (confidential, unaffected); any that are native or desktop clients are affected. Expand to review; sign-in activity helps separate live apps from dormant entries.</summary>
-<table style="margin-top:10px">
-  <tr><th>Application</th><th>Client type</th><th>Ownership</th><th>Consented scopes</th><th>Verdict</th><th>Sign-ins (last 7 d)</th><th>Users</th><th>Last seen</th><th>CA failures</th><th>Recommended action</th></tr>
-  <tr><td><strong>MuralBoard</strong><div class='sub'>a9000000-0000-0000-0000-00000000000a <a href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/5e000000-0000-0000-0000-00000000000a/appId/a9000000-0000-0000-0000-00000000000a' target='_blank'>Enterprise app</a></div></td><td>Unknown</td><td>ISV</td><td class='scopes'>openid profile User.Read</td><td>Possible<br><span class='badge' style='background:#dbeafe;color:#1e3a5f'>Low</span></td><td>6</td><td>2</td><td>2026-08-03T12:15:00Z</td><td>0</td><td class='action'>Affected only if this is actually a public (native or desktop) client. Multi-tenant web SSO integrations are confidential clients and are unaffected unless excluded from an All-resources policy. If users reach this app through a desktop or mobile client that requests only these scopes, treat it as Affected; sign-in activity below helps triage dormant entries.</td></tr>
+<input class="tfilter" data-target="tblPossible" type="search" placeholder="Filter apps..." style="margin-top:10px">
+<table class="sortable" id="tblPossible" style="margin-top:6px">
+  <thead><tr><th>Application</th><th>Client type</th><th>Ownership</th><th>Consented scopes</th><th>Verdict</th><th>Sign-ins (last 7 d)</th><th>Users</th><th>Last seen</th><th>CA failures</th><th>Recommended action</th></tr></thead>
+  <tbody>
+  <tr><td><strong>MuralBoard</strong><div class='sub'>a9000000-0000-0000-0000-00000000000a <a href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/5e000000-0000-0000-0000-00000000000a/appId/a9000000-0000-0000-0000-00000000000a' target='_blank'>Enterprise app</a></div></td><td>Unknown</td><td>ISV</td><td class='scopes'>openid profile User.Read</td><td data-v='2'>Possible<br><span class='badge' style='background:#dbeafe;color:#1e3a5f'>Low</span></td><td data-v='6'>6</td><td data-v='2'>2</td><td>2026-08-03T12:15:00Z</td><td data-v='0'>0</td><td class='action'>Affected only if this is actually a public (native or desktop) client. Multi-tenant web SSO integrations are confidential clients and are unaffected unless excluded from an All-resources policy. If users reach this app through a desktop or mobile client that requests only these scopes, treat it as Affected; sign-in activity below helps triage dormant entries.</td></tr>
 
+  </tbody>
 </table>
 </details>
 
@@ -116,5 +140,47 @@
 </ul>
 </section>
 </main>
+<script>
+(function () {
+  function cellVal(row, idx) {
+    var cell = row.cells[idx];
+    if (!cell) { return ''; }
+    if (cell.hasAttribute('data-v')) { return parseFloat(cell.getAttribute('data-v')); }
+    var t = cell.textContent.trim();
+    var n = parseFloat(t.replace(/[^0-9.\-]/g, ''));
+    if (t !== '' && !isNaN(n) && /^[0-9]/.test(t)) { return n; }
+    return t.toLowerCase();
+  }
+  document.querySelectorAll('table.sortable thead th').forEach(function (th) {
+    th.addEventListener('click', function () {
+      var table = th.closest('table');
+      var tbody = table.tBodies[0];
+      var idx = Array.prototype.indexOf.call(th.parentNode.children, th);
+      var dir = th.dataset.dir === 'desc' ? 'asc' : 'desc';
+      table.querySelectorAll('thead th').forEach(function (h) { delete h.dataset.dir; h.classList.remove('s-asc', 's-desc'); });
+      th.dataset.dir = dir;
+      th.classList.add(dir === 'asc' ? 's-asc' : 's-desc');
+      var rows = Array.prototype.slice.call(tbody.rows);
+      rows.sort(function (a, b) {
+        var va = cellVal(a, idx), vb = cellVal(b, idx);
+        if (typeof va === 'number' && typeof vb === 'number') { return dir === 'asc' ? va - vb : vb - va; }
+        va = String(va); vb = String(vb);
+        return dir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+      });
+      rows.forEach(function (r) { tbody.appendChild(r); });
+    });
+  });
+  document.querySelectorAll('input.tfilter').forEach(function (inp) {
+    inp.addEventListener('input', function () {
+      var table = document.getElementById(inp.dataset.target);
+      if (!table) { return; }
+      var q = inp.value.toLowerCase();
+      Array.prototype.forEach.call(table.tBodies[0].rows, function (r) {
+        r.style.display = r.textContent.toLowerCase().indexOf(q) === -1 ? 'none' : '';
+      });
+    });
+  });
+})();
+</script>
 </body>
 </html>
