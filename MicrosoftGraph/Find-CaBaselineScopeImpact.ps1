@@ -35,7 +35,8 @@
 #                             getByIds / appId-filter batches
 #   - sign-in logs:           OFF by default; -IncludeSignInSample runs one
 #                             bounded query per flagged app (top 100, last
-#                             -SignInSampleDays days) for activity evidence
+#                             -SignInSampleDays days, default 7) via Graph
+#                             $batch, 20 queries per round trip
 #
 # Coverage note: consent grants cannot prove what an app requests at runtime.
 # For authoritative detection Microsoft's method is the Customize-behavior
@@ -81,8 +82,10 @@ param(
     [switch]$UseDeviceCode,
 
     # Per-app bounded sign-in queries for flagged apps (adds AuditLog.Read.All to the consent).
+    # Default window is 7 days: sign-in log query cost scales with the window,
+    # and 7 days is enough to separate live apps from dormant ones.
     [switch]$IncludeSignInSample,
-    [ValidateRange(1, 30)][int]$SignInSampleDays = 14,
+    [ValidateRange(1, 30)][int]$SignInSampleDays = 7,
     [ValidateRange(1, 200)][int]$MaxAppsToSample = 40,
 
     # Only admin-consented (AllPrincipals) grants; skips per-user consents for speed in huge tenants.
@@ -125,6 +128,8 @@ $KnownPublicClients = @{
     '1b730954-1685-4b74-9bfd-dac224a7b894' = 'Azure AD PowerShell (legacy)'
     'd3590ed6-52b3-4102-aeff-aad2292ab01c' = 'Microsoft Office'
     '27922004-5251-4030-b22d-91ecd9a37ea4' = 'Outlook Mobile'
+    'f8d98a96-0999-43f5-8af3-69971c7bb423' = 'Apple Internet Accounts (iOS Accounts)'
+    'ed42a417-9cae-4d2d-a834-84ec9a60bb53' = 'GroupMe'
 }
 
 function Test-IsGuid { param([string]$Value) $g = [guid]::Empty; [guid]::TryParse($Value, [ref]$g) }
@@ -560,8 +565,12 @@ if ($IncludeSignInSample -and ($affectedRows.Count + $possibleRows.Count) -gt 0)
     # InvariantCulture: ':' is a culture placeholder in .NET format strings, and
     # locales like fi-FI render it as '.', which Graph rejects in the filter
     $since = $now.AddDays(-$SignInSampleDays).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ', [System.Globalization.CultureInfo]::InvariantCulture)
-    # Affected apps first; Possible (unverified ISV) apps fill remaining slots
-    $targets = @(@($affectedRows) + @($possibleRows) | Where-Object { $_.AppId } | Select-Object -First $MaxAppsToSample)
+    # Affected apps first; Possible (unverified ISV) apps fill remaining slots.
+    # Sign-in-disabled SPs cannot produce sign-ins: record zeros, skip the query.
+    foreach ($r in @($affectedRows) + @($possibleRows)) {
+        if (-not $r.SignInEnabled) { $r.RecentSignIns = '0'; $r.RecentUsers = '0'; $r.CaFailures = '0' }
+    }
+    $targets = @(@($affectedRows) + @($possibleRows) | Where-Object { $_.AppId -and $_.SignInEnabled } | Select-Object -First $MaxAppsToSample)
     for ($i = 0; $i -lt $targets.Count; $i += 20) {
         $chunk = @($targets[$i..([Math]::Min($i + 19, $targets.Count - 1))])
         $reqs = @()
