@@ -553,9 +553,9 @@ else {
     }
 }
 
-# Default report order: severity first, then app name (headers re-sort client-side)
+# Name order here; the render order is finalized after sampling (activity first)
 $SevRankMap = @{ 'Critical' = 5; 'High' = 4; 'Medium' = 3; 'Low' = 2; 'Info' = 1 }
-$affectedRows = @($rows | Where-Object { $_.Verdict -like 'Affected*' } | Sort-Object @{ e = { $SevRankMap[$_.Severity] }; Descending = $true }, App)
+$affectedRows = @($rows | Where-Object { $_.Verdict -like 'Affected*' } | Sort-Object App)
 $monitorRows  = @($rows | Where-Object { $_.Verdict -eq 'Monitor' } | Sort-Object App)
 $possibleRows = @($rows | Where-Object { $_.Verdict -eq 'Possible' } | Sort-Object App)
 
@@ -613,6 +613,22 @@ if ($IncludeSignInSample -and ($affectedRows.Count + $possibleRows.Count) -gt 0)
         Write-Host ("  sampled {0}/{1} apps" -f ([Math]::Min($i + 20, $targets.Count)), $targets.Count)
     }
 }
+
+# Final render order. Severity is uniform WITHIN each table (it derives from
+# the tenant's worst enforced control), so severity-first would collapse to
+# alphabetical; recent activity is the meaningful triage order when sampling
+# ran (live apps first, dormant tail last). Headers re-sort client-side.
+function Get-ActivityRank {
+    param($r)
+    $d = "$($r.RecentSignIns)" -replace '[^0-9]', ''
+    if ($d -ne '') { [int]$d } else { -1 }
+}
+if ($IncludeSignInSample) {
+    $affectedRows = @($affectedRows | Sort-Object @{ e = { Get-ActivityRank $_ }; Descending = $true }, App)
+    $possibleRows = @($possibleRows | Sort-Object @{ e = { Get-ActivityRank $_ }; Descending = $true }, App)
+}
+$defaultOrderNote = 'Rows are sorted by name; click a column header to re-sort.'
+if ($IncludeSignInSample) { $defaultOrderNote = 'Rows are sorted by recent sign-in activity, then name (unsampled rows last); click a column header to re-sort.' }
 
 # ---------------------------------------------------------------------------
 # Step 5: Outputs
@@ -798,7 +814,7 @@ $stateBannerHtml
   $appRowsHtml
   </tbody>
 </table>
-<p class="note">$(EscHtml $scanNote) $(EscHtml $sampleNote) Confidential clients consented only to OIDC scopes were skipped as explicitly unaffected ($oidcOnlyConfidential found). Click a column header to sort; sorted by severity, then name, by default.</p>
+<p class="note">$(EscHtml $scanNote) $(EscHtml $sampleNote) Confidential clients consented only to OIDC scopes were skipped as explicitly unaffected ($oidcOnlyConfidential found). $(EscHtml $defaultOrderNote)</p>
 
 <h2>Monitored apps ($($monitorRows.Count))</h2>
 <details>
