@@ -635,7 +635,10 @@ if ($IncludeSignInSample) { $defaultOrderNote = 'Rows are sorted by recent sign-
 # ---------------------------------------------------------------------------
 Write-Host 'Step 5: Writing report...' -ForegroundColor Cyan
 
-if ($rows) { $rows | Export-Csv -Path $csvPath -NoTypeInformation -Encoding UTF8 }
+# Export in report order (deterministic; raw $rows follows hashtable order,
+# which varies between runs)
+$orderedRows = @($affectedRows) + @($monitorRows) + @($possibleRows)
+if ($orderedRows) { $orderedRows | Export-Csv -Path $csvPath -NoTypeInformation -Encoding UTF8 }
 
 $sevColors = @{
     'Critical' = @{ fg = '#ffffff'; bg = '#b3261e' }
@@ -909,4 +912,4 @@ Write-Host ("Apps flagged AFFECTED: {0}" -f $affectedRows.Count) -ForegroundColo
 Write-Host ("Apps to monitor: {0}; unverified ISV clients (possible): {1}" -f $monitorRows.Count, $possibleRows.Count)
 Write-Host ''
 Write-Host "Report: $htmlPath"
-if ($rows) { Write-Host "CSV:    $csvPath" }
+if ($orderedRows) { Write-Host "CSV:    $csvPath" }
