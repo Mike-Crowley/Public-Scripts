@@ -66,7 +66,7 @@ Most scripts have companion blog posts with deeper context at [mikecrowley.us](h
 
 + [Get-EntraCredentialInfo.ps1](./OSINT/Get-EntraCredentialInfo.ps1)
 
-  + Query Entra for the CredentialType and openid-configuration of a user for a combined output.
+  + Query Entra for the CredentialType and openid-configuration of a user for a combined output. Accepts a UPN or a bare domain: given a domain it answers the domain half only (tenant GUID, region, managed vs federated) and returns the user-existence fields as null rather than a misleading INVALID_USER. Runs directly with a positional argument, accepts pipeline input, and still loads as a function via `Import-Module` or dot-sourcing.
 
 + [Request-FederationCerts.ps1](./OSINT/Request-FederationCerts.ps1)
 
