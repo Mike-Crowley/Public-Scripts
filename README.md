@@ -154,6 +154,10 @@ Most scripts have companion blog posts with deeper context at [mikecrowley.us](h
 
   + Analyze SharePoint Online and OneDrive storage for duplicate files, version history bloat, and preservation hold libraries via Microsoft Graph. Supports multi-site scanning with interactive site picker, dual-confidence duplicate detection, and generates an HTML dashboard with CSV/JSON exports.
 
++ [Resolve-SharingLinkAccess.ps1](./SharePointOnline/Resolve-SharingLinkAccess.ps1)
+
+  + Answer "who has access to this link?" without clicking it. Resolves a SharePoint/OneDrive sharing URL to the real item through the Graph `/shares` endpoint, deliberately omitting the `Prefer: redeemSharingLink` header so the investigator is never added to the ACL under review. Reports direct grants and sharing-link invitees (including the `grantedToIdentitiesV2` collection that hand-rolled scripts routinely miss), decodes SharePoint claim login names, expands Entra group membership with `-ExpandGroups`, flags anonymous/organization-wide/guest access by risk, and infers inherited vs unique permissions since SharePoint does not return `inheritedFrom`. Warns when a delegated sign-in can only see a partial ACL. Answers at the console, offers `-GridView` for interactive triage, and writes a timestamped HTML report plus CSV. `-IncludeAuditLog` pivots into the unified audit log to show who created the link, who was invited, and who actually used it.
+
 + [Restore-FromRecycleBin.ps1](./SharePointOnline/Restore-FromRecycleBin.ps1)
 
   + Restore files from SPO recycle bin in bulk with logging and progress tracking.
