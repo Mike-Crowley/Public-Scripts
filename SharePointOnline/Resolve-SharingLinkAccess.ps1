@@ -71,10 +71,6 @@
     be in the current user's or machine's certificate store.
     https://learn.microsoft.com/en-us/entra/identity-platform/howto-create-self-signed-certificate
 
-.PARAMETER UseDeviceCode
-    Device-code sign-in for hosts where interactive/WAM auth fails (VS Code integrated
-    console, ISE, ssh sessions).
-
 .PARAMETER Scopes
     Override the delegated scopes requested. The default set is read-only. Microsoft
     documents /shares as requiring Files.ReadWrite (delegated) or Files.ReadWrite.All /
@@ -252,8 +248,6 @@ param(
 
     [string]$ClientId,
     [string]$CertificateThumbprint,
-
-    [switch]$UseDeviceCode,
 
     [string[]]$Scopes = @('Sites.Read.All', 'Files.Read.All', 'Group.Read.All', 'User.Read.All'),
 
@@ -647,10 +641,31 @@ end {
     else {
         $connect.Scopes = $Scopes
         if ($TenantId) { $connect.TenantId = $TenantId }
-        if ($UseDeviceCode) { $connect.UseDeviceCode = $true }
         Write-Host 'Signing in to Microsoft Graph (delegated, read-only scopes)...' -ForegroundColor Cyan
     }
-    Connect-MgGraph @connect
+
+    # No device-code fallback on purpose. Device code is increasingly blocked by Conditional
+    # Access because it is the mechanic behind a common phishing pattern (attacker generates
+    # the code, victim authenticates it), so offering it here would mostly produce a second,
+    # more confusing failure in the tenants this script is aimed at.
+    #
+    # That leaves one real failure mode worth translating: the Windows broker (WAM) cannot
+    # get a parent window handle in a windowless host such as the VS Code integrated console
+    # or the ISE, and MSAL surfaces that as "A window handle must be configured", which does
+    # not hint at the fix.
+    try {
+        Connect-MgGraph @connect
+    }
+    catch {
+        $m = "$($_.Exception.Message)"
+        if ($m -match 'window handle|RuntimeBroker|Object reference not set') {
+            throw ("Interactive sign-in could not start: the Windows broker (WAM) has no parent window in this host " +
+                "($($Host.Name)). Run this from a regular PowerShell 7 console rather than an embedded terminal, or " +
+                'use app-only auth with -ClientId and -CertificateThumbprint, which needs no interactive window at ' +
+                "all. Original error: $m")
+        }
+        throw
+    }
 
     $ctx = Get-MgContext
     if (-not $ctx -or -not $ctx.TenantId) { throw 'Graph sign-in did not produce a usable context.' }
@@ -1308,7 +1323,13 @@ end {
                                 'and none could be derived from the link host. Pass -TenantId contoso.onmicrosoft.com.')
                         }
                     }
-                    elseif ($UseDeviceCode) { $exoConnect.Device = $true }
+                    # ExchangeOnlineManagement 3.7+ also brokers through WAM and crashes in
+                    # windowless hosts. -DisableWAM is the documented escape hatch and keeps
+                    # this on browser auth, which is the reason no device-code path is
+                    # offered here either.
+                    elseif ((Get-Command Connect-ExchangeOnline).Parameters.ContainsKey('DisableWAM') -and $Host.Name -ne 'ConsoleHost') {
+                        $exoConnect.DisableWAM = $true
+                    }
                     Write-Host '  Signing in to Exchange Online (audit log search)...'
                     Connect-ExchangeOnline @exoConnect
                 }
