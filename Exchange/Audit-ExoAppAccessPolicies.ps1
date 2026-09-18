@@ -70,6 +70,9 @@
       - EWS is blocked for non-Microsoft apps Oct 1, 2026 and removed after Apr 2027
 
 .LINK
+    https://mikecrowley.us/2026/07/10/exchange-app-access-policy-rbac-migration/
+
+.LINK
     https://learn.microsoft.com/en-us/exchange/permissions-exo/application-rbac
 
 .LINK

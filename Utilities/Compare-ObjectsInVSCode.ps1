@@ -30,6 +30,9 @@
 
 .LINK
     https://github.com/Mike-Crowley/Public-Scripts
+
+.LINK
+    https://mikecrowley.us/2024/07/04/compare-powershell-objects-with-vs-code/
 #>
 
 function Compare-ObjectsInVSCode {

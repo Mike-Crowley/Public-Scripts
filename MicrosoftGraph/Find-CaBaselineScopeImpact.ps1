@@ -8,6 +8,9 @@
 # "baseline scopes" enforcement change (rollout began June 15, 2026):
 #   https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-enforcement-resource-exclusions
 #
+# Blog post:
+#   https://mikecrowley.us/2026/08/03/ca-baseline-scopes-enforcement-impact/
+#
 # The change: when an ALL-resources CA policy has one or more resource
 # exclusions, sign-ins that request ONLY baseline scopes (openid, profile,
 # email, offline_access, User.Read, User.Read.All, User.ReadBasic.All,
