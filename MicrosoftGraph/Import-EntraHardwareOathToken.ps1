@@ -136,6 +136,9 @@
 
 .LINK
     https://github.com/Mike-Crowley/Public-Scripts
+
+.LINK
+    https://mikecrowley.us/2026/09/18/look-mom-no-hands-migrating-totp-oath-tokens-to-entra-id/
 #>
 
 #Requires -Modules Microsoft.Graph.Authentication

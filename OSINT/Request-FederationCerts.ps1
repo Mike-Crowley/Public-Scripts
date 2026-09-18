@@ -8,6 +8,9 @@
 
     Does not authenticate to the server or investigate individual ADFS farm nodes.
 
+    Runs in Windows PowerShell 5.1 and PowerShell 7, including PowerShell 7 on macOS and Linux
+    (only cross-platform .NET types are used: TcpClient, SslStream and X509Certificate2).
+
     Supports two modes:
         - ADFS mode: Query an ADFS farm by FQDN (uses -FarmFqdn parameter)
         - Entra ID mode: Query Entra ID federation metadata by URL (uses -MetadataUrl parameter)
@@ -51,10 +54,14 @@
     Author: Mike Crowley
     https://mikecrowley.us
 
-    See also: https://adfshelp.microsoft.com/MetadataExplorer/GetFederationMetadata
-
 .LINK
     https://github.com/Mike-Crowley/Public-Scripts
+
+.LINK
+    https://mikecrowley.us/2026/09/18/request-federationcerts/
+
+.LINK
+    https://learn.microsoft.com/en-us/entra/identity-platform/federation-metadata
 #>
 
 function Request-FederationCerts {
@@ -84,9 +91,20 @@ function Request-FederationCerts {
     }
 
     if ($FarmFqdn) {
-        # ADFS mode - test connection first
-        if (-not (Test-NetConnection -ComputerName $FarmFqdn -Port 443 -InformationLevel Quiet -Verbose)) {
-            Write-Warning "Cannot connect to: $FarmFqdn"
+        # ADFS mode - test connection first. Test-NetConnection only exists on Windows, so use a plain
+        # TcpClient probe instead; it works in Windows PowerShell and in PowerShell 7 on macOS and Linux.
+        $probe = [System.Net.Sockets.TcpClient]::new()
+        try {
+            $reachable = $probe.ConnectAsync($FarmFqdn, 443).Wait(5000) -and $probe.Connected
+        }
+        catch {
+            $reachable = $false
+        }
+        finally {
+            $probe.Dispose()
+        }
+        if (-not $reachable) {
+            Write-Warning "Cannot connect to: $FarmFqdn on port 443"
             return
         }
         $url = "https://$FarmFqdn/FederationMetadata/2007-06/FederationMetadata.xml"
@@ -101,9 +119,21 @@ function Request-FederationCerts {
     # Ensure TLS 1.2
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-    # For Windows PowerShell, ignore SSL warnings for self-signed certs
+    # For Windows PowerShell, ignore SSL warnings for self-signed certs.
+    # A PowerShell scriptblock assigned to ServerCertificateValidationCallback breaks Invoke-WebRequest in
+    # Windows PowerShell 5.1 ("The underlying connection was closed: An unexpected error occurred on a send")
+    # because the callback fires on a thread with no runspace, so use a compiled ICertificatePolicy instead.
     if (-not $IsPSCore) {
-        [Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }
+        if (-not ([System.Management.Automation.PSTypeName]'TrustAllCertsPolicy').Type) {
+            Add-Type @"
+using System.Net;
+using System.Security.Cryptography.X509Certificates;
+public class TrustAllCertsPolicy : ICertificatePolicy {
+    public bool CheckValidationResult(ServicePoint sp, X509Certificate cert, WebRequest req, int problem) { return true; }
+}
+"@
+        }
+        [Net.ServicePointManager]::CertificatePolicy = New-Object TrustAllCertsPolicy
     }
 
     # Make HTTPS connection and get content
@@ -174,10 +204,13 @@ function Request-FederationCerts {
         $KeyDescriptors = $xmlContent.EntityDescriptor.IDPSSODescriptor.KeyDescriptor
     }
 
-    $FirstSigningCert_base64 = ([array]($KeyDescriptors | Where-Object use -eq 'signing').KeyInfo)[0].X509Data.X509Certificate
+    # Guard the indexing: a document with no SP/IDP KeyDescriptors (e.g. WS-Fed-only metadata) would otherwise throw
+    $SigningKeyInfo = @(($KeyDescriptors | Where-Object use -eq 'signing').KeyInfo)
+
+    $FirstSigningCert_base64 = if ($SigningKeyInfo.Count -ge 1) { $SigningKeyInfo[0].X509Data.X509Certificate } else { $null }
     $FirstSigningCert_x509 = if ($FirstSigningCert_base64) { [Security.Cryptography.X509Certificates.X509Certificate2][System.Convert]::FromBase64String($FirstSigningCert_base64) } else { $null }
 
-    $SecondSigningCert_base64 = ([array]($KeyDescriptors | Where-Object use -eq 'signing').KeyInfo)[1].X509Data.X509Certificate
+    $SecondSigningCert_base64 = if ($SigningKeyInfo.Count -ge 2) { $SigningKeyInfo[1].X509Data.X509Certificate } else { $null }
     $SecondSigningCert_x509 = if ($SecondSigningCert_base64) { [Security.Cryptography.X509Certificates.X509Certificate2][System.Convert]::FromBase64String($SecondSigningCert_base64) } else { $null }
 
     $EncryptionCert_base64 = ($KeyDescriptors | Where-Object use -eq 'encryption').KeyInfo.X509Data.X509Certificate
