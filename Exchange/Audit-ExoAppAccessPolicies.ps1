@@ -67,6 +67,8 @@
       - DenyAccess policies have no RBAC equivalent and must not be migrated blindly
       - IMAP/POP app permissions have no RBAC roles (scoped via Add-MailboxPermission)
       - Delegated-only apps never needed a policy (policies constrain app-only access)
+      - Live RBAC assignments are listed with their scope; ScopeType 'Organization' means
+        org-wide, so such an assignment constrains nothing and the row is held for review
       - EWS is blocked for non-Microsoft apps Oct 1, 2026 and removed after Apr 2027
 
 .LINK
@@ -429,11 +431,19 @@ $Report = foreach ($Policy in $Policies) {
 
     # Actual (live) RBAC application role assignments in Exchange for this app. Detects
     # half-finished migrations: grants already revoked but the legacy policy left behind.
-    $LiveRbacRoles = @()
+    # Without -Resource every row comes back InScope = 'Not Run', but AllowedResourceScope
+    # and ScopeType are always populated, and they are the only way to tell a constrained
+    # assignment (CustomRecipientScope / AdministrativeUnit) from an unscoped one: ScopeType
+    # 'Organization' is org-wide, the same reach as the tenant-wide Entra grant.
+    $LiveRbacRoles = @()      # role names only (compared against the proposed $RbacRoles)
+    $LiveRbacScopes = @()     # 'role @ scope [ScopeType]' display strings for the report
+    $LiveRbacUnscoped = @()   # roles whose live assignment is org-wide (ScopeType = Organization)
     if ($ExoSpExists) {
         try {
-            $LiveRbacRoles = @(Test-ServicePrincipalAuthorization -Identity $AppId -ErrorAction Stop |
-                ForEach-Object { "$($_.RoleName)" } | Where-Object { $_ } | Select-Object -Unique)
+            $liveAuth = @(Test-ServicePrincipalAuthorization -Identity $AppId -ErrorAction Stop | Where-Object { "$($_.RoleName)" })
+            $LiveRbacRoles = @($liveAuth | ForEach-Object { "$($_.RoleName)" } | Select-Object -Unique)
+            $LiveRbacScopes = @($liveAuth | ForEach-Object { "$($_.RoleName) @ $($_.AllowedResourceScope) [$($_.ScopeType)]" } | Select-Object -Unique)
+            $LiveRbacUnscoped = @($liveAuth | Where-Object { "$($_.ScopeType)" -eq 'Organization' } | ForEach-Object { "$($_.RoleName)" } | Select-Object -Unique)
         }
         catch { }
     }
@@ -557,7 +567,7 @@ $Report = foreach ($Policy in $Policies) {
             # constrains nothing now (it only ever constrained Entra grants).
             $Issues += 'Finish Migration'
             $MigrationStatus = 'Review'
-            $MigrationBlockers += "Live RBAC role assignments exist ($($LiveRbacRoles -join ', ')) and no matching tenant-wide Entra grants remain. Migration is nearly complete - remove the legacy policy to finish."
+            $MigrationBlockers += "Live RBAC role assignments exist ($($LiveRbacScopes -join ', ')) and no matching tenant-wide Entra grants remain. Migration is nearly complete - remove the legacy policy to finish."
         }
         elseif ($DelegatedLookupOk -and $DelegatedExchangeScopes.Count -gt 0) {
             $Issues += 'Delegated Only'
@@ -579,7 +589,17 @@ $Report = foreach ($Policy in $Policies) {
     if ($RbacRoles.Count -gt 0 -and $LiveRbacRoles.Count -gt 0 -and $MigrationStatus -in @('Ready', 'Review')) {
         # Tenant-wide grants remain AND RBAC assignments exist - likely a partial cutover.
         $Issues += 'RBAC Live'
-        $MigrationBlockers += "Live RBAC assignments already exist ($($LiveRbacRoles -join ', ')) while tenant-wide grants remain. If a previous cutover was interrupted, rerun this block's cutover to finish revoking and remove the policy."
+        $MigrationBlockers += "Live RBAC assignments already exist ($($LiveRbacScopes -join ', ')) while tenant-wide grants remain. If a previous cutover was interrupted, rerun this block's cutover to finish revoking and remove the policy."
+    }
+    if ($LiveRbacUnscoped.Count -gt 0 -and $MigrationStatus -in @('Ready', 'Review')) {
+        # An org-wide assignment (ScopeType = Organization) has the same reach as the
+        # tenant-wide Entra grant, so revoking the grant constrains nothing, and removing the
+        # policy WIDENS access from the policy's target to every mailbox. The generated
+        # cutover gate cannot catch this on its own: InScope is True for every mailbox under
+        # an Organization scope, and Step 3 skips a role that already has any assignment.
+        $Issues += 'RBAC Unscoped'
+        $MigrationStatus = 'Review'
+        $MigrationBlockers += "Live RBAC assignment(s) with NO resource scope (ScopeType = Organization): $($LiveRbacUnscoped -join ', '). These grant org-wide access, so the cutover would not constrain the app. Re-scope them first (Set-ManagementRoleAssignment -CustomResourceScope) or remove them, then rerun the audit."
     }
 
     # --- Deny check AFTER relevance so those notes are preserved; deny dominates below ---
@@ -910,7 +930,11 @@ $Report = foreach ($Policy in $Policies) {
             $MigrationCommands += "`$cutoverTestMailbox = '<member mailbox>'   # REQUIRED: set to a mailbox inside the new scope"
         }
         $MigrationCommands += "`$auth = if (`$cutoverTestMailbox -notlike '<*') { @(Test-ServicePrincipalAuthorization -Identity '$AppId' -Resource `$cutoverTestMailbox -ErrorAction SilentlyContinue) } else { @() }"
-        $MigrationCommands += "`$missingRoles = @(`$expectedRoles | Where-Object { `$role = `$_; -not (`$auth | Where-Object { `$_.RoleName -eq `$role -and `$_.InScope }) })"
+        # InScope is a STRING ('True' / 'False' / 'Not Run'), never a [bool], so it has to be compared
+        # as text. Testing it for truthiness passed every role that merely existed, in scope or not,
+        # which let the cutover revoke grants for an app whose RBAC scope did not cover the mailbox.
+        $MigrationCommands += "# InScope is text ('True' / 'False' / 'Not Run'), not a boolean - compare it, never test it for truthiness."
+        $MigrationCommands += "`$missingRoles = @(`$expectedRoles | Where-Object { `$role = `$_; -not (`$auth | Where-Object { `$_.RoleName -eq `$role -and `"`$(`$_.InScope)`" -eq 'True' }) })"
         if ($NeedsFlattenGate) {
             $MigrationCommands += "`$nestedGroupsHandled = `$false   # set to `$true after adding nested-group members DIRECTLY to the group"
         }
@@ -970,7 +994,7 @@ $Report = foreach ($Policy in $Policies) {
         $MigrationCommands += "Get-ApplicationAccessPolicy -Identity '$PolicyIdSafe' | Format-List"
     }
     elseif ($Issues -contains 'Finish Migration') {
-        $MigrationCommands += "# FINISH MIGRATION: RBAC is live ($($LiveRbacRoles -join ', ')) and the matching tenant-wide"
+        $MigrationCommands += "# FINISH MIGRATION: RBAC is live ($($LiveRbacScopes -join ', ')) and the matching tenant-wide"
         $MigrationCommands += "# Entra grants are gone, so this legacy policy constrains nothing. Verify, then remove it:"
         if ($TestMailbox) {
             $MigrationCommands += "Test-ServicePrincipalAuthorization -Identity '$AppId' -Resource '$(EscSq $TestMailbox)' | Format-Table   # expect InScope = True"
@@ -1075,6 +1099,8 @@ $Report = foreach ($Policy in $Policies) {
         DelegatedPerms     = $DelegatedExchangeScopes -join '; '
         RbacRoles          = $RbacRoles -join '; '
         LiveRbacRoles      = $LiveRbacRoles -join '; '
+        LiveRbacScopes     = $LiveRbacScopes -join '; '
+        LiveRbacUnscoped   = $LiveRbacUnscoped -join '; '
         Issues             = $Issues -join ', '
         MigrationStatus    = $MigrationStatus
         MigrationBlockers  = $MigrationBlockers -join ' | '
@@ -1294,7 +1320,7 @@ $HtmlRows = foreach ($item in $SortedReport) {
     $issuesBadges = ''
     foreach ($iss in ($item.Issues -split ', ' | Where-Object { $_ })) {
         $cls = switch -Regex ($iss) {
-            'Orphaned|Target Missing|Deny|Error|Ambiguous|No EXO Recipient|Disabled by Microsoft' { 'crit' }
+            'Orphaned|Target Missing|Deny|Error|Ambiguous|No EXO Recipient|Disabled by Microsoft|RBAC Unscoped' { 'crit' }
             'Delegated' { 'purp' }
             'Nested|Resolved By Name|Members Unverified' { 'warn' }
             'Single Mailbox|Finish Migration|RBAC Live' { 'info' }
@@ -1321,13 +1347,23 @@ $HtmlRows = foreach ($item in $SortedReport) {
     if (-not $permsList) { $permsList = "<span class='none'>None granted</span>" }
 
     $rbacList = ''
-    if ($item.LiveRbacRoles) {
-        $rbacList += ($item.LiveRbacRoles -split '; ' | ForEach-Object { "<span class='rbac-role live' title='Assignment is LIVE in Exchange Online'>$(HtmlEnc $_) &#183; live</span>" }) -join ''
+    if ($item.LiveRbacScopes) {
+        # One chip per live assignment with its scope in the tooltip. An org-wide assignment
+        # (ScopeType Organization) is flagged on the chip itself: it constrains nothing.
+        $rbacList += (@($item.LiveRbacScopes -split '; ') | ForEach-Object {
+            $liveRole, $liveScope = $_ -split ' @ ', 2
+            if ("$liveScope".EndsWith('[Organization]')) {
+                "<span class='rbac-role live unscoped' title='LIVE but UNSCOPED - $(HtmlEnc $liveScope) reaches every mailbox'>$(HtmlEnc $liveRole) &#183; live &#183; unscoped</span>"
+            }
+            else {
+                "<span class='rbac-role live' title='Assignment is LIVE in Exchange Online - scope: $(HtmlEnc $liveScope)'>$(HtmlEnc $liveRole) &#183; live</span>"
+            }
+        }) -join ''
     }
     if ($item.RbacRoles) {
         $liveSet = @($item.LiveRbacRoles -split '; ')
         $rbacList += (@($item.RbacRoles -split '; ') | Where-Object { $liveSet -notcontains $_ } |
-            ForEach-Object { "<span class='rbac-role' title='Proposed - created by this row''s commands'>$(HtmlEnc $_)</span>" }) -join ''
+            ForEach-Object { "<span class='rbac-role' title='Proposed - created by this row&#39;s commands'>$(HtmlEnc $_)</span>" }) -join ''
     }
     if (-not $rbacList) { $rbacList = "<span class='none'>N/A</span>" }
 
@@ -1610,6 +1646,7 @@ $Html = @"
         .perm.delegated { background: var(--purp-bg); color: var(--purp-fg); }
         .rbac-role { background: var(--good-bg); color: var(--good-fg); }
         .rbac-role.live { background: var(--good-fg); color: #ffffff; }
+        .rbac-role.live.unscoped { background: var(--crit-solid); color: #ffffff; }
         .none { color: var(--ink-3); font-style: italic; font-size: 0.75rem; }
 
         .blockers { margin-top: 0.5rem; font-size: 0.75rem; color: var(--crit-fg); }
