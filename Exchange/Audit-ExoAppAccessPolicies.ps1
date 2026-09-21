@@ -73,7 +73,8 @@
       - Live RBAC assignments are listed with their scope; ScopeType 'Organization' means
         org-wide, so such an assignment constrains nothing and the row is held for review
       - The security scan seeds rows from Exchange RBAC as well as Entra grants: 'RBAC scoped'
-        is the finished state, 'RBAC org-wide' counts as unconstrained
+        means a scoped assignment is live (its breadth is not measured), 'RBAC org-wide'
+        counts as unconstrained
       - EWS is blocked for non-Microsoft apps Oct 1, 2026 and removed after Apr 2027
 
 .LINK
@@ -1363,6 +1364,9 @@ foreach ($rbacAppId in @($RbacAppIds.Keys | Sort-Object)) {
         if ($disRes.Ok -and $disRes.Data.isDisabled) { $rowDeactivated = $true }
     }
 
+    # Risk is permission sensitivity on every row of this table (a Legacy policy row shows
+    # High too); Constraint Status says what limits reach. Scoped rows are NOT tiered down,
+    # because how many mailboxes a scope matches is not measured here.
     $notes = @()
     $tier = 'low'
     if ($null -eq $rbacLive) {
@@ -1370,19 +1374,21 @@ foreach ($rbacAppId in @($RbacAppIds.Keys | Sort-Object)) {
         $tier = 'high'
         $notes += 'Has an Exchange RBAC assignment but Test-ServicePrincipalAuthorization failed - scope UNKNOWN; rerun the audit.'
     }
-    elseif ($rbacLive.Unscoped.Count -gt 0) {
-        # Same reach as a tenant-wide grant, so it is tiered like one and counted as unconstrained.
-        $constraint = 'RBAC org-wide'
+    else {
         foreach ($p in $rbacLive.Perms) {
             $t = Get-PermRiskTier $p
             if ($t -eq 'high') { $tier = 'high'; break }
             if ($t -eq 'medium') { $tier = 'medium' }
         }
-        $notes += "RBAC assignment(s) with NO resource scope (ScopeType = Organization): $($rbacLive.Unscoped -join ', '). No tenant-wide Entra grant remains, but an Organization-scoped assignment reaches every mailbox - re-scope it (Set-ManagementRoleAssignment -CustomResourceScope) or remove it."
-    }
-    else {
-        $constraint = 'RBAC scoped'
-        $notes += 'Constrained by Exchange RBAC: every live application role carries a resource scope and no tenant-wide Entra grant remains. This is the finished state - spot-check with Test-ServicePrincipalAuthorization -Resource.'
+        if ($rbacLive.Unscoped.Count -gt 0) {
+            # Same reach as a tenant-wide grant, so it is counted as unconstrained.
+            $constraint = 'RBAC org-wide'
+            $notes += "RBAC assignment(s) with NO resource scope (ScopeType = Organization): $($rbacLive.Unscoped -join ', '). No tenant-wide Entra grant remains, but an Organization-scoped assignment reaches every mailbox - re-scope it (Set-ManagementRoleAssignment -CustomResourceScope) or remove it."
+        }
+        else {
+            $constraint = 'RBAC scoped'
+            $notes += 'Constrained by Exchange RBAC: every live application role carries a resource scope and no tenant-wide Entra grant remains. Scope BREADTH is not measured here - a custom filter or an administrative unit can still match most of the tenant. Check each scope (Get-ManagementScope <name> | Format-List RecipientFilter, then Get-Recipient -RecipientPreviewFilter <filter> -ResultSize 501) before treating this as finished.'
+        }
     }
     if ($rowDeactivated -or $info.Data.accountEnabled -eq $false) {
         $notes += 'App cannot obtain new tokens right now (deactivated / sign-in disabled) - the RBAC assignment is live again the moment it is re-enabled.'
@@ -1947,7 +1953,7 @@ $Html = @"
         Entra ID or a live Exchange RBAC application role assignment. Admin consent alone grants <strong>org-wide</strong>
         mailbox access: scoping requires a policy or an RBAC assignment that the portal never prompts for (insecure by
         default). Rows marked Unconstrained or RBAC org-wide can reach every mailbox in the tenant; <em>RBAC scoped</em>
-        is the finished state (scoped assignment live, tenant-wide grant revoked). $(if ($MsFirstPartySkipped -gt 0) { "$MsFirstPartySkipped Microsoft first-party service principals were excluded." }) $(if ($DanglingGrants -gt 0) { "$DanglingGrants grant(s) pointing at deleted service principals were skipped." }) $(if ($DanglingRbac -gt 0) { "$DanglingRbac RBAC assignment(s) pointing at deleted service principals were skipped." })</p>
+        means a scoped assignment is live and the tenant-wide grant is gone; how many mailboxes that scope matches is not measured. $(if ($MsFirstPartySkipped -gt 0) { "$MsFirstPartySkipped Microsoft first-party service principals were excluded." }) $(if ($DanglingGrants -gt 0) { "$DanglingGrants grant(s) pointing at deleted service principals were skipped." }) $(if ($DanglingRbac -gt 0) { "$DanglingRbac RBAC assignment(s) pointing at deleted service principals were skipped." })</p>
         $SecurityScanNote
         <table>
             <thead>
