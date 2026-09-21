@@ -58,7 +58,7 @@
     https://github.com/Mike-Crowley/Public-Scripts
 
 .LINK
-    https://mikecrowley.us/2026/09/18/request-federationcerts/
+    https://mikecrowley.us/2026/09/21/request-federationcerts/
 
 .LINK
     https://learn.microsoft.com/en-us/entra/identity-platform/federation-metadata
