@@ -9,7 +9,10 @@
     granted permissions. Also scans Graph + Exchange Online service principals for apps
     holding Exchange application permissions with NO mailbox scoping (Microsoft's model
     is insecure-by-default: portal admin consent grants org-wide mailbox access unless a
-    policy or RBAC scope is added separately).
+    policy or RBAC scope is added separately). Apps whose only Exchange access is a live
+    RBAC application role assignment are listed too, with the assignment's scope, so a
+    finished migration stays visible and an assignment created without a resource scope
+    (org-wide reach) is caught.
 
     Outputs an HTML report and a companion .ps1 with the migration commands.
 
@@ -69,6 +72,8 @@
       - Delegated-only apps never needed a policy (policies constrain app-only access)
       - Live RBAC assignments are listed with their scope; ScopeType 'Organization' means
         org-wide, so such an assignment constrains nothing and the row is held for review
+      - The security scan seeds rows from Exchange RBAC as well as Entra grants: 'RBAC scoped'
+        is the finished state, 'RBAC org-wide' counts as unconstrained
       - EWS is blocked for non-Microsoft apps Oct 1, 2026 and removed after Apr 2027
 
 .LINK
@@ -1138,6 +1143,47 @@ try {
 }
 catch { $SecurityScanOk = $false }
 
+# What those assignments actually grant, per app: Test-ServicePrincipalAuthorization with no
+# -Resource lists every live application role with its AllowedResourceScope and ScopeType
+# (InScope is the text 'Not Run' on every row there and is not consulted). Only 'Application *'
+# roles count - those are the mailbox-data roles; anything else a service principal could hold
+# is admin/API surface that mailbox scoping does not apply to. A failed lookup is recorded as
+# $null so the app stays visible with an UNKNOWN scope instead of vanishing from the table.
+$RbacLiveByAppId = @{}
+foreach ($rbacAppId in @($RbacAppIds.Keys)) {
+    try {
+        $liveRows = @(Test-ServicePrincipalAuthorization -Identity $rbacAppId -ErrorAction Stop | Where-Object { "$($_.RoleName)" -like 'Application *' })
+        $RbacLiveByAppId[$rbacAppId] = @($liveRows | ForEach-Object {
+            @{
+                RoleName  = "$($_.RoleName)"
+                Perms     = @("$($_.GrantedPermissions)" -split '[,\s]+' | Where-Object { $_ })
+                ScopeType = "$($_.ScopeType)"
+                Display   = "$($_.RoleName) @ $($_.AllowedResourceScope) [$($_.ScopeType)]"
+            }
+        })
+    }
+    catch {
+        $RbacLiveByAppId[$rbacAppId] = $null
+        $SecurityScanOk = $false
+    }
+}
+
+function Get-RbacLive {
+    # One app's live application-role assignments for the security table: $null when the
+    # lookup failed (scope unknown); otherwise the 'role @ scope [ScopeType]' strings, the
+    # roles whose scope is Organization (org-wide), and the bare permission names for risk
+    # tiering. Apps with no RBAC assignment get an empty summary.
+    param([string]$AppId)
+    if (-not $RbacLiveByAppId.ContainsKey($AppId)) { return @{ Display = @(); Unscoped = @(); Perms = @() } }
+    $rows = $RbacLiveByAppId[$AppId]
+    if ($null -eq $rows) { return $null }
+    @{
+        Display  = @($rows | ForEach-Object { $_.Display })
+        Unscoped = @($rows | Where-Object { $_.ScopeType -eq 'Organization' } | ForEach-Object { $_.RoleName })
+        Perms    = @($rows | ForEach-Object { $_.Perms } | Select-Object -Unique)
+    }
+}
+
 function Get-PermRiskTier {
     param([string]$Perm)
     switch -Regex ($Perm) {
@@ -1197,6 +1243,7 @@ foreach ($principalId in @($GrantHolders.Keys)) {
             Deactivated  = $false
             IsHomeTenant = $false
             Perms        = @($GrantHolders[$principalId].Perms | Select-Object -Unique)
+            RbacLive     = @()
             Constraint   = 'Lookup failed'
             RiskTier     = 'high'
             Notes        = "Graph lookup for this service principal failed - constraint status UNKNOWN; rerun the audit. $($info.Error)"
@@ -1221,6 +1268,7 @@ foreach ($principalId in @($GrantHolders.Keys)) {
     $protoPerms = @($perms | Where-Object { $_ -match '^EXO:(IMAP|POP|SMTP)' })
     $hasRestrict = $RestrictPolicyAppIds -contains $appId
     $hasRbac = $RbacAppIds.ContainsKey($appId)
+    $rbacLive = Get-RbacLive $appId
 
     $notes = @()
     if ($graphEwsPerms.Count -eq 0 -and $protoPerms.Count -gt 0) {
@@ -1235,6 +1283,8 @@ foreach ($principalId in @($GrantHolders.Keys)) {
     elseif ($hasRbac) {
         $constraint = 'Unconstrained (RBAC exists)'
         $notes += 'Appears to have an Exchange RBAC assignment, BUT the tenant-wide Entra grant is still in place - grants are a union, so the RBAC scope is not limiting anything. Verify the assignment (Get-ManagementRoleAssignment / Test-ServicePrincipalAuthorization) covers these permissions, then revoke the Entra grant.'
+        if ($null -eq $rbacLive) { $notes += 'The RBAC scope lookup failed - assignment scope UNKNOWN; rerun the audit.' }
+        elseif ($rbacLive.Unscoped.Count -gt 0) { $notes += "RBAC assignment(s) with NO resource scope (ScopeType = Organization): $($rbacLive.Unscoped -join ', ') - re-scope them (Set-ManagementRoleAssignment -CustomResourceScope) before revoking the grant, or the app stays org-wide." }
     }
     else {
         $constraint = 'Unconstrained'
@@ -1260,13 +1310,100 @@ foreach ($principalId in @($GrantHolders.Keys)) {
         Deactivated  = $rowDeactivated
         IsHomeTenant = $isHomeTenant
         Perms        = $perms
+        RbacLive     = if ($null -ne $rbacLive) { $rbacLive.Display } else { @() }
         Constraint   = $constraint
         RiskTier     = $tier
         Notes        = $notes -join ' | '
     }
 }
 
-$UnconstrainedCount = @($SecurityRows | Where-Object { $_.Constraint -match '^Unconstrained' }).Count
+# Apps constrained ONLY by RBAC: scoped assignment live, tenant-wide Entra grant already
+# revoked. They hold no grant, so the enumeration above never sees them - yet they are the
+# apps an admin most wants confirmed after a migration, and an assignment created without a
+# resource scope (ScopeType Organization) is org-wide reach that nothing else reports.
+# Keyed by AppId, and the Entra service principal is looked up by that same unambiguous key.
+$DanglingRbac = 0
+foreach ($rbacAppId in @($RbacAppIds.Keys | Sort-Object)) {
+    $rbacLive = Get-RbacLive $rbacAppId
+    # No live 'Application *' role means nothing here to scope (admin/API roles are out of
+    # this table's scope). A failed lookup ($null) must still produce a row.
+    if ($null -ne $rbacLive -and $rbacLive.Display.Count -eq 0) { continue }
+
+    $exoSp = $ExchangeServicePrincipals[$rbacAppId]
+    $info = Invoke-GraphSafe "v1.0/servicePrincipals(appId='$rbacAppId')?`$select=id,appId,displayName,appOwnerOrganizationId,accountEnabled"
+    if ($info.NotFound) {
+        # Exchange pointer to a deleted Entra principal: no tokens, no reach. Counted, not listed.
+        $DanglingRbac++
+        continue
+    }
+    if (-not $info.Ok) {
+        $SecurityScanOk = $false
+        $SecurityRows += [PSCustomObject]@{
+            AppId        = $rbacAppId
+            SpObjectId   = "$($exoSp.ObjectId)"
+            DisplayName  = "$($exoSp.DisplayName)"
+            Enabled      = $null
+            Deactivated  = $false
+            IsHomeTenant = $false
+            Perms        = @()
+            RbacLive     = if ($null -ne $rbacLive) { $rbacLive.Display } else { @() }
+            Constraint   = 'Lookup failed'
+            RiskTier     = 'high'
+            Notes        = "Graph lookup for this service principal failed - constraint status UNKNOWN; rerun the audit. $($info.Error)"
+        }
+        continue
+    }
+    if ($GrantHolders.ContainsKey("$($info.Data.id)")) { continue }   # already handled by the grant enumeration above
+    if ($MsTenantIds -contains "$($info.Data.appOwnerOrganizationId)") { $MsFirstPartySkipped++; continue }
+
+    $isHomeTenant = ("$($info.Data.appOwnerOrganizationId)" -eq $TenantId)
+    $rowDeactivated = $false
+    if ($isHomeTenant) {
+        $disRes = Invoke-GraphSafe "beta/applications(appId='$rbacAppId')?`$select=isDisabled"
+        if ($disRes.Ok -and $disRes.Data.isDisabled) { $rowDeactivated = $true }
+    }
+
+    $notes = @()
+    $tier = 'low'
+    if ($null -eq $rbacLive) {
+        $constraint = 'Lookup failed'
+        $tier = 'high'
+        $notes += 'Has an Exchange RBAC assignment but Test-ServicePrincipalAuthorization failed - scope UNKNOWN; rerun the audit.'
+    }
+    elseif ($rbacLive.Unscoped.Count -gt 0) {
+        # Same reach as a tenant-wide grant, so it is tiered like one and counted as unconstrained.
+        $constraint = 'RBAC org-wide'
+        foreach ($p in $rbacLive.Perms) {
+            $t = Get-PermRiskTier $p
+            if ($t -eq 'high') { $tier = 'high'; break }
+            if ($t -eq 'medium') { $tier = 'medium' }
+        }
+        $notes += "RBAC assignment(s) with NO resource scope (ScopeType = Organization): $($rbacLive.Unscoped -join ', '). No tenant-wide Entra grant remains, but an Organization-scoped assignment reaches every mailbox - re-scope it (Set-ManagementRoleAssignment -CustomResourceScope) or remove it."
+    }
+    else {
+        $constraint = 'RBAC scoped'
+        $notes += 'Constrained by Exchange RBAC: every live application role carries a resource scope and no tenant-wide Entra grant remains. This is the finished state - spot-check with Test-ServicePrincipalAuthorization -Resource.'
+    }
+    if ($rowDeactivated -or $info.Data.accountEnabled -eq $false) {
+        $notes += 'App cannot obtain new tokens right now (deactivated / sign-in disabled) - the RBAC assignment is live again the moment it is re-enabled.'
+    }
+
+    $SecurityRows += [PSCustomObject]@{
+        AppId        = $rbacAppId
+        SpObjectId   = "$($info.Data.id)"
+        DisplayName  = if ($info.Data.displayName) { "$($info.Data.displayName)".Trim() } else { "$($exoSp.DisplayName)" }
+        Enabled      = $info.Data.accountEnabled
+        Deactivated  = $rowDeactivated
+        IsHomeTenant = $isHomeTenant
+        Perms        = @()
+        RbacLive     = if ($null -ne $rbacLive) { $rbacLive.Display } else { @() }
+        Constraint   = $constraint
+        RiskTier     = $tier
+        Notes        = $notes -join ' | '
+    }
+}
+
+$UnconstrainedCount = @($SecurityRows | Where-Object { $_.Constraint -match '^Unconstrained|^RBAC org-wide' }).Count
 
 #endregion Security scan
 
@@ -1409,12 +1546,12 @@ $HtmlRows = foreach ($item in $SortedReport) {
 
 # Build security table rows (unconstrained first, then by risk)
 $SecuritySorted = $SecurityRows | Sort-Object @{Expression = { switch -Regex ($_.Constraint) {
-    '^Unconstrained' { 0 } 'Mailbox-permission' { 1 } default { 2 } } } },
+    '^Unconstrained|^RBAC org-wide' { 0 } 'Mailbox-permission' { 1 } '^RBAC scoped' { 3 } default { 2 } } } },
     @{Expression = { switch ($_.RiskTier) { 'high' { 0 } 'medium' { 1 } default { 2 } } } }, DisplayName
 
 $SecurityRowsHtml = foreach ($row in $SecuritySorted) {
     $constraintBadge = switch -Regex ($row.Constraint) {
-        '^Unconstrained' { "<span class='status-badge unconstrained'>&#9888; $(HtmlEnc $row.Constraint)</span>" }
+        '^Unconstrained|^RBAC org-wide' { "<span class='status-badge unconstrained'>&#9888; $(HtmlEnc $row.Constraint)</span>" }
         'Mailbox-permission' { "<span class='status-badge review'>&#9888; Verify grants</span>" }
         'Lookup failed' { "<span class='status-badge error'>&#8252; Lookup failed</span>" }
         default { "<span class='status-badge ready'>&#10003; $(HtmlEnc $row.Constraint)</span>" }
@@ -1425,6 +1562,13 @@ $SecurityRowsHtml = foreach ($row in $SecuritySorted) {
         default { "<span class='badge neut'>Low</span>" }
     }
     $permChips = ($row.Perms | ForEach-Object { "<span class='perm keep'>$(HtmlEnc $_)</span>" }) -join ''
+    # Live RBAC application roles as 'role @ scope [ScopeType]'; an Organization scope is
+    # org-wide reach and gets the same red chip the policy table uses.
+    $permChips += (@($row.RbacLive) | Where-Object { $_ } | ForEach-Object {
+        $cls = if ("$_".EndsWith('[Organization]')) { 'rbac-role live unscoped' } else { 'rbac-role live' }
+        "<span class='$cls' title='Live Exchange RBAC assignment: role @ scope [ScopeType]'>$(HtmlEnc $_) &#183; live</span>"
+    }) -join ''
+    if (-not $permChips) { $permChips = "<span class='none'>None</span>" }
     # App registration link only for home-tenant apps (a registration exists here). It is
     # the actionable one for a deactivated app - reactivate and API permissions live there.
     $appRegLink = if ($row.IsHomeTenant -and $row.AppId) {
@@ -1434,7 +1578,7 @@ $SecurityRowsHtml = foreach ($row in $SecuritySorted) {
     $disabledNote = ''
     if ($row.Deactivated) { $disabledNote += " <span class='badge neut'>deactivated</span>" }
     if ($row.Enabled -eq $false) { $disabledNote += " <span class='badge neut'>sign-in disabled</span>" }
-    $rowCls = if ($row.Constraint -match '^Unconstrained') { 'status-blocked' } else { '' }
+    $rowCls = if ($row.Constraint -match '^Unconstrained|^RBAC org-wide') { 'status-blocked' } else { '' }
     @"
     <tr class="$rowCls">
         <td><strong>$(HtmlEnc $row.DisplayName)</strong>$disabledNote<br><span class="app-id">$(HtmlEnc $row.AppId)</span><br>$links</td>
@@ -1798,11 +1942,12 @@ $Html = @"
             </tbody>
         </table>
 
-        <h2 id="security">Exchange App Permissions Without Mailbox Scoping</h2>
-        <p class="section-sub">Every non-Microsoft service principal holding Exchange <em>application</em> permissions.
-        Admin consent alone grants <strong>org-wide</strong> mailbox access &mdash; scoping requires a policy or an RBAC
-        assignment that the portal never prompts for (insecure by default). Rows marked Unconstrained can reach every
-        mailbox in the tenant. $(if ($MsFirstPartySkipped -gt 0) { "$MsFirstPartySkipped Microsoft first-party service principals were excluded." }) $(if ($DanglingGrants -gt 0) { "$DanglingGrants grant(s) pointing at deleted service principals were skipped." })</p>
+        <h2 id="security">Exchange App Access and Mailbox Scoping</h2>
+        <p class="section-sub">Every non-Microsoft service principal holding Exchange <em>application</em> permissions in
+        Entra ID or a live Exchange RBAC application role assignment. Admin consent alone grants <strong>org-wide</strong>
+        mailbox access: scoping requires a policy or an RBAC assignment that the portal never prompts for (insecure by
+        default). Rows marked Unconstrained or RBAC org-wide can reach every mailbox in the tenant; <em>RBAC scoped</em>
+        is the finished state (scoped assignment live, tenant-wide grant revoked). $(if ($MsFirstPartySkipped -gt 0) { "$MsFirstPartySkipped Microsoft first-party service principals were excluded." }) $(if ($DanglingGrants -gt 0) { "$DanglingGrants grant(s) pointing at deleted service principals were skipped." }) $(if ($DanglingRbac -gt 0) { "$DanglingRbac RBAC assignment(s) pointing at deleted service principals were skipped." })</p>
         $SecurityScanNote
         <table>
             <thead>
@@ -1810,7 +1955,7 @@ $Html = @"
                     <th>Application</th>
                     <th>Constraint Status</th>
                     <th>Risk</th>
-                    <th>Exchange App Permissions</th>
+                    <th>Entra Grants &amp; RBAC Roles</th>
                 </tr>
             </thead>
             <tbody>
