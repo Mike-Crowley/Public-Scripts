@@ -1,4 +1,6 @@
-#Requires -Modules ExchangeOnlineManagement, Microsoft.Graph.Authentication
+# Microsoft.Graph.Authentication 2.4.0 (Aug 2023) introduced Connect-MgGraph -NoWelcome; older
+# builds fail parameter binding on the $graphConnect splat, so pin the minimum here.
+#Requires -Modules ExchangeOnlineManagement, @{ ModuleName = 'Microsoft.Graph.Authentication'; ModuleVersion = '2.4.0' }
 
 <#
 .SYNOPSIS
