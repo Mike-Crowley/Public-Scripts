@@ -1,4 +1,4 @@
-﻿# Microsoft.Graph.Authentication 2.4.0 (Aug 2023) introduced Connect-MgGraph -NoWelcome; older
+# Microsoft.Graph.Authentication 2.4.0 (Aug 2023) introduced Connect-MgGraph -NoWelcome; older
 # builds fail parameter binding on the $graphConnect splat, so pin the minimum here.
 # Graph is listed FIRST on purpose: #Requires imports in list order, and in Windows PowerShell 5.1
 # importing ExchangeOnlineManagement first loads its own System.Threading.Tasks.Extensions, after
@@ -108,7 +108,9 @@ param(
     [switch]$UseDeviceCode
 )
 
-Disconnect-MgGraph -ErrorAction SilentlyContinue
+# A process-scoped Graph context outlives the script, so a reused window would otherwise inherit
+# the previous tenant. Disconnect-MgGraph returns the context it tears down; keep that off the screen.
+$null = Disconnect-MgGraph -ErrorAction SilentlyContinue
 $graphConnect = @{ NoWelcome = $true; ContextScope = 'Process'; Scopes = @('Application.Read.All', 'Directory.Read.All') }
 $exoConnect = @{ ShowBanner = $false }
 if ($UseDeviceCode) {
@@ -164,6 +166,12 @@ catch {
 $TenantName = ($Org.value[0].displayName -replace '[^\w\-]', '')
 $TenantId = "$($Org.value[0].id)"
 
+# Browser auth cannot reuse the broker's sign-in, but a login hint pre-fills the account and lets a
+# browser that already holds a session for it pass silently. A hint, not a lock: another account
+# can still be picked.
+$graphAccount = "$((Get-MgContext).Account)"
+if (-not $UseDeviceCode -and $graphAccount) { $exoConnect['UserPrincipalName'] = $graphAccount }
+
 Write-Host "Sign-in 2 of 2: Exchange Online ($($Org.value[0].displayName))" -ForegroundColor Cyan
 $WamCrashPattern = 'RuntimeBroker|Object reference not set|window handle'
 $ExoConnected = $false
@@ -180,6 +188,7 @@ if (-not $ExoConnected) {
             'device-code sign-in. If Conditional Access blocks device code, rerun in a fresh PowerShell 7 console ' +
             '(a broker attempt earlier in this session poisons later ones).')
         $null = $exoConnect.Remove('DisableWAM')
+        $null = $exoConnect.Remove('UserPrincipalName')
         $exoConnect['Device'] = $true
         try {
             Connect-ExchangeOnline @exoConnect
