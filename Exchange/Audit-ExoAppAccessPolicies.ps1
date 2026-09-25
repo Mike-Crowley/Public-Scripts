@@ -1,6 +1,10 @@
-# Microsoft.Graph.Authentication 2.4.0 (Aug 2023) introduced Connect-MgGraph -NoWelcome; older
+﻿# Microsoft.Graph.Authentication 2.4.0 (Aug 2023) introduced Connect-MgGraph -NoWelcome; older
 # builds fail parameter binding on the $graphConnect splat, so pin the minimum here.
-#Requires -Modules ExchangeOnlineManagement, @{ ModuleName = 'Microsoft.Graph.Authentication'; ModuleVersion = '2.4.0' }
+# Graph is listed FIRST on purpose: #Requires imports in list order, and in Windows PowerShell 5.1
+# importing ExchangeOnlineManagement first loads its own System.Threading.Tasks.Extensions, after
+# which Microsoft.Graph.Authentication 2.34+ fails to load (TypeLoadException: 'GetTokenAsync' does
+# not have an implementation; msgraph-sdk-powershell issue 3479). Graph first loads clean in 5.1 and 7.
+#Requires -Modules @{ ModuleName = 'Microsoft.Graph.Authentication'; ModuleVersion = '2.4.0' }, ExchangeOnlineManagement
 
 <#
 .SYNOPSIS
