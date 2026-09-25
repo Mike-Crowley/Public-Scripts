@@ -16,7 +16,9 @@
     finished migration stays visible and an assignment created without a resource scope
     (org-wide reach) is caught.
 
-    Outputs an HTML report and a companion .ps1 with the migration commands.
+    Outputs an HTML report and a companion .ps1 with the migration commands, plus a verified
+    revoke block for each app whose scoped RBAC assignment is live while the tenant-wide
+    grant still stands.
 
     Safety model of the generated commands:
       - Steps 1-4 (service principal pointer, management scope, role assignments, test)
@@ -110,15 +112,19 @@ if ($UseDeviceCode) {
     $exoConnect['Device'] = $true
 }
 
-# ExchangeOnlineManagement 3.7+ signs in through the Windows broker (WAM) by default,
-# and MSAL's broker crashes (NullReferenceException in RuntimeBroker, or "window handle
-# must be configured") in windowless hosts like the VS Code integrated console and ISE.
-# -DisableWAM is the documented escape hatch, but 3.9.2 has been observed constructing
-# the broker anyway. Connect-MgGraph survives these hosts by silently falling back to
-# device code; this ladder gives Connect-ExchangeOnline the same resilience:
-#   interactive (browser preferred off-console) -> -DisableWAM retry -> device code.
+# Graph signs in first, and on Windows Connect-MgGraph uses the Windows broker (WAM) by
+# default, which starts the native msalruntime. ExchangeOnlineManagement 3.7+ signs in through
+# the broker too, and its own copy of MSAL then finds that runtime already started, so its
+# RuntimeBroker constructor throws a NullReferenceException. That happens in every host, not
+# just windowless ones, and once a broker attempt has run in this session a -DisableWAM retry
+# still takes the broker path (observed on 3.10.1), so -DisableWAM has to be on the FIRST
+# Connect-ExchangeOnline call. Traced in msgraph-sdk-powershell issue 3394. The ladder is:
+#   browser auth (-DisableWAM) -> device code.
+# Reversing the order (Exchange first) fails differently on current releases (WithLogging
+# MissingMethodException in Connect-MgGraph); Graph PR 3789 (merged, not yet released as of
+# 2.40.0) is expected to fix that direction.
 $ExoHasDisableWam = (Get-Command Connect-ExchangeOnline).Parameters.ContainsKey('DisableWAM')
-if (-not $UseDeviceCode -and $ExoHasDisableWam -and $Host.Name -ne 'ConsoleHost') {
+if (-not $UseDeviceCode -and $ExoHasDisableWam) {
     $exoConnect['DisableWAM'] = $true
 }
 
@@ -131,7 +137,16 @@ Write-Host 'Sign-in 1 of 2: Microsoft Graph' -ForegroundColor Cyan
 if ($UseDeviceCode) {
     Write-Host '  (Graph and Exchange Online each issue their own device code - complete this one first)'
 }
-Connect-MgGraph @graphConnect
+# A failed sign-in must stop here. Nothing sets $ErrorActionPreference, so without this a
+# closed browser window, a Conditional Access block, or a parameter the installed module
+# does not know falls through to the organization query, whose failure is then mislabelled
+# as a consent problem.
+try {
+    Connect-MgGraph @graphConnect -ErrorAction Stop
+}
+catch {
+    throw "Microsoft Graph sign-in failed: $_"
+}
 
 try {
     $Org = Invoke-MgGraphRequest -Uri "v1.0/organization" -ErrorAction Stop
@@ -154,23 +169,12 @@ try {
 }
 catch {
     if ("$_" -notmatch $WamCrashPattern) { throw }
-    if ($ExoHasDisableWam -and -not $exoConnect.ContainsKey('DisableWAM')) {
-        Write-Warning 'Windows broker (WAM) sign-in failed in this host - retrying with browser auth (-DisableWAM).'
-        $exoConnect['DisableWAM'] = $true
-        try {
-            Connect-ExchangeOnline @exoConnect
-            $ExoConnected = $true
-        }
-        catch {
-            if ("$_" -notmatch $WamCrashPattern) { throw }
-        }
-    }
 }
 if (-not $ExoConnected) {
     if ($PSVersionTable.PSEdition -eq 'Core') {
-        Write-Warning ('Exchange Online sign-in keeps hitting the WAM broker crash (it can occur even with -DisableWAM ' +
-            'in windowless hosts) - falling back to device-code sign-in, as Connect-MgGraph does automatically. ' +
-            'If Conditional Access blocks device code, run this script from a regular PowerShell 7 console instead.')
+        Write-Warning ('Exchange Online sign-in hit the WAM broker crash even with -DisableWAM - falling back to ' +
+            'device-code sign-in. If Conditional Access blocks device code, rerun in a fresh PowerShell 7 console ' +
+            '(a broker attempt earlier in this session poisons later ones).')
         $null = $exoConnect.Remove('DisableWAM')
         $exoConnect['Device'] = $true
         try {
@@ -178,13 +182,12 @@ if (-not $ExoConnected) {
         }
         catch {
             throw ("The device-code fallback also failed (Conditional Access may block device-code sign-in). " +
-                   "Run this script from a regular PowerShell 7 console, where broker sign-in works. Original error: $_")
+                   "Rerun in a fresh PowerShell 7 console. Original error: $_")
         }
     }
     else {
-        throw ('Connect-ExchangeOnline cannot initialize the Windows broker (WAM) in this host (VS Code integrated ' +
-               'console / ISE), and the device-code fallback (-Device) requires PowerShell 7. Run the script from a ' +
-               'regular PowerShell 7 console.')
+        throw ('Connect-ExchangeOnline hit the WAM broker crash, and the device-code fallback (-Device) requires ' +
+               'PowerShell 7. Rerun the script in a fresh PowerShell 7 console.')
     }
 }
 
@@ -1161,6 +1164,7 @@ foreach ($rbacAppId in @($RbacAppIds.Keys)) {
                 RoleName  = "$($_.RoleName)"
                 Perms     = @("$($_.GrantedPermissions)" -split '[,\s]+' | Where-Object { $_ })
                 ScopeType = "$($_.ScopeType)"
+                Scope     = "$($_.AllowedResourceScope)"
                 Display   = "$($_.RoleName) @ $($_.AllowedResourceScope) [$($_.ScopeType)]"
             }
         })
@@ -1174,16 +1178,19 @@ foreach ($rbacAppId in @($RbacAppIds.Keys)) {
 function Get-RbacLive {
     # One app's live application-role assignments for the security table: $null when the
     # lookup failed (scope unknown); otherwise the 'role @ scope [ScopeType]' strings, the
-    # roles whose scope is Organization (org-wide), and the bare permission names for risk
-    # tiering. Apps with no RBAC assignment get an empty summary.
+    # roles whose scope is Organization (org-wide), the live role names (for matching grants
+    # against them), the custom scope names (to find a test mailbox), and the bare permission
+    # names for risk tiering. Apps with no RBAC assignment get an empty summary.
     param([string]$AppId)
-    if (-not $RbacLiveByAppId.ContainsKey($AppId)) { return @{ Display = @(); Unscoped = @(); Perms = @() } }
+    if (-not $RbacLiveByAppId.ContainsKey($AppId)) { return @{ Display = @(); Unscoped = @(); Perms = @(); Roles = @(); Scopes = @() } }
     $rows = $RbacLiveByAppId[$AppId]
     if ($null -eq $rows) { return $null }
     @{
         Display  = @($rows | ForEach-Object { $_.Display })
         Unscoped = @($rows | Where-Object { $_.ScopeType -eq 'Organization' } | ForEach-Object { $_.RoleName })
         Perms    = @($rows | ForEach-Object { $_.Perms } | Select-Object -Unique)
+        Roles    = @($rows | ForEach-Object { $_.RoleName } | Select-Object -Unique)
+        Scopes   = @($rows | Where-Object { $_.ScopeType -ne 'Organization' -and $_.Scope } | ForEach-Object { $_.Scope } | Select-Object -Unique)
     }
 }
 
@@ -1196,7 +1203,28 @@ function Get-PermRiskTier {
     }
 }
 
-$GrantHolders = @{}   # principal objectId -> @{ Perms = [list]; }
+# One recipient inside a custom recipient scope, so a generated cutover gate can run without
+# hand edits. Best effort: an administrative-unit or exclusive scope, or a filter the preview
+# rejects, yields '' and the block gets a placeholder instead. Cached per scope name.
+$ScopeMemberCache = @{}
+function Get-ScopeTestMailbox {
+    param([string]$ScopeName)
+    if (-not $ScopeName) { return '' }
+    if ($ScopeMemberCache.ContainsKey($ScopeName)) { return $ScopeMemberCache[$ScopeName] }
+    $found = ''
+    try {
+        $scope = Get-ManagementScope -Identity $ScopeName -ErrorAction Stop
+        if ($scope.RecipientFilter) {
+            $hit = @(Get-Recipient -RecipientPreviewFilter "$($scope.RecipientFilter)" -ResultSize 1 -ErrorAction Stop)
+            if ($hit.Count -gt 0 -and $hit[0].PrimarySmtpAddress) { $found = "$($hit[0].PrimarySmtpAddress)" }
+        }
+    }
+    catch { $found = '' }
+    $ScopeMemberCache[$ScopeName] = $found
+    $found
+}
+
+$GrantHolders = @{}   # principal objectId -> @{ DisplayName; Perms = [display strings]; Grants = [@{ Display; Id; Role }] }
 foreach ($resAppId in @($GraphAppId, $ExoAppId)) {
     $resSp = $ServicePrincipals[$resAppId]
     $roleNameById = @{}
@@ -1219,9 +1247,13 @@ foreach ($resAppId in @($GraphAppId, $ExoAppId)) {
             if (-not $isRelevant -and $resAppId -eq $ExoAppId -and $permName -match '^(Mail|Calendars|Contacts|MailboxSettings)\.') { $isRelevant = $true }
             if (-not $isRelevant) { continue }
             if (-not $GrantHolders.ContainsKey($a.principalId)) {
-                $GrantHolders[$a.principalId] = @{ DisplayName = "$($a.principalDisplayName)"; Perms = @() }
+                $GrantHolders[$a.principalId] = @{ DisplayName = "$($a.principalDisplayName)"; Perms = @(); Grants = @() }
             }
             $GrantHolders[$a.principalId].Perms += "$prefix`:$permName"
+            # Keep the assignment id and the RBAC role that replaces it (if any): a scan row with
+            # live roles gets a generated, verified revoke block built from these.
+            $rbacRole = if ($resAppId -eq $GraphAppId) { $GraphRoleMap[$permName] } else { $ExoRoleMap[$permName] }
+            $GrantHolders[$a.principalId].Grants += @{ Display = "$prefix`:$permName"; Id = "$($a.id)"; Role = $rbacRole }
         }
         $uri = $res.Data.'@odata.nextLink'
     }
@@ -1250,6 +1282,7 @@ foreach ($principalId in @($GrantHolders.Keys)) {
             Constraint   = 'Lookup failed'
             RiskTier     = 'high'
             Notes        = "Graph lookup for this service principal failed - constraint status UNKNOWN; rerun the audit. $($info.Error)"
+            Commands     = ''
         }
         continue
     }
@@ -1273,7 +1306,9 @@ foreach ($principalId in @($GrantHolders.Keys)) {
     $hasRbac = $RbacAppIds.ContainsKey($appId)
     $rbacLive = Get-RbacLive $appId
 
+    $appDisplay = if ($info.Data.displayName) { "$($info.Data.displayName)".Trim() } else { $GrantHolders[$principalId].DisplayName }
     $notes = @()
+    $rowCommands = @()
     if ($graphEwsPerms.Count -eq 0 -and $protoPerms.Count -gt 0) {
         $constraint = 'Mailbox-permission model'
         $notes += 'IMAP/POP/SMTP reach = FullAccess grants to the service principal (verify with Get-MailboxPermission); policies do not apply'
@@ -1285,9 +1320,83 @@ foreach ($principalId in @($GrantHolders.Keys)) {
     }
     elseif ($hasRbac) {
         $constraint = 'Unconstrained (RBAC exists)'
-        $notes += 'Appears to have an Exchange RBAC assignment, BUT the tenant-wide Entra grant is still in place - grants are a union, so the RBAC scope is not limiting anything. Verify the assignment (Get-ManagementRoleAssignment / Test-ServicePrincipalAuthorization) covers these permissions, then revoke the Entra grant.'
-        if ($null -eq $rbacLive) { $notes += 'The RBAC scope lookup failed - assignment scope UNKNOWN; rerun the audit.' }
-        elseif ($rbacLive.Unscoped.Count -gt 0) { $notes += "RBAC assignment(s) with NO resource scope (ScopeType = Organization): $($rbacLive.Unscoped -join ', ') - re-scope them (Set-ManagementRoleAssignment -CustomResourceScope) before revoking the grant, or the app stays org-wide." }
+        if ($null -eq $rbacLive) {
+            $notes += 'Has an Exchange RBAC assignment, BUT the tenant-wide Entra grant is still in place - grants are a union, so the RBAC scope is not limiting anything. The RBAC scope lookup failed - assignment scope UNKNOWN; rerun the audit.'
+        }
+        else {
+            # Say what is actually left to do. A grant is covered when the Application role that
+            # replaces it is live (Graph:Mail.Read -> 'Application Mail.Read'); a grant with no RBAC
+            # role at all (IMAP/POP, Calendars.ReadBasic) is a keep, not a gap. The audit already ran
+            # Test-ServicePrincipalAuthorization, so the admin is not sent back to rerun it - except
+            # for the one thing it cannot check here: InScope for a specific mailbox, which the
+            # generated block below checks before it revokes anything.
+            $coveredGrants = @()
+            $uncovered = @()
+            $noRole = @()
+            foreach ($g in $GrantHolders[$principalId].Grants) {
+                if (-not $g.Role) { $noRole += $g.Display }
+                elseif ($rbacLive.Roles -contains $g.Role) { $coveredGrants += $g }
+                else { $uncovered += $g.Display }
+            }
+            $covered = @($coveredGrants | ForEach-Object { $_.Display } | Select-Object -Unique)
+            $uncovered = @($uncovered | Select-Object -Unique)
+            $noRole = @($noRole | Select-Object -Unique)
+            if ($uncovered.Count -gt 0) {
+                $coveredNote = if ($covered.Count -gt 0) { " (covered: $($covered -join ', '))" } else { '' }
+                $notes += "Live RBAC roles do NOT cover $($uncovered -join ', ')$coveredNote - grants are a union, so nothing is scoped yet, and revoking the grant now would break the app for the uncovered permissions. Add the missing Application roles to the scoped assignment first (New-ManagementRoleAssignment -App <AppId> -Role '<Application role>' -CustomResourceScope <scope>)."
+            }
+            elseif ($covered.Count -gt 0) {
+                $notes += "Every migratable grant ($($covered -join ', ')) already has a live RBAC role, BUT the tenant-wide Entra grant is still in place - grants are a union, so the scope is not limiting anything yet. Only the revoke remains: the PowerShell block under this row verifies InScope = True for a mailbox inside the scope, then revokes exactly these grants."
+            }
+            else {
+                $notes += "Has a live RBAC assignment ($($rbacLive.Roles -join ', ')) that does not correspond to any of these grants - grants are a union, so the tenant-wide reach stands; see the caveats below for permissions RBAC cannot replace."
+            }
+            if ($noRole.Count -gt 0) { $notes += "No RBAC role exists for $($noRole -join ', ') - not replaceable by RBAC, so those grants stay (IMAP/POP reach is controlled per mailbox via Add-MailboxPermission)." }
+            if ($rbacLive.Unscoped.Count -gt 0) { $notes += "RBAC assignment(s) with NO resource scope (ScopeType = Organization): $($rbacLive.Unscoped -join ', ') - re-scope them (Set-ManagementRoleAssignment -CustomResourceScope) before revoking the grant, or the app stays org-wide." }
+
+            # Generated cutover for the covered grants only. Same shape as the policy cutover:
+            # verify first (every replaced role live, scoped and InScope for a test mailbox),
+            # revoke second, each revocation checked. Uncovered and no-role grants are listed in
+            # the block and never touched, so the app keeps every permission RBAC does not replace.
+            if ($coveredGrants.Count -gt 0) {
+                $expectedRoles = @($coveredGrants | ForEach-Object { $_.Role } | Select-Object -Unique)
+                $rolesList = ($expectedRoles | ForEach-Object { "'$(EscSq $_)'" }) -join ', '
+                $scopeNames = @($rbacLive.Scopes)
+                $testMailbox = ''
+                foreach ($s in $scopeNames) { if (-not $testMailbox) { $testMailbox = Get-ScopeTestMailbox $s } }
+                $scopeLabel = if ($scopeNames.Count -gt 0) { $scopeNames -join ' / ' } else { 'the assignment scope' }
+                $rowCommands += "# ==== $appDisplay ($appId) -> revoke the tenant-wide Entra grants that live RBAC roles replace ===="
+                $rowCommands += "# A scoped RBAC assignment is live, but the tenant-wide grant still makes reach org-wide (grants"
+                $rowCommands += "# are a union). This block verifies each replaced role is live, scoped and InScope for a mailbox"
+                $rowCommands += "# inside the scope, then revokes only the grants those roles replace. Nothing runs unverified."
+                $rowCommands += "# Prereqs: Connect-ExchangeOnline; Connect-MgGraph -Scopes 'AppRoleAssignment.ReadWrite.All'"
+                $rowCommands += "`$expectedRoles = @($rolesList)"
+                if ($testMailbox) {
+                    $rowCommands += "`$cutoverTestMailbox = '$(EscSq $testMailbox)'   # matches scope $scopeLabel; substitute if needed"
+                }
+                else {
+                    $rowCommands += "`$cutoverTestMailbox = '<member mailbox>'   # REQUIRED: a mailbox inside $scopeLabel"
+                }
+                $rowCommands += "`$auth = if (`$cutoverTestMailbox -notlike '<*') { @(Test-ServicePrincipalAuthorization -Identity '$appId' -Resource `$cutoverTestMailbox -ErrorAction SilentlyContinue) } else { @() }"
+                $rowCommands += "# InScope is text ('True' / 'False' / 'Not Run'), not a boolean - compare it, never test it for truthiness."
+                $rowCommands += "`$missingRoles = @(`$expectedRoles | Where-Object { `$role = `$_; -not (`$auth | Where-Object { `$_.RoleName -eq `$role -and `"`$(`$_.InScope)`" -eq 'True' -and `"`$(`$_.ScopeType)`" -ne 'Organization' }) })"
+                $rowCommands += "if (`$missingRoles.Count -gt 0) {"
+                $rowCommands += "    Write-Warning `"$(EscDq $appDisplay): roles not verified live, scoped and InScope for `$cutoverTestMailbox (missing: `$(`$missingRoles -join ', ')) - nothing revoked. Use a mailbox inside the scope; an Organization-scoped role must be re-scoped first (Set-ManagementRoleAssignment -CustomResourceScope).`""
+                $rowCommands += "} elseif (@((Get-MgContext).Scopes) -notcontains 'AppRoleAssignment.ReadWrite.All') {"
+                $rowCommands += "    Write-Warning 'Graph session lacks AppRoleAssignment.ReadWrite.All - run: Connect-MgGraph -Scopes AppRoleAssignment.ReadWrite.All'"
+                $rowCommands += "} else {"
+                $rowCommands += "    `$revokeFailed = `$false"
+                if ($noRole.Count -gt 0) { $rowCommands += "    # KEEP (no RBAC role replaces these; not revoked): $($noRole -join ', ')" }
+                if ($uncovered.Count -gt 0) { $rowCommands += "    # NOT COVERED by a live role (add the role first, then rerun; not revoked): $($uncovered -join ', ')" }
+                foreach ($g in $coveredGrants) {
+                    $rowCommands += "    try { Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/$principalId/appRoleAssignments/$($g.Id)' -ErrorAction Stop; Write-Host 'Revoked $($g.Display)' } catch { if (`"`$_`" -match 'Request_ResourceNotFound|\b404\b') { Write-Host 'Already revoked: $($g.Display)' } else { `$revokeFailed = `$true; Write-Warning `"Revocation FAILED ($($g.Display)): `$_`" } }"
+                }
+                $rowCommands += "    if (`$revokeFailed) { Write-Warning '$(EscSq $appDisplay): one or more revocations FAILED - fix the errors above and rerun this block.' }"
+                $rowCommands += "    else { Write-Host '$(EscSq $appDisplay): tenant-wide grants revoked. Exchange caches app permissions 30 min - 2 h; re-test the app.' }"
+                $rowCommands += "}"
+                $rowCommands += "# Hygiene afterwards: App registrations > API permissions - delete the revoked rows. Removing entries there does NOT revoke access by itself."
+            }
+        }
     }
     else {
         $constraint = 'Unconstrained'
@@ -1306,9 +1415,9 @@ foreach ($principalId in @($GrantHolders.Keys)) {
     }
 
     $SecurityRows += [PSCustomObject]@{
-        AppId       = $appId
-        SpObjectId  = $principalId
-        DisplayName = if ($info.Data.displayName) { "$($info.Data.displayName)".Trim() } else { $GrantHolders[$principalId].DisplayName }
+        AppId        = $appId
+        SpObjectId   = $principalId
+        DisplayName  = $appDisplay
         Enabled      = $info.Data.accountEnabled
         Deactivated  = $rowDeactivated
         IsHomeTenant = $isHomeTenant
@@ -1317,6 +1426,7 @@ foreach ($principalId in @($GrantHolders.Keys)) {
         Constraint   = $constraint
         RiskTier     = $tier
         Notes        = $notes -join ' | '
+        Commands     = ($rowCommands -join "`n")
     }
 }
 
@@ -1353,6 +1463,7 @@ foreach ($rbacAppId in @($RbacAppIds.Keys | Sort-Object)) {
             Constraint   = 'Lookup failed'
             RiskTier     = 'high'
             Notes        = "Graph lookup for this service principal failed - constraint status UNKNOWN; rerun the audit. $($info.Error)"
+            Commands     = ''
         }
         continue
     }
@@ -1408,6 +1519,7 @@ foreach ($rbacAppId in @($RbacAppIds.Keys | Sort-Object)) {
         Constraint   = $constraint
         RiskTier     = $tier
         Notes        = $notes -join ' | '
+        Commands     = ''
     }
 }
 
@@ -1587,13 +1699,18 @@ $SecurityRowsHtml = foreach ($row in $SecuritySorted) {
     if ($row.Deactivated) { $disabledNote += " <span class='badge neut'>deactivated</span>" }
     if ($row.Enabled -eq $false) { $disabledNote += " <span class='badge neut'>sign-in disabled</span>" }
     $rowCls = if ($row.Constraint -match '^Unconstrained|^RBAC org-wide') { 'status-blocked' } else { '' }
+    # Generated revoke block (RBAC-exists rows), same collapsed markup as the policy rows.
+    $commandsRow = if ($row.Commands) {
+        $lineCount = @($row.Commands -split "`n").Count
+        "`n    <tr class=`"commands-row $rowCls`">`n        <td colspan=`"4`"><details class='cmd'><summary>PowerShell <span class='cmd-meta'>$lineCount lines</span><button type='button' class='copy-btn'>Copy</button></summary><pre class='commands'>$(HtmlEnc $row.Commands)</pre></details></td>`n    </tr>"
+    } else { '' }
     @"
     <tr class="$rowCls">
         <td><strong>$(HtmlEnc $row.DisplayName)</strong>$disabledNote<br><span class="app-id">$(HtmlEnc $row.AppId)</span><br>$links</td>
         <td>$constraintBadge<div class='blockers-neutral'>$(HtmlEnc $row.Notes)</div></td>
         <td>$tierBadge</td>
         <td class="perms">$permChips</td>
-    </tr>
+    </tr>$commandsRow
 "@
 }
 
@@ -1610,6 +1727,42 @@ if (-not $HtmlRows) {
     </tr>
 "@
 }
+
+# Generic recipe for the scan rows. Policy rows get generated, id-filled commands; scan rows do
+# not, and a policy-free tenant (the common case now that Microsoft says not to create policies)
+# has no Ready row to copy a pattern from, so the sample has to live here.
+$ScanSample = @'
+# Constrain an unconstrained app with RBAC for Applications. <AppId> and <SpObjectId> are the
+# application (client) id and the Enterprise app object id shown in the row above.
+# Steps 1-4 are additive (Exchange Online PowerShell); step 5 is the cutover (Graph PowerShell).
+
+# 1. Exchange pointer to the Entra service principal (idempotent)
+New-ServicePrincipal -AppId '<AppId>' -ObjectId '<SpObjectId>' -DisplayName '<App name>'
+
+# 2. Scope: DIRECT members of a mail-enabled security group, or a single mailbox
+New-ManagementScope -Name '<App name>-Scope' -RecipientRestrictionFilter "MemberOfGroup -eq '<group DistinguishedName>'"
+#    single mailbox: -RecipientRestrictionFilter "ExternalDirectoryObjectId -eq '<mailbox Entra object id>'"
+
+# 3. One assignment per grant, using the matching role: Graph:Mail.Read -> 'Application Mail.Read'
+New-ManagementRoleAssignment -App '<AppId>' -Role 'Application Mail.Read' -CustomResourceScope '<App name>-Scope'
+
+# 4. Verify: expect InScope = True for a mailbox inside the scope, then test the app itself
+Test-ServicePrincipalAuthorization -Identity '<AppId>' -Resource '<in-scope mailbox>' | Format-Table
+
+# 5. Revoke ONLY the grants that RBAC now replaces (grants are a union until this runs).
+#    In the portal this is "Revoke all admin consents" on the permission group, which is fine when
+#    every grant in that group is replaced. Per grant from PowerShell (Graph permission names are
+#    resolved from Microsoft Graph's own appRoles; for EWS grants use the Office 365 Exchange Online
+#    service principal, appId 00000002-0000-0ff1-ce00-000000000000, the same way):
+Connect-MgGraph -Scopes 'AppRoleAssignment.ReadWrite.All' -ContextScope Process
+$graphSp = Invoke-MgGraphRequest -Uri "v1.0/servicePrincipals(appId='00000003-0000-0000-c000-000000000000')?`$select=appRoles"
+$roleName = @{}; foreach ($r in $graphSp.appRoles) { $roleName[$r.id] = $r.value }
+$grants = (Invoke-MgGraphRequest -Uri 'v1.0/servicePrincipals/<SpObjectId>/appRoleAssignments').value
+$grants | ForEach-Object { [pscustomobject]@{ Id = $_.id; Permission = $roleName[$_.appRoleId]; Resource = $_.resourceDisplayName } }
+# then, for each Id whose Permission now has a live Application role:
+Invoke-MgGraphRequest -Method DELETE -Uri 'v1.0/servicePrincipals/<SpObjectId>/appRoleAssignments/<Id>'
+'@
+$ScanSampleHtml = "<details class='cmd'><summary>Sample commands <span class='cmd-meta'>placeholders in &lt;angle brackets&gt;</span><button type='button' class='copy-btn'>Copy</button></summary><pre class='commands'>$(HtmlEnc $ScanSample)</pre></details>"
 
 $Html = @"
 <!DOCTYPE html>
@@ -1971,9 +2124,12 @@ $Html = @"
             </tbody>
         </table>
         <p class="section-sub" style="margin-top:0.75rem">To constrain an unconstrained app: create a management scope for
-        the mailboxes it actually needs, add the matching <code>Application *</code> RBAC role assignment (pattern in any
-        Ready row above), verify with <code>Test-ServicePrincipalAuthorization</code>, then revoke the tenant-wide Entra
-        grant. Order matters: RBAC first, revoke second &mdash; the app never loses access it should have.</p>
+        the mailboxes it actually needs, add the matching <code>Application *</code> RBAC role assignment, verify with
+        <code>Test-ServicePrincipalAuthorization</code>, then revoke the tenant-wide Entra grant. Order matters: RBAC first,
+        revoke second, so the app never loses access it should have. A row marked <em>RBAC exists</em> says in its notes
+        which of those steps is left and, once a live role replaces at least one grant, carries a PowerShell block that
+        verifies the scope and revokes exactly those grants. The recipe for everything else, with placeholders:</p>
+        $ScanSampleHtml
 
         <div class="footer">
             <strong>Migration Steps (per app):</strong><br>
@@ -1982,10 +2138,15 @@ $Html = @"
                <code>ExternalDirectoryObjectId</code> for a single mailbox)<br>
             3. <code>New-ManagementRoleAssignment</code> &mdash; assign RBAC application roles with the scope<br>
             4. <code>Test-ServicePrincipalAuthorization</code> &mdash; verify InScope = True, and test the app itself<br>
-            5. Revoke <em>only the migrated</em> permission <em>grants</em> in Entra ID (per-permission via Graph; the
-               portal's &quot;Revoke admin consent&quot; button revokes everything at once). Removing rows from the app
-               registration's API-permissions list afterwards is hygiene only &mdash; it does not revoke access.
-               Permissions marked <em>keep</em> are not replaced by RBAC and must stay.<br>
+            5. Revoke <em>only the migrated</em> permission <em>grants</em> in Entra ID. From PowerShell that is one Graph
+               <code>DELETE</code> per appRoleAssignment (the generated cutover and the sample above do this). In the portal
+               (App registrations &gt; API permissions) the permission group's &quot;Revoke all admin consents&quot; revokes
+               <em>every</em> grant in that group at once, which is fine only when every grant in the group is replaced by
+               RBAC. Grants whose rows were already deleted from the registration show up under &quot;Other permissions
+               granted for &lt;tenant&gt;&quot; with the same menu; do not pick &quot;Add to configured permissions&quot; there,
+               it revokes nothing and puts the rows back on the registration. Deleting rows from the API-permissions list
+               is hygiene only; it does not revoke access. Permissions marked <em>keep</em> are not replaced by RBAC and
+               must stay.<br>
             6. <code>Remove-ApplicationAccessPolicy</code> &mdash; delete the legacy policy last<br><br>
             <strong>Caveats:</strong>
             RBAC scoping only takes effect once the tenant-wide Entra grant is revoked (grants are a union).
@@ -2037,10 +2198,12 @@ $ExportPath = Join-Path $OutDir "AppAccessPolicyMigration_$TenantName`_$RunStamp
 $Html | Out-File -FilePath $ExportPath -Encoding UTF8
 Write-Host "Report saved to: $ExportPath" -ForegroundColor Green
 
-# Companion script: all generated command blocks. Steps 1-4 run as-is (additive); each
-# cutover verifies RBAC and confirms revocations succeeded before removing the inert policy.
-$CommandBlocks = $SortedReport | Where-Object { $_.MigrationCommands } | ForEach-Object { $_.MigrationCommands + "`n" }
-if ($CommandBlocks) {
+# Companion script: all generated command blocks. Policy rows: steps 1-4 run as-is (additive)
+# and each cutover verifies RBAC and confirms revocations succeeded before removing the inert
+# policy. Scan rows with live RBAC roles: a revoke block with the same verify-then-revoke gate.
+$CommandBlocks = @($SortedReport | Where-Object { $_.MigrationCommands } | ForEach-Object { $_.MigrationCommands + "`n" })
+$CommandBlocks += @($SecuritySorted | Where-Object { $_.Commands } | ForEach-Object { $_.Commands + "`n" })
+if ($CommandBlocks.Count -gt 0) {
     $ScriptPath = Join-Path $OutDir "AppAccessPolicyMigration_$TenantName`_$RunStamp.ps1"
     @(
         "# Application Access Policy -> RBAC for Applications migration commands"
@@ -2049,6 +2212,7 @@ if ($CommandBlocks) {
         "#          Connect-MgGraph -Scopes 'AppRoleAssignment.ReadWrite.All' (for the cutover revocations)."
         "# Steps 1-4 are additive. Cutover blocks self-verify with Test-ServicePrincipalAuthorization,"
         "# skip themselves if RBAC is not live, and remove the inert policy only after revocations succeed."
+        "# Revoke blocks (apps already scoped by RBAC that still hold the tenant-wide grant) use the same gate."
         "# Blocks for name-matched targets are fully commented out - verify the target first."
         ""
     ) + $CommandBlocks | Out-File -FilePath $ScriptPath -Encoding UTF8
