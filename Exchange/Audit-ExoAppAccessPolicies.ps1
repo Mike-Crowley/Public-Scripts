@@ -319,12 +319,16 @@ $GraphRoleMap = @{
     'MailboxFolder.Read.All'       = 'Application MailboxFolder.Read'
     'MailboxFolder.ReadWrite.All'  = 'Application MailboxFolder.ReadWrite'
     'MailboxItem.Read.All'         = 'Application MailboxItem.Read'
+    'MailboxItem.ReadWrite.All'    = 'Application MailboxItem.ReadWrite'
     'MailboxItem.Export.All'       = 'Application MailboxItem.Export'
     'MailboxItem.ImportExport.All' = 'Application MailboxItem.ImportExport'
     'MailboxConfigItem.Read'       = 'Application MailboxConfigItem.Read'
     'MailboxConfigItem.ReadWrite'  = 'Application MailboxConfigItem.ReadWrite'
     'MailTips.ReadBasic.All'       = 'Application MailTips.ReadBasic.All'
+    'Mail-Advanced.ReadWrite.All'  = 'Application Mail-Advanced.ReadWrite.All'   # keeps its .All, unlike the rest
 }
+# The table also lists two composite roles (Application Mail Full Access, Application Exchange Full
+# Access) that bundle several permissions; this map stays one permission to one role.
 $ExoRoleMap = @{
     'full_access_as_app' = 'Application EWS.AccessAsApp'
     'SMTP.SendAsApp'     = 'Application SMTP.SendAsApp'
@@ -1210,7 +1214,7 @@ function Get-RbacLive {
 function Get-PermRiskTier {
     param([string]$Perm)
     switch -Regex ($Perm) {
-        '^(Mail\.Read|Mail\.ReadWrite|Mail\.Send|full_access_as_app|IMAP\.AccessAsApp|POP\.AccessAsApp|SMTP\.SendAsApp|MailboxItem\.|MailboxFolder\.ReadWrite|Exchange\.ManageAsApp|EWS\.AccessAsApp)' { 'high'; break }
+        '^(Mail\.Read$|Mail\.ReadWrite$|Mail-Advanced\.|Mail\.Send|full_access_as_app|IMAP\.AccessAsApp|POP\.AccessAsApp|SMTP\.SendAsApp|MailboxItem\.|MailboxFolder\.ReadWrite|Exchange\.ManageAsApp|EWS\.AccessAsApp)' { 'high'; break }
         '^(Calendars\.|Contacts\.|MailboxSettings\.|MailboxFolder\.Read|Mail\.ReadBasic)' { 'medium'; break }
         default { 'low' }
     }
