@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exchange App Mailbox Activity - crowleydev.onmicrosoft.com</title>
+    <style>
+        /* Semantic palette - status colors are reserved for state, never decoration.
+           All text/background pairs validated >= 4.5:1 (muted ink reserved for
+           non-essential de-emphasis). */
+        :root {
+            --page: #f2f1ee;
+            --surface: #fcfcfb;
+            --ink: #0b0b0b;
+            --ink-2: #52514e;
+            --ink-3: #898781;
+            --hairline: #e1e0d9;
+            --link: #1c5cab;
+            --good-bg: #e2f5e2;  --good-fg: #006300;
+            --warn-bg: #fdf0d5;  --warn-fg: #704d00;
+            --crit-bg: #fbe3e3;  --crit-fg: #8f1f1f;  --crit-solid: #b22727;
+            --err-bg:  #fde8df;  --err-fg:  #93381b;
+            --info-bg: #ddebfa;  --info-fg: #14477f;
+            --purp-bg: #e6e2f7;  --purp-fg: #38307e;
+            --neut-bg: #eceae5;  --neut-fg: #52514e;
+            --code-bg: #232322;  --code-fg: #e8e6df;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            background: var(--page);
+            color: var(--ink);
+            line-height: 1.5;
+            margin: 0;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+        .container { max-width: 1600px; margin: 0 auto; }
+        h1 { font-weight: 600; margin-bottom: 0.5rem; color: var(--ink); }
+        h2 { font-weight: 600; margin: 2.5rem 0 0.5rem 0; color: var(--ink); }
+        .subtitle, .section-sub { color: var(--ink-2); margin-bottom: 1.5rem; }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat {
+            background: var(--surface);
+            border-radius: 8px;
+            padding: 1rem;
+            border: 1px solid var(--hairline);
+        }
+        .stat-value { font-size: 1.75rem; font-weight: 600; color: var(--ink); }
+        .stat-label { color: var(--ink-2); font-size: 0.8rem; }
+        .stat.warning .stat-value { color: var(--warn-fg); }
+        .stat.danger .stat-value { color: var(--crit-fg); }
+        .stat.success .stat-value { color: var(--good-fg); }
+        .migration-note {
+            background: var(--surface);
+            border-left: 4px solid var(--info-fg);
+            padding: 1rem;
+            margin-bottom: 2rem;
+            border-radius: 0 8px 8px 0;
+            border-top: 1px solid var(--hairline);
+            border-right: 1px solid var(--hairline);
+            border-bottom: 1px solid var(--hairline);
+        }
+        .migration-note h3 { margin: 0 0 0.5rem 0; color: var(--info-fg); }
+        .migration-note p { margin: 0 0 0.5rem 0; color: var(--ink-2); }
+        .migration-note p:last-child { margin-bottom: 0; }
+        .migration-note a { color: var(--link); }
+        table {
+            width: 100%;
+            background: var(--surface);
+            border-radius: 8px;
+            border-collapse: collapse;
+            border: 1px solid var(--hairline);
+        }
+        th {
+            text-align: left;
+            padding: 0.75rem;
+            background: var(--page);
+            border-bottom: 2px solid var(--hairline);
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+            color: var(--ink-2);
+        }
+        td {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--hairline);
+            vertical-align: top;
+            font-size: 0.875rem;
+        }
+        tr:last-child td { border-bottom: none; }
+        .app-id { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 0.7rem; color: var(--ink-3); }
+        a.plink { color: var(--link); font-size: 0.75rem; text-decoration: none; }
+        a.plink:hover { text-decoration: underline; }
+        .status-badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+            vertical-align: middle;
+            margin-left: 0.5rem;
+        }
+        .status-badge.ready { background: var(--good-bg); color: var(--good-fg); }
+        .status-badge.error { background: var(--err-bg); color: var(--err-fg); }
+        .status-badge.delete { background: var(--neut-bg); color: var(--neut-fg); }
+        .status-badge.unconstrained { background: var(--crit-fg); color: #ffffff; }
+        .badge {
+            display: inline-block;
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            margin-left: 0.25rem;
+            vertical-align: middle;
+            text-transform: uppercase;
+        }
+        .badge.crit { background: var(--crit-bg); color: var(--crit-fg); }
+        .badge.warn { background: var(--warn-bg); color: var(--warn-fg); }
+        .badge.info { background: var(--info-bg); color: var(--info-fg); }
+        .badge.purp { background: var(--purp-bg); color: var(--purp-fg); }
+        .badge.neut { background: var(--neut-bg); color: var(--neut-fg); }
+        .email { color: var(--ink-3); font-size: 0.75rem; }
+        .perm {
+            display: inline-block;
+            padding: 0.1rem 0.35rem;
+            border-radius: 3px;
+            margin: 0.1rem;
+            font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+            font-size: 0.7rem;
+        }
+        .perm.migrate { background: var(--info-bg); color: var(--info-fg); }
+        .perm.keep { background: var(--neut-bg); color: var(--neut-fg); border: 1px dashed var(--ink-3); }
+        .none { color: var(--ink-3); font-style: italic; font-size: 0.75rem; }
+        .empty-state { padding: 2rem 1rem; text-align: center; color: var(--ink-2); }
+        .commands {
+            background: var(--code-bg);
+            color: var(--code-fg);
+            padding: 1rem;
+            border-radius: 6px;
+            font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+            font-size: 0.75rem;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            margin: 0;
+        }
+        /* Collapsed-by-default disclosure, shared by command blocks and long mailbox lists */
+        details.cmd > summary {
+            cursor: pointer;
+            list-style: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--ink-2);
+            background: var(--surface);
+            border: 1px solid var(--hairline);
+            border-radius: 999px;
+            padding: 0.3rem 0.85rem;
+            user-select: none;
+            transition: border-color 0.15s ease, color 0.15s ease;
+        }
+        details.cmd > summary:hover { color: var(--link); border-color: var(--link); }
+        details.cmd > summary::-webkit-details-marker { display: none; }
+        details.cmd > summary::before {
+            content: '';
+            width: 0.42em;
+            height: 0.42em;
+            border-right: 2px solid currentColor;
+            border-bottom: 2px solid currentColor;
+            transform: rotate(-45deg);
+            transition: transform 0.15s ease;
+            flex: none;
+        }
+        details.cmd[open] > summary::before { transform: rotate(45deg); }
+        details.cmd > pre.commands { margin-top: 0.5rem; }
+        .cmd-meta { font-weight: 400; color: var(--ink-3); }
+        .copy-btn {
+            font: inherit;
+            font-weight: 600;
+            color: var(--link);
+            background: none;
+            border: none;
+            border-left: 1px solid var(--hairline);
+            padding: 0 0 0 0.6rem;
+            cursor: pointer;
+        }
+        .copy-btn:hover { text-decoration: underline; }
+        .footer {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--hairline);
+            color: var(--ink-2);
+            font-size: 0.8rem;
+        }
+        .footer code {
+            background: var(--neut-bg);
+            padding: 0.1rem 0.3rem;
+            border-radius: 3px;
+            font-size: 0.75rem;
+        }
+        .footer a { color: var(--link); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Exchange App Mailbox Activity</h1>
+        <p class="subtitle"><strong>crowleydev.onmicrosoft.com</strong> &middot; September 25, 2026 at 11:21:16 PM &middot; last 30 days of mailbox audit records</p>
+        <div class="migration-note">
+            <h3>What this shows</h3>
+            <p>For each app, the mailboxes it actually touched, grouped by the operation the audit log recorded
+            (Send, MailItemsAccessed, Update...). Use it to judge whether the activity matches the app's job, and
+            to build the RBAC for Applications scope from real mailboxes instead of guesses. Each app's PowerShell
+            block does exactly that. The audit of which apps are unconstrained, and the verified cutover that revokes the
+            tenant-wide grant afterwards, live in <a href="https://github.com/Mike-Crowley/Public-Scripts/blob/main/Exchange/Audit-ExoAppAccessPolicies.ps1">Audit-ExoAppAccessPolicies.ps1</a>.
+            How this report works: <a href="https://mikecrowley.us/2026/09/26/exchange-app-mailbox-activity/">How to Identify Which Mailbox(es) an Entra App Is Using</a>;
+            the migration itself: <a href="https://mikecrowley.us/2026/07/10/exchange-app-access-policy-rbac-migration/">Migrating Exchange Apps to RBAC for Applications</a>.</p>
+            <p>Source: the unified audit log via the Purview audit search API. The apps listed are the ones holding
+            <em>application</em> permissions. Records that carry an Entra session id came from a signed-in user working
+            through the app (delegated access); they are counted on the app's heading and left out of its lists, the CSV and its scope, because an RBAC scope constrains the app's own access, not the user's. A record with no session id, including one with no
+            AppAccessContext block at all, counts as the app's own. Every app/operation/mailbox row is in the companion
+            CSV next to this file.</p>
+        </div>
+        <div class="summary">
+            <div class="stat"><div class="stat-value">5</div><div class="stat-label">Apps analyzed</div></div>
+            <div class="stat success"><div class="stat-value">2</div><div class="stat-label">Scope candidates</div></div>
+            <div class="stat danger"><div class="stat-value">1</div><div class="stat-label">Broad (over 25 mailboxes)</div></div>
+            <div class="stat"><div class="stat-value">2</div><div class="stat-label">No activity</div></div>
+            <div class="stat warning"><div class="stat-value">1</div><div class="stat-label">Truncated searches</div></div>
+            <div class="stat"><div class="stat-value">0</div><div class="stat-label">Not analyzed</div></div>
+        </div>
+        <h2>Helpdesk Notifier <span class='status-badge ready'>&#10003; Single mailbox</span></h2>
+        <p class="section-sub"><span class="app-id">4f2a8c1e-7b3d-4e9a-b6c5-1d2e3f4a5b6c</span> &nbsp; <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/4f2a8c1e-7b3d-4e9a-b6c5-1d2e3f4a5b6c' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d/appId/4f2a8c1e-7b3d-4e9a-b6c5-1d2e3f4a5b6c' target='_blank' rel='noopener'>Enterprise app &#8599;</a> <br>
+        Entra grants: <span class='perm migrate' title='Activity of this kind observed'>Graph:Mail.Send</span></p>
+        <table>
+            <thead><tr><th>Operation</th><th>Events</th><th>Mailboxes</th><th>Mailboxes by activity (top 10 inline)</th></tr></thead>
+            <tbody>
+                <tr><td><strong>Send</strong><span class='badge warn'>send</span><br><span class='email'>2026-08-31 to 2026-09-26</span></td><td>612</td><td>1</td><td>helpdesk@crowleydev.onmicrosoft.com <span class='email'>(612)</span></td></tr>
+            </tbody>
+        </table>
+        <div style="margin:0.6rem 0 0 0"><details class='cmd'><summary>PowerShell <span class='cmd-meta'>23 lines</span><button type='button' class='copy-btn'>Copy</button></summary><pre class='commands'># ==== Helpdesk Notifier (4f2a8c1e-7b3d-4e9a-b6c5-1d2e3f4a5b6c) - RBAC scope from observed activity, last 30 days ====
+# Observed: Send on 1 mailbox(es)
+# Steps 1-4 are additive. Verify, then revoke the tenant-wide grant with the audit script&#39;s generated
+# cutover: https://github.com/Mike-Crowley/Public-Scripts/blob/main/Exchange/Audit-ExoAppAccessPolicies.ps1
+# How this report works and its caveats: https://mikecrowley.us/2026/09/26/exchange-app-mailbox-activity/
+# The migration itself (scopes, roles, cutover): https://mikecrowley.us/2026/07/10/exchange-app-access-policy-rbac-migration/
+
+# 1. Exchange pointer to the Entra service principal (idempotent)
+if (-not (Get-ServicePrincipal -Identity &#39;4f2a8c1e-7b3d-4e9a-b6c5-1d2e3f4a5b6c&#39; -ErrorAction SilentlyContinue)) {
+    New-ServicePrincipal -AppId &#39;4f2a8c1e-7b3d-4e9a-b6c5-1d2e3f4a5b6c&#39; -ObjectId &#39;a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d&#39; -DisplayName &#39;Helpdesk Notifier&#39;
+}
+
+# 2. Scope: the one mailbox observed (helpdesk@crowleydev.onmicrosoft.com)
+New-ManagementScope -Name &#39;Helpdesk Notifier-4f2a8c1e-Scope&#39; -RecipientRestrictionFilter &quot;ExternalDirectoryObjectId -eq &#39;c620371c-4653-4272-b253-0513000eeeaf&#39;&quot;
+
+# 3. Role assignments: one per RBAC role the grants map to. Grants with no matching activity in the
+#    window are commented out - add them back only if the app needs them, or drop the grant instead.
+#    &quot;unproven&quot; means reads or writes were seen but the record cannot say they were calendar, contacts
+#    or settings rather than mail; keep the role if the app needs it, drop the grant if its job is mail.
+New-ManagementRoleAssignment -App &#39;4f2a8c1e-7b3d-4e9a-b6c5-1d2e3f4a5b6c&#39; -Role &#39;Application Mail.Send&#39; -CustomResourceScope &#39;Helpdesk Notifier-4f2a8c1e-Scope&#39;
+
+# 4. Verify: expect InScope = True, then test the app itself
+Test-ServicePrincipalAuthorization -Identity &#39;4f2a8c1e-7b3d-4e9a-b6c5-1d2e3f4a5b6c&#39; -Resource &#39;helpdesk@crowleydev.onmicrosoft.com&#39; | Format-Table</pre></details></div>
+        <h2>Legacy Fax Gateway <span class='status-badge delete'>No activity</span> <span class='badge neut'>sign-in disabled</span></h2>
+        <p class="section-sub"><span class="app-id">d4c3b2a1-f0e9-4d8c-b7a6-5f4e3d2c1b0a</span> &nbsp; <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/d4c3b2a1-f0e9-4d8c-b7a6-5f4e3d2c1b0a' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/d4e5f6a7-b8c9-4d0e-9f2a-3b4c5d6e7f8a/appId/d4c3b2a1-f0e9-4d8c-b7a6-5f4e3d2c1b0a' target='_blank' rel='noopener'>Enterprise app &#8599;</a> <br>
+        Entra grants: <span class='perm keep' title='No mailbox audit record this report can match proves or disproves this kind of access (IMAP, POP, or an unrecognized permission)'>EXO:IMAP.AccessAsApp &#183; not measured</span><span class='perm keep' title='No matching activity in the window'>EXO:full_access_as_app &#183; idle</span></p>
+        <table>
+            <thead><tr><th>Operation</th><th>Events</th><th>Mailboxes</th><th>Mailboxes by activity (top 10 inline)</th></tr></thead>
+            <tbody>
+                <tr><td colspan='4' class='empty-state'>No mailbox activity attributed to this app in the last 30 days.</td></tr>
+            </tbody>
+        </table>
+        <div style="margin:0.6rem 0 0 0"><details class='cmd'><summary>PowerShell <span class='cmd-meta'>6 lines</span><button type='button' class='copy-btn'>Copy</button></summary><pre class='commands'># ==== Legacy Fax Gateway (d4c3b2a1-f0e9-4d8c-b7a6-5f4e3d2c1b0a) - RBAC scope from observed activity, last 30 days ====
+# No mailbox activity in 30 days. Before scoping, ask whether the app is still in use: an idle app
+# is a candidate for revoking its grants outright (the audit script&#39;s report handles that), not for a scope.
+# If it is seasonal or new, rerun with a longer -Days (up to 180) before deciding. An app that only uses
+# EWS can also look idle here, because EWS records do not name the app; check its sign-in log first.
+# Details: https://mikecrowley.us/2026/09/26/exchange-app-mailbox-activity/</pre></details></div>
+        <h2>Mailbox Backup Appliance <span class='status-badge unconstrained'>&#9888; Broad</span> <span class='badge crit' title='The audit search stopped at its record limit'>truncated</span></h2>
+        <p class="section-sub"><span class="app-id">c3d2e1f0-a9b8-4c7d-8e6f-5a4b3c2d1e0f</span> &nbsp; <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/c3d2e1f0-a9b8-4c7d-8e6f-5a4b3c2d1e0f' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/c3d4e5f6-a7b8-4c9d-8e1f-2a3b4c5d6e7f/appId/c3d2e1f0-a9b8-4c7d-8e6f-5a4b3c2d1e0f' target='_blank' rel='noopener'>Enterprise app &#8599;</a> <br>
+        Entra grants: <span class='perm migrate' title='Activity of this kind observed'>Graph:Mail.ReadWrite</span><span class='perm migrate' title='Activity of this kind observed'>EXO:full_access_as_app</span></p>
+        <table>
+            <thead><tr><th>Operation</th><th>Events</th><th>Mailboxes</th><th>Mailboxes by activity (top 10 inline)</th></tr></thead>
+            <tbody>
+                <tr><td><strong>FolderBind</strong><span class='badge info'>read</span><br><span class='email'>2026-08-31 to 2026-09-26</span></td><td>1240</td><td>1240</td><td>user1@crowleydev.onmicrosoft.com <span class='email'>(1)</span><br>user10@crowleydev.onmicrosoft.com <span class='email'>(1)</span><br>user100@crowleydev.onmicrosoft.com <span class='email'>(1)</span><br>user1000@crowleydev.onmicrosoft.com <span class='email'>(1)</span><br>user1001@crowleydev.onmicrosoft.com <span class='email'>(1)</span><br>user1002@crowleydev.onmicrosoft.com <span class='email'>(1)</span><br>user1003@crowleydev.onmicrosoft.com <span class='email'>(1)</span><br>user1004@crowleydev.onmicrosoft.com <span class='email'>(1)</span><br>user1005@crowleydev.onmicrosoft.com <span class='email'>(1)</span><br>user1006@crowleydev.onmicrosoft.com <span class='email'>(1)</span><details class='cmd' style='margin-top:0.4rem'><summary>All 1240 mailboxes <span class='cmd-meta'>first 500 shown; all 1240 in the CSV</span></summary><pre class='commands'>user1@crowleydev.onmicrosoft.com  (1)
+user10@crowleydev.onmicrosoft.com  (1)
+user100@crowleydev.onmicrosoft.com  (1)
+user1000@crowleydev.onmicrosoft.com  (1)
+user1001@crowleydev.onmicrosoft.com  (1)
+user1002@crowleydev.onmicrosoft.com  (1)
+user1003@crowleydev.onmicrosoft.com  (1)
+user1004@crowleydev.onmicrosoft.com  (1)
+user1005@crowleydev.onmicrosoft.com  (1)
+user1006@crowleydev.onmicrosoft.com  (1)
+user1007@crowleydev.onmicrosoft.com  (1)
+user1008@crowleydev.onmicrosoft.com  (1)
+user1009@crowleydev.onmicrosoft.com  (1)
+user101@crowleydev.onmicrosoft.com  (1)
+user1010@crowleydev.onmicrosoft.com  (1)
+user1011@crowleydev.onmicrosoft.com  (1)
+user1012@crowleydev.onmicrosoft.com  (1)
+user1013@crowleydev.onmicrosoft.com  (1)
+user1014@crowleydev.onmicrosoft.com  (1)
+user1015@crowleydev.onmicrosoft.com  (1)
+user1016@crowleydev.onmicrosoft.com  (1)
+user1017@crowleydev.onmicrosoft.com  (1)
+user1018@crowleydev.onmicrosoft.com  (1)
+user1019@crowleydev.onmicrosoft.com  (1)
+user102@crowleydev.onmicrosoft.com  (1)
+user1020@crowleydev.onmicrosoft.com  (1)
+user1021@crowleydev.onmicrosoft.com  (1)
+user1022@crowleydev.onmicrosoft.com  (1)
+user1023@crowleydev.onmicrosoft.com  (1)
+user1024@crowleydev.onmicrosoft.com  (1)
+user1025@crowleydev.onmicrosoft.com  (1)
+user1026@crowleydev.onmicrosoft.com  (1)
+user1027@crowleydev.onmicrosoft.com  (1)
+user1028@crowleydev.onmicrosoft.com  (1)
+user1029@crowleydev.onmicrosoft.com  (1)
+user103@crowleydev.onmicrosoft.com  (1)
+user1030@crowleydev.onmicrosoft.com  (1)
+user1031@crowleydev.onmicrosoft.com  (1)
+user1032@crowleydev.onmicrosoft.com  (1)
+user1033@crowleydev.onmicrosoft.com  (1)
+user1034@crowleydev.onmicrosoft.com  (1)
+user1035@crowleydev.onmicrosoft.com  (1)
+user1036@crowleydev.onmicrosoft.com  (1)
+user1037@crowleydev.onmicrosoft.com  (1)
+user1038@crowleydev.onmicrosoft.com  (1)
+user1039@crowleydev.onmicrosoft.com  (1)
+user104@crowleydev.onmicrosoft.com  (1)
+user1040@crowleydev.onmicrosoft.com  (1)
+user1041@crowleydev.onmicrosoft.com  (1)
+user1042@crowleydev.onmicrosoft.com  (1)
+user1043@crowleydev.onmicrosoft.com  (1)
+user1044@crowleydev.onmicrosoft.com  (1)
+user1045@crowleydev.onmicrosoft.com  (1)
+user1046@crowleydev.onmicrosoft.com  (1)
+user1047@crowleydev.onmicrosoft.com  (1)
+user1048@crowleydev.onmicrosoft.com  (1)
+user1049@crowleydev.onmicrosoft.com  (1)
+user105@crowleydev.onmicrosoft.com  (1)
+user1050@crowleydev.onmicrosoft.com  (1)
+user1051@crowleydev.onmicrosoft.com  (1)
+user1052@crowleydev.onmicrosoft.com  (1)
+user1053@crowleydev.onmicrosoft.com  (1)
+user1054@crowleydev.onmicrosoft.com  (1)
+user1055@crowleydev.onmicrosoft.com  (1)
+user1056@crowleydev.onmicrosoft.com  (1)
+user1057@crowleydev.onmicrosoft.com  (1)
+user1058@crowleydev.onmicrosoft.com  (1)
+user1059@crowleydev.onmicrosoft.com  (1)
+user106@crowleydev.onmicrosoft.com  (1)
+user1060@crowleydev.onmicrosoft.com  (1)
+user1061@crowleydev.onmicrosoft.com  (1)
+user1062@crowleydev.onmicrosoft.com  (1)
+user1063@crowleydev.onmicrosoft.com  (1)
+user1064@crowleydev.onmicrosoft.com  (1)
+user1065@crowleydev.onmicrosoft.com  (1)
+user1066@crowleydev.onmicrosoft.com  (1)
+user1067@crowleydev.onmicrosoft.com  (1)
+user1068@crowleydev.onmicrosoft.com  (1)
+user1069@crowleydev.onmicrosoft.com  (1)
+user107@crowleydev.onmicrosoft.com  (1)
+user1070@crowleydev.onmicrosoft.com  (1)
+user1071@crowleydev.onmicrosoft.com  (1)
+user1072@crowleydev.onmicrosoft.com  (1)
+user1073@crowleydev.onmicrosoft.com  (1)
+user1074@crowleydev.onmicrosoft.com  (1)
+user1075@crowleydev.onmicrosoft.com  (1)
+user1076@crowleydev.onmicrosoft.com  (1)
+user1077@crowleydev.onmicrosoft.com  (1)
+user1078@crowleydev.onmicrosoft.com  (1)
+user1079@crowleydev.onmicrosoft.com  (1)
+user108@crowleydev.onmicrosoft.com  (1)
+user1080@crowleydev.onmicrosoft.com  (1)
+user1081@crowleydev.onmicrosoft.com  (1)
+user1082@crowleydev.onmicrosoft.com  (1)
+user1083@crowleydev.onmicrosoft.com  (1)
+user1084@crowleydev.onmicrosoft.com  (1)
+user1085@crowleydev.onmicrosoft.com  (1)
+user1086@crowleydev.onmicrosoft.com  (1)
+user1087@crowleydev.onmicrosoft.com  (1)
+user1088@crowleydev.onmicrosoft.com  (1)
+user1089@crowleydev.onmicrosoft.com  (1)
+user109@crowleydev.onmicrosoft.com  (1)
+user1090@crowleydev.onmicrosoft.com  (1)
+user1091@crowleydev.onmicrosoft.com  (1)
+user1092@crowleydev.onmicrosoft.com  (1)
+user1093@crowleydev.onmicrosoft.com  (1)
+user1094@crowleydev.onmicrosoft.com  (1)
+user1095@crowleydev.onmicrosoft.com  (1)
+user1096@crowleydev.onmicrosoft.com  (1)
+user1097@crowleydev.onmicrosoft.com  (1)
+user1098@crowleydev.onmicrosoft.com  (1)
+user1099@crowleydev.onmicrosoft.com  (1)
+user11@crowleydev.onmicrosoft.com  (1)
+user110@crowleydev.onmicrosoft.com  (1)
+user1100@crowleydev.onmicrosoft.com  (1)
+user1101@crowleydev.onmicrosoft.com  (1)
+user1102@crowleydev.onmicrosoft.com  (1)
+user1103@crowleydev.onmicrosoft.com  (1)
+user1104@crowleydev.onmicrosoft.com  (1)
+user1105@crowleydev.onmicrosoft.com  (1)
+user1106@crowleydev.onmicrosoft.com  (1)
+user1107@crowleydev.onmicrosoft.com  (1)
+user1108@crowleydev.onmicrosoft.com  (1)
+user1109@crowleydev.onmicrosoft.com  (1)
+user111@crowleydev.onmicrosoft.com  (1)
+user1110@crowleydev.onmicrosoft.com  (1)
+user1111@crowleydev.onmicrosoft.com  (1)
+user1112@crowleydev.onmicrosoft.com  (1)
+user1113@crowleydev.onmicrosoft.com  (1)
+user1114@crowleydev.onmicrosoft.com  (1)
+user1115@crowleydev.onmicrosoft.com  (1)
+user1116@crowleydev.onmicrosoft.com  (1)
+user1117@crowleydev.onmicrosoft.com  (1)
+user1118@crowleydev.onmicrosoft.com  (1)
+user1119@crowleydev.onmicrosoft.com  (1)
+user112@crowleydev.onmicrosoft.com  (1)
+user1120@crowleydev.onmicrosoft.com  (1)
+user1121@crowleydev.onmicrosoft.com  (1)
+user1122@crowleydev.onmicrosoft.com  (1)
+user1123@crowleydev.onmicrosoft.com  (1)
+user1124@crowleydev.onmicrosoft.com  (1)
+user1125@crowleydev.onmicrosoft.com  (1)
+user1126@crowleydev.onmicrosoft.com  (1)
+user1127@crowleydev.onmicrosoft.com  (1)
+user1128@crowleydev.onmicrosoft.com  (1)
+user1129@crowleydev.onmicrosoft.com  (1)
+user113@crowleydev.onmicrosoft.com  (1)
+user1130@crowleydev.onmicrosoft.com  (1)
+user1131@crowleydev.onmicrosoft.com  (1)
+user1132@crowleydev.onmicrosoft.com  (1)
+user1133@crowleydev.onmicrosoft.com  (1)
+user1134@crowleydev.onmicrosoft.com  (1)
+user1135@crowleydev.onmicrosoft.com  (1)
+user1136@crowleydev.onmicrosoft.com  (1)
+user1137@crowleydev.onmicrosoft.com  (1)
+user1138@crowleydev.onmicrosoft.com  (1)
+user1139@crowleydev.onmicrosoft.com  (1)
+user114@crowleydev.onmicrosoft.com  (1)
+user1140@crowleydev.onmicrosoft.com  (1)
+user1141@crowleydev.onmicrosoft.com  (1)
+user1142@crowleydev.onmicrosoft.com  (1)
+user1143@crowleydev.onmicrosoft.com  (1)
+user1144@crowleydev.onmicrosoft.com  (1)
+user1145@crowleydev.onmicrosoft.com  (1)
+user1146@crowleydev.onmicrosoft.com  (1)
+user1147@crowleydev.onmicrosoft.com  (1)
+user1148@crowleydev.onmicrosoft.com  (1)
+user1149@crowleydev.onmicrosoft.com  (1)
+user115@crowleydev.onmicrosoft.com  (1)
+user1150@crowleydev.onmicrosoft.com  (1)
+user1151@crowleydev.onmicrosoft.com  (1)
+user1152@crowleydev.onmicrosoft.com  (1)
+user1153@crowleydev.onmicrosoft.com  (1)
+user1154@crowleydev.onmicrosoft.com  (1)
+user1155@crowleydev.onmicrosoft.com  (1)
+user1156@crowleydev.onmicrosoft.com  (1)
+user1157@crowleydev.onmicrosoft.com  (1)
+user1158@crowleydev.onmicrosoft.com  (1)
+user1159@crowleydev.onmicrosoft.com  (1)
+user116@crowleydev.onmicrosoft.com  (1)
+user1160@crowleydev.onmicrosoft.com  (1)
+user1161@crowleydev.onmicrosoft.com  (1)
+user1162@crowleydev.onmicrosoft.com  (1)
+user1163@crowleydev.onmicrosoft.com  (1)
+user1164@crowleydev.onmicrosoft.com  (1)
+user1165@crowleydev.onmicrosoft.com  (1)
+user1166@crowleydev.onmicrosoft.com  (1)
+user1167@crowleydev.onmicrosoft.com  (1)
+user1168@crowleydev.onmicrosoft.com  (1)
+user1169@crowleydev.onmicrosoft.com  (1)
+user117@crowleydev.onmicrosoft.com  (1)
+user1170@crowleydev.onmicrosoft.com  (1)
+user1171@crowleydev.onmicrosoft.com  (1)
+user1172@crowleydev.onmicrosoft.com  (1)
+user1173@crowleydev.onmicrosoft.com  (1)
+user1174@crowleydev.onmicrosoft.com  (1)
+user1175@crowleydev.onmicrosoft.com  (1)
+user1176@crowleydev.onmicrosoft.com  (1)
+user1177@crowleydev.onmicrosoft.com  (1)
+user1178@crowleydev.onmicrosoft.com  (1)
+user1179@crowleydev.onmicrosoft.com  (1)
+user118@crowleydev.onmicrosoft.com  (1)
+user1180@crowleydev.onmicrosoft.com  (1)
+user1181@crowleydev.onmicrosoft.com  (1)
+user1182@crowleydev.onmicrosoft.com  (1)
+user1183@crowleydev.onmicrosoft.com  (1)
+user1184@crowleydev.onmicrosoft.com  (1)
+user1185@crowleydev.onmicrosoft.com  (1)
+user1186@crowleydev.onmicrosoft.com  (1)
+user1187@crowleydev.onmicrosoft.com  (1)
+user1188@crowleydev.onmicrosoft.com  (1)
+user1189@crowleydev.onmicrosoft.com  (1)
+user119@crowleydev.onmicrosoft.com  (1)
+user1190@crowleydev.onmicrosoft.com  (1)
+user1191@crowleydev.onmicrosoft.com  (1)
+user1192@crowleydev.onmicrosoft.com  (1)
+user1193@crowleydev.onmicrosoft.com  (1)
+user1194@crowleydev.onmicrosoft.com  (1)
+user1195@crowleydev.onmicrosoft.com  (1)
+user1196@crowleydev.onmicrosoft.com  (1)
+user1197@crowleydev.onmicrosoft.com  (1)
+user1198@crowleydev.onmicrosoft.com  (1)
+user1199@crowleydev.onmicrosoft.com  (1)
+user12@crowleydev.onmicrosoft.com  (1)
+user120@crowleydev.onmicrosoft.com  (1)
+user1200@crowleydev.onmicrosoft.com  (1)
+user1201@crowleydev.onmicrosoft.com  (1)
+user1202@crowleydev.onmicrosoft.com  (1)
+user1203@crowleydev.onmicrosoft.com  (1)
+user1204@crowleydev.onmicrosoft.com  (1)
+user1205@crowleydev.onmicrosoft.com  (1)
+user1206@crowleydev.onmicrosoft.com  (1)
+user1207@crowleydev.onmicrosoft.com  (1)
+user1208@crowleydev.onmicrosoft.com  (1)
+user1209@crowleydev.onmicrosoft.com  (1)
+user121@crowleydev.onmicrosoft.com  (1)
+user1210@crowleydev.onmicrosoft.com  (1)
+user1211@crowleydev.onmicrosoft.com  (1)
+user1212@crowleydev.onmicrosoft.com  (1)
+user1213@crowleydev.onmicrosoft.com  (1)
+user1214@crowleydev.onmicrosoft.com  (1)
+user1215@crowleydev.onmicrosoft.com  (1)
+user1216@crowleydev.onmicrosoft.com  (1)
+user1217@crowleydev.onmicrosoft.com  (1)
+user1218@crowleydev.onmicrosoft.com  (1)
+user1219@crowleydev.onmicrosoft.com  (1)
+user122@crowleydev.onmicrosoft.com  (1)
+user1220@crowleydev.onmicrosoft.com  (1)
+user1221@crowleydev.onmicrosoft.com  (1)
+user1222@crowleydev.onmicrosoft.com  (1)
+user1223@crowleydev.onmicrosoft.com  (1)
+user1224@crowleydev.onmicrosoft.com  (1)
+user1225@crowleydev.onmicrosoft.com  (1)
+user1226@crowleydev.onmicrosoft.com  (1)
+user1227@crowleydev.onmicrosoft.com  (1)
+user1228@crowleydev.onmicrosoft.com  (1)
+user1229@crowleydev.onmicrosoft.com  (1)
+user123@crowleydev.onmicrosoft.com  (1)
+user1230@crowleydev.onmicrosoft.com  (1)
+user1231@crowleydev.onmicrosoft.com  (1)
+user1232@crowleydev.onmicrosoft.com  (1)
+user1233@crowleydev.onmicrosoft.com  (1)
+user1234@crowleydev.onmicrosoft.com  (1)
+user1235@crowleydev.onmicrosoft.com  (1)
+user1236@crowleydev.onmicrosoft.com  (1)
+user1237@crowleydev.onmicrosoft.com  (1)
+user1238@crowleydev.onmicrosoft.com  (1)
+user1239@crowleydev.onmicrosoft.com  (1)
+user124@crowleydev.onmicrosoft.com  (1)
+user1240@crowleydev.onmicrosoft.com  (1)
+user125@crowleydev.onmicrosoft.com  (1)
+user126@crowleydev.onmicrosoft.com  (1)
+user127@crowleydev.onmicrosoft.com  (1)
+user128@crowleydev.onmicrosoft.com  (1)
+user129@crowleydev.onmicrosoft.com  (1)
+user13@crowleydev.onmicrosoft.com  (1)
+user130@crowleydev.onmicrosoft.com  (1)
+user131@crowleydev.onmicrosoft.com  (1)
+user132@crowleydev.onmicrosoft.com  (1)
+user133@crowleydev.onmicrosoft.com  (1)
+user134@crowleydev.onmicrosoft.com  (1)
+user135@crowleydev.onmicrosoft.com  (1)
+user136@crowleydev.onmicrosoft.com  (1)
+user137@crowleydev.onmicrosoft.com  (1)
+user138@crowleydev.onmicrosoft.com  (1)
+user139@crowleydev.onmicrosoft.com  (1)
+user14@crowleydev.onmicrosoft.com  (1)
+user140@crowleydev.onmicrosoft.com  (1)
+user141@crowleydev.onmicrosoft.com  (1)
+user142@crowleydev.onmicrosoft.com  (1)
+user143@crowleydev.onmicrosoft.com  (1)
+user144@crowleydev.onmicrosoft.com  (1)
+user145@crowleydev.onmicrosoft.com  (1)
+user146@crowleydev.onmicrosoft.com  (1)
+user147@crowleydev.onmicrosoft.com  (1)
+user148@crowleydev.onmicrosoft.com  (1)
+user149@crowleydev.onmicrosoft.com  (1)
+user15@crowleydev.onmicrosoft.com  (1)
+user150@crowleydev.onmicrosoft.com  (1)
+user151@crowleydev.onmicrosoft.com  (1)
+user152@crowleydev.onmicrosoft.com  (1)
+user153@crowleydev.onmicrosoft.com  (1)
+user154@crowleydev.onmicrosoft.com  (1)
+user155@crowleydev.onmicrosoft.com  (1)
+user156@crowleydev.onmicrosoft.com  (1)
+user157@crowleydev.onmicrosoft.com  (1)
+user158@crowleydev.onmicrosoft.com  (1)
+user159@crowleydev.onmicrosoft.com  (1)
+user16@crowleydev.onmicrosoft.com  (1)
+user160@crowleydev.onmicrosoft.com  (1)
+user161@crowleydev.onmicrosoft.com  (1)
+user162@crowleydev.onmicrosoft.com  (1)
+user163@crowleydev.onmicrosoft.com  (1)
+user164@crowleydev.onmicrosoft.com  (1)
+user165@crowleydev.onmicrosoft.com  (1)
+user166@crowleydev.onmicrosoft.com  (1)
+user167@crowleydev.onmicrosoft.com  (1)
+user168@crowleydev.onmicrosoft.com  (1)
+user169@crowleydev.onmicrosoft.com  (1)
+user17@crowleydev.onmicrosoft.com  (1)
+user170@crowleydev.onmicrosoft.com  (1)
+user171@crowleydev.onmicrosoft.com  (1)
+user172@crowleydev.onmicrosoft.com  (1)
+user173@crowleydev.onmicrosoft.com  (1)
+user174@crowleydev.onmicrosoft.com  (1)
+user175@crowleydev.onmicrosoft.com  (1)
+user176@crowleydev.onmicrosoft.com  (1)
+user177@crowleydev.onmicrosoft.com  (1)
+user178@crowleydev.onmicrosoft.com  (1)
+user179@crowleydev.onmicrosoft.com  (1)
+user18@crowleydev.onmicrosoft.com  (1)
+user180@crowleydev.onmicrosoft.com  (1)
+user181@crowleydev.onmicrosoft.com  (1)
+user182@crowleydev.onmicrosoft.com  (1)
+user183@crowleydev.onmicrosoft.com  (1)
+user184@crowleydev.onmicrosoft.com  (1)
+user185@crowleydev.onmicrosoft.com  (1)
+user186@crowleydev.onmicrosoft.com  (1)
+user187@crowleydev.onmicrosoft.com  (1)
+user188@crowleydev.onmicrosoft.com  (1)
+user189@crowleydev.onmicrosoft.com  (1)
+user19@crowleydev.onmicrosoft.com  (1)
+user190@crowleydev.onmicrosoft.com  (1)
+user191@crowleydev.onmicrosoft.com  (1)
+user192@crowleydev.onmicrosoft.com  (1)
+user193@crowleydev.onmicrosoft.com  (1)
+user194@crowleydev.onmicrosoft.com  (1)
+user195@crowleydev.onmicrosoft.com  (1)
+user196@crowleydev.onmicrosoft.com  (1)
+user197@crowleydev.onmicrosoft.com  (1)
+user198@crowleydev.onmicrosoft.com  (1)
+user199@crowleydev.onmicrosoft.com  (1)
+user2@crowleydev.onmicrosoft.com  (1)
+user20@crowleydev.onmicrosoft.com  (1)
+user200@crowleydev.onmicrosoft.com  (1)
+user201@crowleydev.onmicrosoft.com  (1)
+user202@crowleydev.onmicrosoft.com  (1)
+user203@crowleydev.onmicrosoft.com  (1)
+user204@crowleydev.onmicrosoft.com  (1)
+user205@crowleydev.onmicrosoft.com  (1)
+user206@crowleydev.onmicrosoft.com  (1)
+user207@crowleydev.onmicrosoft.com  (1)
+user208@crowleydev.onmicrosoft.com  (1)
+user209@crowleydev.onmicrosoft.com  (1)
+user21@crowleydev.onmicrosoft.com  (1)
+user210@crowleydev.onmicrosoft.com  (1)
+user211@crowleydev.onmicrosoft.com  (1)
+user212@crowleydev.onmicrosoft.com  (1)
+user213@crowleydev.onmicrosoft.com  (1)
+user214@crowleydev.onmicrosoft.com  (1)
+user215@crowleydev.onmicrosoft.com  (1)
+user216@crowleydev.onmicrosoft.com  (1)
+user217@crowleydev.onmicrosoft.com  (1)
+user218@crowleydev.onmicrosoft.com  (1)
+user219@crowleydev.onmicrosoft.com  (1)
+user22@crowleydev.onmicrosoft.com  (1)
+user220@crowleydev.onmicrosoft.com  (1)
+user221@crowleydev.onmicrosoft.com  (1)
+user222@crowleydev.onmicrosoft.com  (1)
+user223@crowleydev.onmicrosoft.com  (1)
+user224@crowleydev.onmicrosoft.com  (1)
+user225@crowleydev.onmicrosoft.com  (1)
+user226@crowleydev.onmicrosoft.com  (1)
+user227@crowleydev.onmicrosoft.com  (1)
+user228@crowleydev.onmicrosoft.com  (1)
+user229@crowleydev.onmicrosoft.com  (1)
+user23@crowleydev.onmicrosoft.com  (1)
+user230@crowleydev.onmicrosoft.com  (1)
+user231@crowleydev.onmicrosoft.com  (1)
+user232@crowleydev.onmicrosoft.com  (1)
+user233@crowleydev.onmicrosoft.com  (1)
+user234@crowleydev.onmicrosoft.com  (1)
+user235@crowleydev.onmicrosoft.com  (1)
+user236@crowleydev.onmicrosoft.com  (1)
+user237@crowleydev.onmicrosoft.com  (1)
+user238@crowleydev.onmicrosoft.com  (1)
+user239@crowleydev.onmicrosoft.com  (1)
+user24@crowleydev.onmicrosoft.com  (1)
+user240@crowleydev.onmicrosoft.com  (1)
+user241@crowleydev.onmicrosoft.com  (1)
+user242@crowleydev.onmicrosoft.com  (1)
+user243@crowleydev.onmicrosoft.com  (1)
+user244@crowleydev.onmicrosoft.com  (1)
+user245@crowleydev.onmicrosoft.com  (1)
+user246@crowleydev.onmicrosoft.com  (1)
+user247@crowleydev.onmicrosoft.com  (1)
+user248@crowleydev.onmicrosoft.com  (1)
+user249@crowleydev.onmicrosoft.com  (1)
+user25@crowleydev.onmicrosoft.com  (1)
+user250@crowleydev.onmicrosoft.com  (1)
+user251@crowleydev.onmicrosoft.com  (1)
+user252@crowleydev.onmicrosoft.com  (1)
+user253@crowleydev.onmicrosoft.com  (1)
+user254@crowleydev.onmicrosoft.com  (1)
+user255@crowleydev.onmicrosoft.com  (1)
+user256@crowleydev.onmicrosoft.com  (1)
+user257@crowleydev.onmicrosoft.com  (1)
+user258@crowleydev.onmicrosoft.com  (1)
+user259@crowleydev.onmicrosoft.com  (1)
+user26@crowleydev.onmicrosoft.com  (1)
+user260@crowleydev.onmicrosoft.com  (1)
+user261@crowleydev.onmicrosoft.com  (1)
+user262@crowleydev.onmicrosoft.com  (1)
+user263@crowleydev.onmicrosoft.com  (1)
+user264@crowleydev.onmicrosoft.com  (1)
+user265@crowleydev.onmicrosoft.com  (1)
+user266@crowleydev.onmicrosoft.com  (1)
+user267@crowleydev.onmicrosoft.com  (1)
+user268@crowleydev.onmicrosoft.com  (1)
+user269@crowleydev.onmicrosoft.com  (1)
+user27@crowleydev.onmicrosoft.com  (1)
+user270@crowleydev.onmicrosoft.com  (1)
+user271@crowleydev.onmicrosoft.com  (1)
+user272@crowleydev.onmicrosoft.com  (1)
+user273@crowleydev.onmicrosoft.com  (1)
+user274@crowleydev.onmicrosoft.com  (1)
+user275@crowleydev.onmicrosoft.com  (1)
+user276@crowleydev.onmicrosoft.com  (1)
+user277@crowleydev.onmicrosoft.com  (1)
+user278@crowleydev.onmicrosoft.com  (1)
+user279@crowleydev.onmicrosoft.com  (1)
+user28@crowleydev.onmicrosoft.com  (1)
+user280@crowleydev.onmicrosoft.com  (1)
+user281@crowleydev.onmicrosoft.com  (1)
+user282@crowleydev.onmicrosoft.com  (1)
+user283@crowleydev.onmicrosoft.com  (1)
+user284@crowleydev.onmicrosoft.com  (1)
+user285@crowleydev.onmicrosoft.com  (1)
+user286@crowleydev.onmicrosoft.com  (1)
+user287@crowleydev.onmicrosoft.com  (1)
+user288@crowleydev.onmicrosoft.com  (1)
+user289@crowleydev.onmicrosoft.com  (1)
+user29@crowleydev.onmicrosoft.com  (1)
+user290@crowleydev.onmicrosoft.com  (1)
+user291@crowleydev.onmicrosoft.com  (1)
+user292@crowleydev.onmicrosoft.com  (1)
+user293@crowleydev.onmicrosoft.com  (1)
+user294@crowleydev.onmicrosoft.com  (1)
+user295@crowleydev.onmicrosoft.com  (1)
+user296@crowleydev.onmicrosoft.com  (1)
+user297@crowleydev.onmicrosoft.com  (1)
+user298@crowleydev.onmicrosoft.com  (1)
+user299@crowleydev.onmicrosoft.com  (1)
+user3@crowleydev.onmicrosoft.com  (1)
+user30@crowleydev.onmicrosoft.com  (1)
+user300@crowleydev.onmicrosoft.com  (1)
+user301@crowleydev.onmicrosoft.com  (1)
+user302@crowleydev.onmicrosoft.com  (1)
+user303@crowleydev.onmicrosoft.com  (1)
+user304@crowleydev.onmicrosoft.com  (1)
+user305@crowleydev.onmicrosoft.com  (1)
+user306@crowleydev.onmicrosoft.com  (1)
+user307@crowleydev.onmicrosoft.com  (1)
+user308@crowleydev.onmicrosoft.com  (1)
+user309@crowleydev.onmicrosoft.com  (1)
+user31@crowleydev.onmicrosoft.com  (1)
+user310@crowleydev.onmicrosoft.com  (1)
+user311@crowleydev.onmicrosoft.com  (1)
+user312@crowleydev.onmicrosoft.com  (1)
+user313@crowleydev.onmicrosoft.com  (1)
+user314@crowleydev.onmicrosoft.com  (1)
+user315@crowleydev.onmicrosoft.com  (1)
+user316@crowleydev.onmicrosoft.com  (1)
+user317@crowleydev.onmicrosoft.com  (1)
+user318@crowleydev.onmicrosoft.com  (1)
+user319@crowleydev.onmicrosoft.com  (1)
+user32@crowleydev.onmicrosoft.com  (1)
+user320@crowleydev.onmicrosoft.com  (1)
+user321@crowleydev.onmicrosoft.com  (1)
+user322@crowleydev.onmicrosoft.com  (1)
+user323@crowleydev.onmicrosoft.com  (1)
+user324@crowleydev.onmicrosoft.com  (1)
+user325@crowleydev.onmicrosoft.com  (1)
+user326@crowleydev.onmicrosoft.com  (1)
+user327@crowleydev.onmicrosoft.com  (1)
+user328@crowleydev.onmicrosoft.com  (1)
+user329@crowleydev.onmicrosoft.com  (1)
+user33@crowleydev.onmicrosoft.com  (1)
+user330@crowleydev.onmicrosoft.com  (1)
+user331@crowleydev.onmicrosoft.com  (1)</pre></details></td></tr>
+<tr><td><strong>MailItemsAccessed</strong><span class='badge info'>read</span><br><span class='email'>2026-08-31 to 2026-09-26</span></td><td>1240</td><td>1240</td><td>user1@crowleydev.onmicrosoft.com <span class='email'>(1)</span><br>user10@crowleydev.onmicrosoft.com <span class='email'>(1)</span><br>user100@crowleydev.onmicrosoft.com <span class='email'>(1)</span><br>user1000@crowleydev.onmicrosoft.com <span class='email'>(1)</span><br>user1001@crowleydev.onmicrosoft.com <span class='email'>(1)</span><br>user1002@crowleydev.onmicrosoft.com <span class='email'>(1)</span><br>user1003@crowleydev.onmicrosoft.com <span class='email'>(1)</span><br>user1004@crowleydev.onmicrosoft.com <span class='email'>(1)</span><br>user1005@crowleydev.onmicrosoft.com <span class='email'>(1)</span><br>user1006@crowleydev.onmicrosoft.com <span class='email'>(1)</span><details class='cmd' style='margin-top:0.4rem'><summary>All 1240 mailboxes <span class='cmd-meta'>first 500 shown; all 1240 in the CSV</span></summary><pre class='commands'>user1@crowleydev.onmicrosoft.com  (1)
+user10@crowleydev.onmicrosoft.com  (1)
+user100@crowleydev.onmicrosoft.com  (1)
+user1000@crowleydev.onmicrosoft.com  (1)
+user1001@crowleydev.onmicrosoft.com  (1)
+user1002@crowleydev.onmicrosoft.com  (1)
+user1003@crowleydev.onmicrosoft.com  (1)
+user1004@crowleydev.onmicrosoft.com  (1)
+user1005@crowleydev.onmicrosoft.com  (1)
+user1006@crowleydev.onmicrosoft.com  (1)
+user1007@crowleydev.onmicrosoft.com  (1)
+user1008@crowleydev.onmicrosoft.com  (1)
+user1009@crowleydev.onmicrosoft.com  (1)
+user101@crowleydev.onmicrosoft.com  (1)
+user1010@crowleydev.onmicrosoft.com  (1)
+user1011@crowleydev.onmicrosoft.com  (1)
+user1012@crowleydev.onmicrosoft.com  (1)
+user1013@crowleydev.onmicrosoft.com  (1)
+user1014@crowleydev.onmicrosoft.com  (1)
+user1015@crowleydev.onmicrosoft.com  (1)
+user1016@crowleydev.onmicrosoft.com  (1)
+user1017@crowleydev.onmicrosoft.com  (1)
+user1018@crowleydev.onmicrosoft.com  (1)
+user1019@crowleydev.onmicrosoft.com  (1)
+user102@crowleydev.onmicrosoft.com  (1)
+user1020@crowleydev.onmicrosoft.com  (1)
+user1021@crowleydev.onmicrosoft.com  (1)
+user1022@crowleydev.onmicrosoft.com  (1)
+user1023@crowleydev.onmicrosoft.com  (1)
+user1024@crowleydev.onmicrosoft.com  (1)
+user1025@crowleydev.onmicrosoft.com  (1)
+user1026@crowleydev.onmicrosoft.com  (1)
+user1027@crowleydev.onmicrosoft.com  (1)
+user1028@crowleydev.onmicrosoft.com  (1)
+user1029@crowleydev.onmicrosoft.com  (1)
+user103@crowleydev.onmicrosoft.com  (1)
+user1030@crowleydev.onmicrosoft.com  (1)
+user1031@crowleydev.onmicrosoft.com  (1)
+user1032@crowleydev.onmicrosoft.com  (1)
+user1033@crowleydev.onmicrosoft.com  (1)
+user1034@crowleydev.onmicrosoft.com  (1)
+user1035@crowleydev.onmicrosoft.com  (1)
+user1036@crowleydev.onmicrosoft.com  (1)
+user1037@crowleydev.onmicrosoft.com  (1)
+user1038@crowleydev.onmicrosoft.com  (1)
+user1039@crowleydev.onmicrosoft.com  (1)
+user104@crowleydev.onmicrosoft.com  (1)
+user1040@crowleydev.onmicrosoft.com  (1)
+user1041@crowleydev.onmicrosoft.com  (1)
+user1042@crowleydev.onmicrosoft.com  (1)
+user1043@crowleydev.onmicrosoft.com  (1)
+user1044@crowleydev.onmicrosoft.com  (1)
+user1045@crowleydev.onmicrosoft.com  (1)
+user1046@crowleydev.onmicrosoft.com  (1)
+user1047@crowleydev.onmicrosoft.com  (1)
+user1048@crowleydev.onmicrosoft.com  (1)
+user1049@crowleydev.onmicrosoft.com  (1)
+user105@crowleydev.onmicrosoft.com  (1)
+user1050@crowleydev.onmicrosoft.com  (1)
+user1051@crowleydev.onmicrosoft.com  (1)
+user1052@crowleydev.onmicrosoft.com  (1)
+user1053@crowleydev.onmicrosoft.com  (1)
+user1054@crowleydev.onmicrosoft.com  (1)
+user1055@crowleydev.onmicrosoft.com  (1)
+user1056@crowleydev.onmicrosoft.com  (1)
+user1057@crowleydev.onmicrosoft.com  (1)
+user1058@crowleydev.onmicrosoft.com  (1)
+user1059@crowleydev.onmicrosoft.com  (1)
+user106@crowleydev.onmicrosoft.com  (1)
+user1060@crowleydev.onmicrosoft.com  (1)
+user1061@crowleydev.onmicrosoft.com  (1)
+user1062@crowleydev.onmicrosoft.com  (1)
+user1063@crowleydev.onmicrosoft.com  (1)
+user1064@crowleydev.onmicrosoft.com  (1)
+user1065@crowleydev.onmicrosoft.com  (1)
+user1066@crowleydev.onmicrosoft.com  (1)
+user1067@crowleydev.onmicrosoft.com  (1)
+user1068@crowleydev.onmicrosoft.com  (1)
+user1069@crowleydev.onmicrosoft.com  (1)
+user107@crowleydev.onmicrosoft.com  (1)
+user1070@crowleydev.onmicrosoft.com  (1)
+user1071@crowleydev.onmicrosoft.com  (1)
+user1072@crowleydev.onmicrosoft.com  (1)
+user1073@crowleydev.onmicrosoft.com  (1)
+user1074@crowleydev.onmicrosoft.com  (1)
+user1075@crowleydev.onmicrosoft.com  (1)
+user1076@crowleydev.onmicrosoft.com  (1)
+user1077@crowleydev.onmicrosoft.com  (1)
+user1078@crowleydev.onmicrosoft.com  (1)
+user1079@crowleydev.onmicrosoft.com  (1)
+user108@crowleydev.onmicrosoft.com  (1)
+user1080@crowleydev.onmicrosoft.com  (1)
+user1081@crowleydev.onmicrosoft.com  (1)
+user1082@crowleydev.onmicrosoft.com  (1)
+user1083@crowleydev.onmicrosoft.com  (1)
+user1084@crowleydev.onmicrosoft.com  (1)
+user1085@crowleydev.onmicrosoft.com  (1)
+user1086@crowleydev.onmicrosoft.com  (1)
+user1087@crowleydev.onmicrosoft.com  (1)
+user1088@crowleydev.onmicrosoft.com  (1)
+user1089@crowleydev.onmicrosoft.com  (1)
+user109@crowleydev.onmicrosoft.com  (1)
+user1090@crowleydev.onmicrosoft.com  (1)
+user1091@crowleydev.onmicrosoft.com  (1)
+user1092@crowleydev.onmicrosoft.com  (1)
+user1093@crowleydev.onmicrosoft.com  (1)
+user1094@crowleydev.onmicrosoft.com  (1)
+user1095@crowleydev.onmicrosoft.com  (1)
+user1096@crowleydev.onmicrosoft.com  (1)
+user1097@crowleydev.onmicrosoft.com  (1)
+user1098@crowleydev.onmicrosoft.com  (1)
+user1099@crowleydev.onmicrosoft.com  (1)
+user11@crowleydev.onmicrosoft.com  (1)
+user110@crowleydev.onmicrosoft.com  (1)
+user1100@crowleydev.onmicrosoft.com  (1)
+user1101@crowleydev.onmicrosoft.com  (1)
+user1102@crowleydev.onmicrosoft.com  (1)
+user1103@crowleydev.onmicrosoft.com  (1)
+user1104@crowleydev.onmicrosoft.com  (1)
+user1105@crowleydev.onmicrosoft.com  (1)
+user1106@crowleydev.onmicrosoft.com  (1)
+user1107@crowleydev.onmicrosoft.com  (1)
+user1108@crowleydev.onmicrosoft.com  (1)
+user1109@crowleydev.onmicrosoft.com  (1)
+user111@crowleydev.onmicrosoft.com  (1)
+user1110@crowleydev.onmicrosoft.com  (1)
+user1111@crowleydev.onmicrosoft.com  (1)
+user1112@crowleydev.onmicrosoft.com  (1)
+user1113@crowleydev.onmicrosoft.com  (1)
+user1114@crowleydev.onmicrosoft.com  (1)
+user1115@crowleydev.onmicrosoft.com  (1)
+user1116@crowleydev.onmicrosoft.com  (1)
+user1117@crowleydev.onmicrosoft.com  (1)
+user1118@crowleydev.onmicrosoft.com  (1)
+user1119@crowleydev.onmicrosoft.com  (1)
+user112@crowleydev.onmicrosoft.com  (1)
+user1120@crowleydev.onmicrosoft.com  (1)
+user1121@crowleydev.onmicrosoft.com  (1)
+user1122@crowleydev.onmicrosoft.com  (1)
+user1123@crowleydev.onmicrosoft.com  (1)
+user1124@crowleydev.onmicrosoft.com  (1)
+user1125@crowleydev.onmicrosoft.com  (1)
+user1126@crowleydev.onmicrosoft.com  (1)
+user1127@crowleydev.onmicrosoft.com  (1)
+user1128@crowleydev.onmicrosoft.com  (1)
+user1129@crowleydev.onmicrosoft.com  (1)
+user113@crowleydev.onmicrosoft.com  (1)
+user1130@crowleydev.onmicrosoft.com  (1)
+user1131@crowleydev.onmicrosoft.com  (1)
+user1132@crowleydev.onmicrosoft.com  (1)
+user1133@crowleydev.onmicrosoft.com  (1)
+user1134@crowleydev.onmicrosoft.com  (1)
+user1135@crowleydev.onmicrosoft.com  (1)
+user1136@crowleydev.onmicrosoft.com  (1)
+user1137@crowleydev.onmicrosoft.com  (1)
+user1138@crowleydev.onmicrosoft.com  (1)
+user1139@crowleydev.onmicrosoft.com  (1)
+user114@crowleydev.onmicrosoft.com  (1)
+user1140@crowleydev.onmicrosoft.com  (1)
+user1141@crowleydev.onmicrosoft.com  (1)
+user1142@crowleydev.onmicrosoft.com  (1)
+user1143@crowleydev.onmicrosoft.com  (1)
+user1144@crowleydev.onmicrosoft.com  (1)
+user1145@crowleydev.onmicrosoft.com  (1)
+user1146@crowleydev.onmicrosoft.com  (1)
+user1147@crowleydev.onmicrosoft.com  (1)
+user1148@crowleydev.onmicrosoft.com  (1)
+user1149@crowleydev.onmicrosoft.com  (1)
+user115@crowleydev.onmicrosoft.com  (1)
+user1150@crowleydev.onmicrosoft.com  (1)
+user1151@crowleydev.onmicrosoft.com  (1)
+user1152@crowleydev.onmicrosoft.com  (1)
+user1153@crowleydev.onmicrosoft.com  (1)
+user1154@crowleydev.onmicrosoft.com  (1)
+user1155@crowleydev.onmicrosoft.com  (1)
+user1156@crowleydev.onmicrosoft.com  (1)
+user1157@crowleydev.onmicrosoft.com  (1)
+user1158@crowleydev.onmicrosoft.com  (1)
+user1159@crowleydev.onmicrosoft.com  (1)
+user116@crowleydev.onmicrosoft.com  (1)
+user1160@crowleydev.onmicrosoft.com  (1)
+user1161@crowleydev.onmicrosoft.com  (1)
+user1162@crowleydev.onmicrosoft.com  (1)
+user1163@crowleydev.onmicrosoft.com  (1)
+user1164@crowleydev.onmicrosoft.com  (1)
+user1165@crowleydev.onmicrosoft.com  (1)
+user1166@crowleydev.onmicrosoft.com  (1)
+user1167@crowleydev.onmicrosoft.com  (1)
+user1168@crowleydev.onmicrosoft.com  (1)
+user1169@crowleydev.onmicrosoft.com  (1)
+user117@crowleydev.onmicrosoft.com  (1)
+user1170@crowleydev.onmicrosoft.com  (1)
+user1171@crowleydev.onmicrosoft.com  (1)
+user1172@crowleydev.onmicrosoft.com  (1)
+user1173@crowleydev.onmicrosoft.com  (1)
+user1174@crowleydev.onmicrosoft.com  (1)
+user1175@crowleydev.onmicrosoft.com  (1)
+user1176@crowleydev.onmicrosoft.com  (1)
+user1177@crowleydev.onmicrosoft.com  (1)
+user1178@crowleydev.onmicrosoft.com  (1)
+user1179@crowleydev.onmicrosoft.com  (1)
+user118@crowleydev.onmicrosoft.com  (1)
+user1180@crowleydev.onmicrosoft.com  (1)
+user1181@crowleydev.onmicrosoft.com  (1)
+user1182@crowleydev.onmicrosoft.com  (1)
+user1183@crowleydev.onmicrosoft.com  (1)
+user1184@crowleydev.onmicrosoft.com  (1)
+user1185@crowleydev.onmicrosoft.com  (1)
+user1186@crowleydev.onmicrosoft.com  (1)
+user1187@crowleydev.onmicrosoft.com  (1)
+user1188@crowleydev.onmicrosoft.com  (1)
+user1189@crowleydev.onmicrosoft.com  (1)
+user119@crowleydev.onmicrosoft.com  (1)
+user1190@crowleydev.onmicrosoft.com  (1)
+user1191@crowleydev.onmicrosoft.com  (1)
+user1192@crowleydev.onmicrosoft.com  (1)
+user1193@crowleydev.onmicrosoft.com  (1)
+user1194@crowleydev.onmicrosoft.com  (1)
+user1195@crowleydev.onmicrosoft.com  (1)
+user1196@crowleydev.onmicrosoft.com  (1)
+user1197@crowleydev.onmicrosoft.com  (1)
+user1198@crowleydev.onmicrosoft.com  (1)
+user1199@crowleydev.onmicrosoft.com  (1)
+user12@crowleydev.onmicrosoft.com  (1)
+user120@crowleydev.onmicrosoft.com  (1)
+user1200@crowleydev.onmicrosoft.com  (1)
+user1201@crowleydev.onmicrosoft.com  (1)
+user1202@crowleydev.onmicrosoft.com  (1)
+user1203@crowleydev.onmicrosoft.com  (1)
+user1204@crowleydev.onmicrosoft.com  (1)
+user1205@crowleydev.onmicrosoft.com  (1)
+user1206@crowleydev.onmicrosoft.com  (1)
+user1207@crowleydev.onmicrosoft.com  (1)
+user1208@crowleydev.onmicrosoft.com  (1)
+user1209@crowleydev.onmicrosoft.com  (1)
+user121@crowleydev.onmicrosoft.com  (1)
+user1210@crowleydev.onmicrosoft.com  (1)
+user1211@crowleydev.onmicrosoft.com  (1)
+user1212@crowleydev.onmicrosoft.com  (1)
+user1213@crowleydev.onmicrosoft.com  (1)
+user1214@crowleydev.onmicrosoft.com  (1)
+user1215@crowleydev.onmicrosoft.com  (1)
+user1216@crowleydev.onmicrosoft.com  (1)
+user1217@crowleydev.onmicrosoft.com  (1)
+user1218@crowleydev.onmicrosoft.com  (1)
+user1219@crowleydev.onmicrosoft.com  (1)
+user122@crowleydev.onmicrosoft.com  (1)
+user1220@crowleydev.onmicrosoft.com  (1)
+user1221@crowleydev.onmicrosoft.com  (1)
+user1222@crowleydev.onmicrosoft.com  (1)
+user1223@crowleydev.onmicrosoft.com  (1)
+user1224@crowleydev.onmicrosoft.com  (1)
+user1225@crowleydev.onmicrosoft.com  (1)
+user1226@crowleydev.onmicrosoft.com  (1)
+user1227@crowleydev.onmicrosoft.com  (1)
+user1228@crowleydev.onmicrosoft.com  (1)
+user1229@crowleydev.onmicrosoft.com  (1)
+user123@crowleydev.onmicrosoft.com  (1)
+user1230@crowleydev.onmicrosoft.com  (1)
+user1231@crowleydev.onmicrosoft.com  (1)
+user1232@crowleydev.onmicrosoft.com  (1)
+user1233@crowleydev.onmicrosoft.com  (1)
+user1234@crowleydev.onmicrosoft.com  (1)
+user1235@crowleydev.onmicrosoft.com  (1)
+user1236@crowleydev.onmicrosoft.com  (1)
+user1237@crowleydev.onmicrosoft.com  (1)
+user1238@crowleydev.onmicrosoft.com  (1)
+user1239@crowleydev.onmicrosoft.com  (1)
+user124@crowleydev.onmicrosoft.com  (1)
+user1240@crowleydev.onmicrosoft.com  (1)
+user125@crowleydev.onmicrosoft.com  (1)
+user126@crowleydev.onmicrosoft.com  (1)
+user127@crowleydev.onmicrosoft.com  (1)
+user128@crowleydev.onmicrosoft.com  (1)
+user129@crowleydev.onmicrosoft.com  (1)
+user13@crowleydev.onmicrosoft.com  (1)
+user130@crowleydev.onmicrosoft.com  (1)
+user131@crowleydev.onmicrosoft.com  (1)
+user132@crowleydev.onmicrosoft.com  (1)
+user133@crowleydev.onmicrosoft.com  (1)
+user134@crowleydev.onmicrosoft.com  (1)
+user135@crowleydev.onmicrosoft.com  (1)
+user136@crowleydev.onmicrosoft.com  (1)
+user137@crowleydev.onmicrosoft.com  (1)
+user138@crowleydev.onmicrosoft.com  (1)
+user139@crowleydev.onmicrosoft.com  (1)
+user14@crowleydev.onmicrosoft.com  (1)
+user140@crowleydev.onmicrosoft.com  (1)
+user141@crowleydev.onmicrosoft.com  (1)
+user142@crowleydev.onmicrosoft.com  (1)
+user143@crowleydev.onmicrosoft.com  (1)
+user144@crowleydev.onmicrosoft.com  (1)
+user145@crowleydev.onmicrosoft.com  (1)
+user146@crowleydev.onmicrosoft.com  (1)
+user147@crowleydev.onmicrosoft.com  (1)
+user148@crowleydev.onmicrosoft.com  (1)
+user149@crowleydev.onmicrosoft.com  (1)
+user15@crowleydev.onmicrosoft.com  (1)
+user150@crowleydev.onmicrosoft.com  (1)
+user151@crowleydev.onmicrosoft.com  (1)
+user152@crowleydev.onmicrosoft.com  (1)
+user153@crowleydev.onmicrosoft.com  (1)
+user154@crowleydev.onmicrosoft.com  (1)
+user155@crowleydev.onmicrosoft.com  (1)
+user156@crowleydev.onmicrosoft.com  (1)
+user157@crowleydev.onmicrosoft.com  (1)
+user158@crowleydev.onmicrosoft.com  (1)
+user159@crowleydev.onmicrosoft.com  (1)
+user16@crowleydev.onmicrosoft.com  (1)
+user160@crowleydev.onmicrosoft.com  (1)
+user161@crowleydev.onmicrosoft.com  (1)
+user162@crowleydev.onmicrosoft.com  (1)
+user163@crowleydev.onmicrosoft.com  (1)
+user164@crowleydev.onmicrosoft.com  (1)
+user165@crowleydev.onmicrosoft.com  (1)
+user166@crowleydev.onmicrosoft.com  (1)
+user167@crowleydev.onmicrosoft.com  (1)
+user168@crowleydev.onmicrosoft.com  (1)
+user169@crowleydev.onmicrosoft.com  (1)
+user17@crowleydev.onmicrosoft.com  (1)
+user170@crowleydev.onmicrosoft.com  (1)
+user171@crowleydev.onmicrosoft.com  (1)
+user172@crowleydev.onmicrosoft.com  (1)
+user173@crowleydev.onmicrosoft.com  (1)
+user174@crowleydev.onmicrosoft.com  (1)
+user175@crowleydev.onmicrosoft.com  (1)
+user176@crowleydev.onmicrosoft.com  (1)
+user177@crowleydev.onmicrosoft.com  (1)
+user178@crowleydev.onmicrosoft.com  (1)
+user179@crowleydev.onmicrosoft.com  (1)
+user18@crowleydev.onmicrosoft.com  (1)
+user180@crowleydev.onmicrosoft.com  (1)
+user181@crowleydev.onmicrosoft.com  (1)
+user182@crowleydev.onmicrosoft.com  (1)
+user183@crowleydev.onmicrosoft.com  (1)
+user184@crowleydev.onmicrosoft.com  (1)
+user185@crowleydev.onmicrosoft.com  (1)
+user186@crowleydev.onmicrosoft.com  (1)
+user187@crowleydev.onmicrosoft.com  (1)
+user188@crowleydev.onmicrosoft.com  (1)
+user189@crowleydev.onmicrosoft.com  (1)
+user19@crowleydev.onmicrosoft.com  (1)
+user190@crowleydev.onmicrosoft.com  (1)
+user191@crowleydev.onmicrosoft.com  (1)
+user192@crowleydev.onmicrosoft.com  (1)
+user193@crowleydev.onmicrosoft.com  (1)
+user194@crowleydev.onmicrosoft.com  (1)
+user195@crowleydev.onmicrosoft.com  (1)
+user196@crowleydev.onmicrosoft.com  (1)
+user197@crowleydev.onmicrosoft.com  (1)
+user198@crowleydev.onmicrosoft.com  (1)
+user199@crowleydev.onmicrosoft.com  (1)
+user2@crowleydev.onmicrosoft.com  (1)
+user20@crowleydev.onmicrosoft.com  (1)
+user200@crowleydev.onmicrosoft.com  (1)
+user201@crowleydev.onmicrosoft.com  (1)
+user202@crowleydev.onmicrosoft.com  (1)
+user203@crowleydev.onmicrosoft.com  (1)
+user204@crowleydev.onmicrosoft.com  (1)
+user205@crowleydev.onmicrosoft.com  (1)
+user206@crowleydev.onmicrosoft.com  (1)
+user207@crowleydev.onmicrosoft.com  (1)
+user208@crowleydev.onmicrosoft.com  (1)
+user209@crowleydev.onmicrosoft.com  (1)
+user21@crowleydev.onmicrosoft.com  (1)
+user210@crowleydev.onmicrosoft.com  (1)
+user211@crowleydev.onmicrosoft.com  (1)
+user212@crowleydev.onmicrosoft.com  (1)
+user213@crowleydev.onmicrosoft.com  (1)
+user214@crowleydev.onmicrosoft.com  (1)
+user215@crowleydev.onmicrosoft.com  (1)
+user216@crowleydev.onmicrosoft.com  (1)
+user217@crowleydev.onmicrosoft.com  (1)
+user218@crowleydev.onmicrosoft.com  (1)
+user219@crowleydev.onmicrosoft.com  (1)
+user22@crowleydev.onmicrosoft.com  (1)
+user220@crowleydev.onmicrosoft.com  (1)
+user221@crowleydev.onmicrosoft.com  (1)
+user222@crowleydev.onmicrosoft.com  (1)
+user223@crowleydev.onmicrosoft.com  (1)
+user224@crowleydev.onmicrosoft.com  (1)
+user225@crowleydev.onmicrosoft.com  (1)
+user226@crowleydev.onmicrosoft.com  (1)
+user227@crowleydev.onmicrosoft.com  (1)
+user228@crowleydev.onmicrosoft.com  (1)
+user229@crowleydev.onmicrosoft.com  (1)
+user23@crowleydev.onmicrosoft.com  (1)
+user230@crowleydev.onmicrosoft.com  (1)
+user231@crowleydev.onmicrosoft.com  (1)
+user232@crowleydev.onmicrosoft.com  (1)
+user233@crowleydev.onmicrosoft.com  (1)
+user234@crowleydev.onmicrosoft.com  (1)
+user235@crowleydev.onmicrosoft.com  (1)
+user236@crowleydev.onmicrosoft.com  (1)
+user237@crowleydev.onmicrosoft.com  (1)
+user238@crowleydev.onmicrosoft.com  (1)
+user239@crowleydev.onmicrosoft.com  (1)
+user24@crowleydev.onmicrosoft.com  (1)
+user240@crowleydev.onmicrosoft.com  (1)
+user241@crowleydev.onmicrosoft.com  (1)
+user242@crowleydev.onmicrosoft.com  (1)
+user243@crowleydev.onmicrosoft.com  (1)
+user244@crowleydev.onmicrosoft.com  (1)
+user245@crowleydev.onmicrosoft.com  (1)
+user246@crowleydev.onmicrosoft.com  (1)
+user247@crowleydev.onmicrosoft.com  (1)
+user248@crowleydev.onmicrosoft.com  (1)
+user249@crowleydev.onmicrosoft.com  (1)
+user25@crowleydev.onmicrosoft.com  (1)
+user250@crowleydev.onmicrosoft.com  (1)
+user251@crowleydev.onmicrosoft.com  (1)
+user252@crowleydev.onmicrosoft.com  (1)
+user253@crowleydev.onmicrosoft.com  (1)
+user254@crowleydev.onmicrosoft.com  (1)
+user255@crowleydev.onmicrosoft.com  (1)
+user256@crowleydev.onmicrosoft.com  (1)
+user257@crowleydev.onmicrosoft.com  (1)
+user258@crowleydev.onmicrosoft.com  (1)
+user259@crowleydev.onmicrosoft.com  (1)
+user26@crowleydev.onmicrosoft.com  (1)
+user260@crowleydev.onmicrosoft.com  (1)
+user261@crowleydev.onmicrosoft.com  (1)
+user262@crowleydev.onmicrosoft.com  (1)
+user263@crowleydev.onmicrosoft.com  (1)
+user264@crowleydev.onmicrosoft.com  (1)
+user265@crowleydev.onmicrosoft.com  (1)
+user266@crowleydev.onmicrosoft.com  (1)
+user267@crowleydev.onmicrosoft.com  (1)
+user268@crowleydev.onmicrosoft.com  (1)
+user269@crowleydev.onmicrosoft.com  (1)
+user27@crowleydev.onmicrosoft.com  (1)
+user270@crowleydev.onmicrosoft.com  (1)
+user271@crowleydev.onmicrosoft.com  (1)
+user272@crowleydev.onmicrosoft.com  (1)
+user273@crowleydev.onmicrosoft.com  (1)
+user274@crowleydev.onmicrosoft.com  (1)
+user275@crowleydev.onmicrosoft.com  (1)
+user276@crowleydev.onmicrosoft.com  (1)
+user277@crowleydev.onmicrosoft.com  (1)
+user278@crowleydev.onmicrosoft.com  (1)
+user279@crowleydev.onmicrosoft.com  (1)
+user28@crowleydev.onmicrosoft.com  (1)
+user280@crowleydev.onmicrosoft.com  (1)
+user281@crowleydev.onmicrosoft.com  (1)
+user282@crowleydev.onmicrosoft.com  (1)
+user283@crowleydev.onmicrosoft.com  (1)
+user284@crowleydev.onmicrosoft.com  (1)
+user285@crowleydev.onmicrosoft.com  (1)
+user286@crowleydev.onmicrosoft.com  (1)
+user287@crowleydev.onmicrosoft.com  (1)
+user288@crowleydev.onmicrosoft.com  (1)
+user289@crowleydev.onmicrosoft.com  (1)
+user29@crowleydev.onmicrosoft.com  (1)
+user290@crowleydev.onmicrosoft.com  (1)
+user291@crowleydev.onmicrosoft.com  (1)
+user292@crowleydev.onmicrosoft.com  (1)
+user293@crowleydev.onmicrosoft.com  (1)
+user294@crowleydev.onmicrosoft.com  (1)
+user295@crowleydev.onmicrosoft.com  (1)
+user296@crowleydev.onmicrosoft.com  (1)
+user297@crowleydev.onmicrosoft.com  (1)
+user298@crowleydev.onmicrosoft.com  (1)
+user299@crowleydev.onmicrosoft.com  (1)
+user3@crowleydev.onmicrosoft.com  (1)
+user30@crowleydev.onmicrosoft.com  (1)
+user300@crowleydev.onmicrosoft.com  (1)
+user301@crowleydev.onmicrosoft.com  (1)
+user302@crowleydev.onmicrosoft.com  (1)
+user303@crowleydev.onmicrosoft.com  (1)
+user304@crowleydev.onmicrosoft.com  (1)
+user305@crowleydev.onmicrosoft.com  (1)
+user306@crowleydev.onmicrosoft.com  (1)
+user307@crowleydev.onmicrosoft.com  (1)
+user308@crowleydev.onmicrosoft.com  (1)
+user309@crowleydev.onmicrosoft.com  (1)
+user31@crowleydev.onmicrosoft.com  (1)
+user310@crowleydev.onmicrosoft.com  (1)
+user311@crowleydev.onmicrosoft.com  (1)
+user312@crowleydev.onmicrosoft.com  (1)
+user313@crowleydev.onmicrosoft.com  (1)
+user314@crowleydev.onmicrosoft.com  (1)
+user315@crowleydev.onmicrosoft.com  (1)
+user316@crowleydev.onmicrosoft.com  (1)
+user317@crowleydev.onmicrosoft.com  (1)
+user318@crowleydev.onmicrosoft.com  (1)
+user319@crowleydev.onmicrosoft.com  (1)
+user32@crowleydev.onmicrosoft.com  (1)
+user320@crowleydev.onmicrosoft.com  (1)
+user321@crowleydev.onmicrosoft.com  (1)
+user322@crowleydev.onmicrosoft.com  (1)
+user323@crowleydev.onmicrosoft.com  (1)
+user324@crowleydev.onmicrosoft.com  (1)
+user325@crowleydev.onmicrosoft.com  (1)
+user326@crowleydev.onmicrosoft.com  (1)
+user327@crowleydev.onmicrosoft.com  (1)
+user328@crowleydev.onmicrosoft.com  (1)
+user329@crowleydev.onmicrosoft.com  (1)
+user33@crowleydev.onmicrosoft.com  (1)
+user330@crowleydev.onmicrosoft.com  (1)
+user331@crowleydev.onmicrosoft.com  (1)</pre></details></td></tr>
+            </tbody>
+        </table>
+        <div style="margin:0.6rem 0 0 0"><details class='cmd'><summary>PowerShell <span class='cmd-meta'>6 lines</span><button type='button' class='copy-btn'>Copy</button></summary><pre class='commands'># ==== Mailbox Backup Appliance (c3d2e1f0-a9b8-4c7d-8e6f-5a4b3c2d1e0f) - RBAC scope from observed activity, last 30 days ====
+# Observed on 1240 mailboxes (FolderBind: 1240; MailItemsAccessed: 1240).
+# A scope built from a list this size is not a control. Decide about the app instead: is org-wide
+# reach its job (backup, security, journaling), or has it drifted? If a subset is legitimate, build
+# the group from a source of truth (department, license, OU), not from this list. Full list: CSV.
+# Details: https://mikecrowley.us/2026/09/26/exchange-app-mailbox-activity/</pre></details></div>
+        <h2>Payroll Reminders <span class='status-badge ready'>&#10003; Scope candidate</span></h2>
+        <p class="section-sub"><span class="app-id">8e7d6c5b-4a39-4281-9f0e-1d2c3b4a5968</span> &nbsp; <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/8e7d6c5b-4a39-4281-9f0e-1d2c3b4a5968' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e/appId/8e7d6c5b-4a39-4281-9f0e-1d2c3b4a5968' target='_blank' rel='noopener'>Enterprise app &#8599;</a> <br>
+        Entra grants: <span class='perm migrate' title='Activity of this kind observed'>Graph:Mail.Send</span><span class='perm migrate' title='Activity of this kind observed'>Graph:Mail.ReadWrite</span><span class='perm migrate' title='Reads or writes were observed, but the record does not say whether they were mail, calendar, contacts or settings'>Graph:Calendars.ReadWrite &#183; unproven</span></p>
+        <table>
+            <thead><tr><th>Operation</th><th>Events</th><th>Mailboxes</th><th>Mailboxes by activity (top 10 inline)</th></tr></thead>
+            <tbody>
+                <tr><td><strong>Send</strong><span class='badge warn'>send</span><br><span class='email'>2026-08-31 to 2026-09-26</span></td><td>177</td><td>5</td><td>payroll@crowleydev.onmicrosoft.com <span class='email'>(140)</span><br>jordan.lee@crowleydev.onmicrosoft.com <span class='email'>(10)</span><br>alex.rivera@crowleydev.onmicrosoft.com <span class='email'>(9)</span><br>casey.nguyen@crowleydev.onmicrosoft.com <span class='email'>(9)</span><br>sam.patel@crowleydev.onmicrosoft.com <span class='email'>(9)</span></td></tr>
+<tr><td><strong>MailItemsAccessed</strong><span class='badge info'>read</span><br><span class='email'>2026-08-31 to 2026-09-25</span></td><td>58</td><td>1</td><td>payroll@crowleydev.onmicrosoft.com <span class='email'>(58)</span></td></tr>
+<tr><td><strong>Update</strong><span class='badge purp'>write</span><br><span class='email'>2026-09-01 to 2026-09-10</span></td><td>9</td><td>1</td><td>payroll@crowleydev.onmicrosoft.com <span class='email'>(9)</span></td></tr>
+<tr><td><strong>MoveToDeletedItems</strong><span class='badge purp'>write</span><br><span class='email'>2026-09-11 to 2026-09-13</span></td><td>3</td><td>1</td><td>payroll@crowleydev.onmicrosoft.com <span class='email'>(3)</span></td></tr>
+            </tbody>
+        </table>
+        <div style="margin:0.6rem 0 0 0"><details class='cmd'><summary>PowerShell <span class='cmd-meta'>28 lines</span><button type='button' class='copy-btn'>Copy</button></summary><pre class='commands'># ==== Payroll Reminders (8e7d6c5b-4a39-4281-9f0e-1d2c3b4a5968) - RBAC scope from observed activity, last 30 days ====
+# Observed: Send on 5 mailbox(es); MailItemsAccessed on 1 mailbox(es); Update on 1 mailbox(es); MoveToDeletedItems on 1 mailbox(es)
+# Steps 1-4 are additive. Verify, then revoke the tenant-wide grant with the audit script&#39;s generated
+# cutover: https://github.com/Mike-Crowley/Public-Scripts/blob/main/Exchange/Audit-ExoAppAccessPolicies.ps1
+# How this report works and its caveats: https://mikecrowley.us/2026/09/26/exchange-app-mailbox-activity/
+# The migration itself (scopes, roles, cutover): https://mikecrowley.us/2026/07/10/exchange-app-access-policy-rbac-migration/
+
+# 1. Exchange pointer to the Entra service principal (idempotent)
+if (-not (Get-ServicePrincipal -Identity &#39;8e7d6c5b-4a39-4281-9f0e-1d2c3b4a5968&#39; -ErrorAction SilentlyContinue)) {
+    New-ServicePrincipal -AppId &#39;8e7d6c5b-4a39-4281-9f0e-1d2c3b4a5968&#39; -ObjectId &#39;b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e&#39; -DisplayName &#39;Payroll Reminders&#39;
+}
+
+# 2. Scope: a mail-enabled security group holding the 5 mailboxes observed (DIRECT members only;
+#    membership is the control from here on, so own it like one)
+New-DistributionGroup -Name &#39;Payroll Reminders 8e7d6c5b Mailboxes&#39; -Alias &#39;PayrollReminders8e7d6c5bMailboxes&#39; -Type Security -Members &#39;payroll@crowleydev.onmicrosoft.com&#39;, &#39;jordan.lee@crowleydev.onmicrosoft.com&#39;, &#39;alex.rivera@crowleydev.onmicrosoft.com&#39;, &#39;casey.nguyen@crowleydev.onmicrosoft.com&#39;, &#39;sam.patel@crowleydev.onmicrosoft.com&#39;
+$dn = (Get-DistributionGroup -Identity &#39;Payroll Reminders 8e7d6c5b Mailboxes&#39;).DistinguishedName
+New-ManagementScope -Name &#39;Payroll Reminders-8e7d6c5b-Scope&#39; -RecipientRestrictionFilter &quot;MemberOfGroup -eq &#39;$dn&#39;&quot;
+
+# 3. Role assignments: one per RBAC role the grants map to. Grants with no matching activity in the
+#    window are commented out - add them back only if the app needs them, or drop the grant instead.
+#    &quot;unproven&quot; means reads or writes were seen but the record cannot say they were calendar, contacts
+#    or settings rather than mail; keep the role if the app needs it, drop the grant if its job is mail.
+New-ManagementRoleAssignment -App &#39;8e7d6c5b-4a39-4281-9f0e-1d2c3b4a5968&#39; -Role &#39;Application Mail.Send&#39; -CustomResourceScope &#39;Payroll Reminders-8e7d6c5b-Scope&#39;
+New-ManagementRoleAssignment -App &#39;8e7d6c5b-4a39-4281-9f0e-1d2c3b4a5968&#39; -Role &#39;Application Mail.ReadWrite&#39; -CustomResourceScope &#39;Payroll Reminders-8e7d6c5b-Scope&#39;
+New-ManagementRoleAssignment -App &#39;8e7d6c5b-4a39-4281-9f0e-1d2c3b4a5968&#39; -Role &#39;Application Calendars.ReadWrite&#39; -CustomResourceScope &#39;Payroll Reminders-8e7d6c5b-Scope&#39;   # Graph:Calendars.ReadWrite: unproven
+
+# 4. Verify: expect InScope = True, then test the app itself
+Test-ServicePrincipalAuthorization -Identity &#39;8e7d6c5b-4a39-4281-9f0e-1d2c3b4a5968&#39; -Resource &#39;payroll@crowleydev.onmicrosoft.com&#39; | Format-Table</pre></details></div>
+        <h2>Room Booking Kiosk <span class='status-badge delete'>No activity</span></h2>
+        <p class="section-sub"><span class="app-id">e5d4c3b2-a1f0-4e9d-8c7b-6a5f4e3d2c1b</span> &nbsp; <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/e5d4c3b2-a1f0-4e9d-8c7b-6a5f4e3d2c1b' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/e5f6a7b8-c9d0-4e1f-8a3b-4c5d6e7f8a9b/appId/e5d4c3b2-a1f0-4e9d-8c7b-6a5f4e3d2c1b' target='_blank' rel='noopener'>Enterprise app &#8599;</a> <br>
+        Entra grants: <span class='perm keep' title='No matching activity in the window'>Graph:Calendars.ReadWrite &#183; idle</span><span class='perm keep' title='No matching activity in the window'>Graph:Calendars.Read &#183; idle</span></p>
+        <table>
+            <thead><tr><th>Operation</th><th>Events</th><th>Mailboxes</th><th>Mailboxes by activity (top 10 inline)</th></tr></thead>
+            <tbody>
+                <tr><td colspan='4' class='empty-state'>No mailbox activity attributed to this app in the last 30 days.</td></tr>
+            </tbody>
+        </table>
+        <div style="margin:0.6rem 0 0 0"><details class='cmd'><summary>PowerShell <span class='cmd-meta'>6 lines</span><button type='button' class='copy-btn'>Copy</button></summary><pre class='commands'># ==== Room Booking Kiosk (e5d4c3b2-a1f0-4e9d-8c7b-6a5f4e3d2c1b) - RBAC scope from observed activity, last 30 days ====
+# No mailbox activity in 30 days. Before scoping, ask whether the app is still in use: an idle app
+# is a candidate for revoking its grants outright (the audit script&#39;s report handles that), not for a scope.
+# If it is seasonal or new, rerun with a longer -Days (up to 180) before deciding. An app that only uses
+# EWS can also look idle here, because EWS records do not name the app; check its sign-in log first.
+# Details: https://mikecrowley.us/2026/09/26/exchange-app-mailbox-activity/</pre></details></div>
+        <div class="footer">
+            <strong>Reading the grants:</strong> a grant is marked <em>idle</em> when no operation of its kind (send,
+            read, write) was observed in the window. Send is unambiguous. Reads and writes could be mail, calendar,
+            contacts or settings, which the audit record does not reliably distinguish, so one observed write matches
+            Mail.ReadWrite, Calendars.ReadWrite and Contacts.ReadWrite alike. A calendar, contacts, settings or MailTips
+            grant matched that way is marked <em>unproven</em>: keep its role if the app needs it, drop the grant if the
+            app's job is mail. IMAP, POP and unrecognized grants are marked <em>not measured</em>, because no mailbox
+            audit record this report can match proves or disproves them.<br><br>
+            <strong>What hides records:</strong>
+            The organization switch first: <code>Get-OrganizationConfig | Format-List AuditDisabled</code>. True means
+            nothing is audited, whatever the mailboxes say, and every app comes back idle; the pre-flight cannot see it.
+            An audit bypass (<code>Get-MailboxAuditBypassAssociation</code>) is set on an account, not a mailbox, and
+            suppresses that account's actions in every mailbox it touches. A mailbox whose audit actions were customized
+            still logs what is on its list, but Microsoft stops adding new default actions to it, so an owner set
+            customized before Send and MailItemsAccessed joined the defaults (2024) lacks them: check
+            <code>Get-Mailbox &lt;mailbox&gt; | Format-List DefaultAuditSet, AuditOwner, AuditDelegate, AuditAdmin</code>.
+            During that 2024 rollout Microsoft also told Audit Standard tenants to run
+            <code>Set-Mailbox -AuditEnabled $true</code> on every mailbox regardless of its current value, so a mailbox
+            nobody reran it on can still be missing Send and MailItemsAccessed.
+            Resource mailboxes are not covered by default mailbox auditing, so a room-booking app can look idle.<br><br>
+            <strong>Caveats:</strong>
+            Audit Standard keeps 180 days. Read counts are a floor: reads inside a short window are folded into one
+            MailItemsAccessed record. EWS is a blind spot: in the EWS records anyone has published, an app calling EWS
+            with full_access_as_app appears only as EWS's own first-party id, never as itself, so an EWS-only app can
+            look idle here; the Entra service principal sign-in log says whether it is active.
+            A search that stopped at the service's per-search record limit is marked
+            <em>truncated</em>; rerun that app with a shorter window. Tenants with Microsoft Graph activity logs in
+            Log Analytics have a second, more complete view of sends and can cross-check.
+            Not available in GCC High or DoD, where <code>Search-UnifiedAuditLog -FreeText &lt;appId&gt;</code> is the fallback.
+        </div>
+    </div>
+    <script>
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('.copy-btn');
+        if (!btn) { return; }
+        e.preventDefault();
+        var pre = btn.closest('details').querySelector('pre');
+        var done = function () {
+            btn.textContent = 'Copied';
+            setTimeout(function () { btn.textContent = 'Copy'; }, 1500);
+        };
+        var fallback = function () {
+            var ta = document.createElement('textarea');
+            ta.value = pre.textContent;
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); } catch (err) { }
+            document.body.removeChild(ta);
+            done();
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(pre.textContent).then(done, fallback);
+        } else {
+            fallback();
+        }
+    });
+    </script>
+</body>
+</html>
