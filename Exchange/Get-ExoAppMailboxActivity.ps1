@@ -26,9 +26,9 @@
     app-only access, not the user's.
 
     Known gap: whether app-only EWS records (full_access_as_app) name the app today is
-    unverified. The only published EWS record from a registered app, from a February 2024 lab
-    test, names only EWS itself (47629505-c2b6-4a80-adb1-9b3a3d233b7b), and its dataset does not
-    say whether the access was app-only. Microsoft added AppAccessContext to EWS records in
+    unverified. The only published EWS record from a registered app comes from a February 2024
+    lab test whose published script signs in with client credentials. It names only EWS itself
+    (47629505-c2b6-4a80-adb1-9b3a3d233b7b). Microsoft added AppAccessContext to EWS records in
     November 2024 (MC909164), and a 2026 delegated EWS record does name the app, but no newer
     app-only record has been published. Until one is, an EWS app can look idle here. The EWS
     usage report (Microsoft 365 admin center: Reports, Usage, Exchange, EWS usage) lists EWS
