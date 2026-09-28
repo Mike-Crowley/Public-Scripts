@@ -26,8 +26,9 @@
     app-only access, not the user's.
 
     Known gap: whether app-only EWS records (full_access_as_app) name the app today is
-    unverified. The only published ones, from early 2024, name only EWS itself
-    (47629505-c2b6-4a80-adb1-9b3a3d233b7b). Microsoft added AppAccessContext to EWS records in
+    unverified. The only published EWS record from a registered app, from a February 2024 lab
+    test, names only EWS itself (47629505-c2b6-4a80-adb1-9b3a3d233b7b), and its dataset does not
+    say whether the access was app-only. Microsoft added AppAccessContext to EWS records in
     November 2024 (MC909164), and a 2026 delegated EWS record does name the app, but no newer
     app-only record has been published. Until one is, an EWS app can look idle here. The EWS
     usage report (Microsoft 365 admin center: Reports, Usage, Exchange, EWS usage) lists EWS
@@ -499,19 +500,22 @@ $Report = foreach ($app in $Selected) {
     $r = $Results[$app.AppId]
     if (-not $r) { $r = @{ Hits = @(); Truncated = $false; Failed = 'not run' } }
     # Delegated records (a signed-in user working through the app) carry the app id in the same
-    # fields as app-only ones. What separates them is the user's Entra session. Microsoft's schema
-    # defines AppAccessContext.AADSessionId as the Entra session of a sign-in the app performed on
-    # behalf of a user, and the Exchange team describes the top-level SessionId as the session claim
-    # in the Entra token. A client-credentials (app-only) token carries no user session, and no
-    # published app-only record has AADSessionId (observed on 2025 and 2026 records; nobody has
-    # published an app-only Send record yet). A record without it, including one with no
-    # AppAccessContext block, counts as app-only: a missing marker keeps the mailbox in scope rather
-    # than dropping it.
-    # The top-level SessionId is not used as a marker yet. The delegated records reported to carry it
-    # without AADSessionId come from a Microsoft first-party client (Outlook desktop) that this report
-    # never lists, so it would add little, and any marker has to be confirmed absent from app-only
-    # records against real ones first: an app-only record classed as delegated drops a mailbox the
-    # app needs from its scope, and the cutover's one-mailbox check would not catch it.
+    # fields as app-only ones. What separates them is the user's Entra session. Entra generates the
+    # session id (sid) only "when a user does interactive authentication" and maps it to
+    # "SessionID / AADSessionId within App Access Context object" in Exchange audit records
+    # (https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-authentication-track-linkable-identifiers).
+    # A client-credentials (app-only) token has no user session, and no published record of an app
+    # acting on its own carries AADSessionId (nobody has published an app-only Send record yet).
+    # The same page notes the identifiers "aren't available in the Exchange Online audit logs on
+    # some aggregated log entries, or logs generated from background processes", so some delegated
+    # records lack the marker too. A record without it, including one with no AppAccessContext
+    # block, counts as app-only: a missing marker keeps the mailbox in scope rather than dropping it.
+    # The top-level SessionId carries the same sid but is not used as a marker yet. The delegated
+    # records reported to carry it without AADSessionId come from a Microsoft first-party client
+    # (Outlook desktop) that this report never lists, so it would add little, and any marker has to
+    # be confirmed absent from app-only records against real ones first: an app-only record classed
+    # as delegated drops a mailbox the app needs from its scope, and the cutover's one-mailbox check
+    # would not catch it.
     $allHits = @($r.Hits)
     $delegated = @($allHits | Where-Object { "$($_.auditData.AppAccessContext.AADSessionId)" -ne '' })
     $hits = if ($IncludeDelegated) { $allHits } else { @($allHits | Where-Object { "$($_.auditData.AppAccessContext.AADSessionId)" -eq '' }) }
