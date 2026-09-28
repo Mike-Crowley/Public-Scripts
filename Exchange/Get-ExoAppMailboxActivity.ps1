@@ -499,19 +499,19 @@ $Report = foreach ($app in $Selected) {
     $r = $Results[$app.AppId]
     if (-not $r) { $r = @{ Hits = @(); Truncated = $false; Failed = 'not run' } }
     # Delegated records (a signed-in user working through the app) carry the app id in the same
-    # fields as app-only ones. What separates them is AppAccessContext.AADSessionId: Microsoft's
-    # schema defines it as the Entra session of a sign-in the app performed on behalf of a user, a
-    # client-credentials token has no such session, and no published app-only record carries one
-    # (observed on 2025 and 2026 records, not documented as a rule). A record without it, including
-    # one with no AppAccessContext block, counts as app-only; Microsoft notes some aggregated and
-    # background records carry no session id at all, and counting those as the app's keeps a
-    # mailbox in scope rather than dropping it.
-    # The top-level SessionId is deliberately NOT a delegated marker. Some delegated clients
-    # (Outlook desktop) put their session there, but those are Microsoft first-party apps this
-    # report never lists, and what Exchange puts in that field on app-only EWS records is
-    # unmeasured. Treating it as delegated would risk the costly mistake: an app-only record
-    # classed as delegated drops a mailbox the app needs from its scope, and the cutover's
-    # one-mailbox check would not catch it.
+    # fields as app-only ones. What separates them is the user's Entra session. Microsoft's schema
+    # defines AppAccessContext.AADSessionId as the Entra session of a sign-in the app performed on
+    # behalf of a user, and the Exchange team describes the top-level SessionId as the session claim
+    # in the Entra token. A client-credentials (app-only) token carries no user session, and no
+    # published app-only record has AADSessionId (observed on 2025 and 2026 records; nobody has
+    # published an app-only Send record yet). A record without it, including one with no
+    # AppAccessContext block, counts as app-only: a missing marker keeps the mailbox in scope rather
+    # than dropping it.
+    # The top-level SessionId is not used as a marker yet. The delegated records reported to carry it
+    # without AADSessionId come from a Microsoft first-party client (Outlook desktop) that this report
+    # never lists, so it would add little, and any marker has to be confirmed absent from app-only
+    # records against real ones first: an app-only record classed as delegated drops a mailbox the
+    # app needs from its scope, and the cutover's one-mailbox check would not catch it.
     $allHits = @($r.Hits)
     $delegated = @($allHits | Where-Object { "$($_.auditData.AppAccessContext.AADSessionId)" -ne '' })
     $hits = if ($IncludeDelegated) { $allHits } else { @($allHits | Where-Object { "$($_.auditData.AppAccessContext.AADSessionId)" -eq '' }) }
