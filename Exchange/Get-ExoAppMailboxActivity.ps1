@@ -15,16 +15,24 @@
     tenant with mailbox auditing on (the default); no Log Analytics required.
 
     Where the app id sits in a mailbox audit record depends on the access path, not on the
-    record's age. For Graph access the app is usually in ClientAppId (often also in
-    AppAccessContext.ClientAppId, though Graph's own id has been seen there too) while AppId holds
-    Microsoft Graph's own id. No published record puts the app itself in AppId; the script checks
-    AppId as well in case one does. Records that carry an AppAccessContext.AADSessionId came from
-    a signed-in user's session (delegated access) and are counted separately, since a management
-    scope constrains app-only access, not the user's.
+    record's age. For Graph access the app is in ClientAppId (and usually in
+    AppAccessContext.ClientAppId) while AppId holds Microsoft Graph's own id. In a delegated EWS
+    record from 2026 the app is in AppId, ClientAppId and AppAccessContext.ClientAppId, with EWS's
+    own id in AppAccessContext.APIId. Some records also name the app as "[AppId=...]" inside
+    ActorInfoString or ClientInfoString. A match in any of those places counts. Records that carry
+    an AppAccessContext.AADSessionId (the Entra session of a sign-in the app performed on behalf
+    of a user, per Microsoft's schema) came from a signed-in user working through the app; they
+    are listed separately and left out of the scope, since a management scope constrains
+    app-only access, not the user's.
 
-    Known gap: in the EWS records anyone has published, an app calling EWS with
-    full_access_as_app appears only as EWS's own first-party id, so an EWS-only app can look
-    idle here. The Entra service principal sign-in log confirms whether such an app is active.
+    Known gap: whether app-only EWS records (full_access_as_app) name the app today is
+    unverified. The only published ones, from early 2024, name only EWS itself
+    (47629505-c2b6-4a80-adb1-9b3a3d233b7b). Microsoft added AppAccessContext to EWS records in
+    November 2024 (MC909164), and a 2026 delegated EWS record does name the app, but no newer
+    app-only record has been published. Until one is, an EWS app can look idle here. The EWS
+    usage report (Microsoft 365 admin center: Reports, Usage, Exchange, EWS usage) lists EWS
+    calls by application ID, which shows whether the app uses EWS at all, though not which
+    mailboxes.
 
     Output: an HTML report in the audit report's style, one section per app with its
     grants, the operations observed and the mailboxes under each, and a commands block that
@@ -119,7 +127,11 @@ elseif ($UserPrincipalName) {
 # first call's credential with an empty token cache and throws "DeviceCodeCredential authentication
 # failed: Object reference not set" (msgraph-sdk-powershell issue 3495, opened against 2.34, closed
 # April 2026 with a fix in 2.37.0; the same error was reported on 2.37 afterwards and reproduced
-# here on 2.40.0). A disconnect and a second sign-in usually clears it, so one retry is built in.
+# here on 2.40.0). The reporter saw it only when the account signing in was not the one logged in
+# to Windows, which is the normal case for an admin working in a customer's tenant. A disconnect
+# and a second sign-in usually clears it, so device-code sign-in gets one retry. Browser and broker
+# sign-ins do not: the bug is in the device-code credential, and the same text from another flow
+# is a different problem that a second prompt would not fix.
 $attempt = 0
 while ($true) {
     $attempt++
@@ -134,7 +146,7 @@ while ($true) {
         break
     }
     catch {
-        if ($attempt -lt 2 -and "$_" -match 'Object reference not set') {
+        if ($UseDeviceCode -and $attempt -lt 2 -and "$_" -match 'Object reference not set') {
             Write-Warning 'The Graph session signed in but cannot issue tokens (SDK device-code bug, issue 3495). Signing in once more.'
             Disconnect-MgGraph -ErrorAction SilentlyContinue | Out-Null
             continue
@@ -436,7 +448,10 @@ while ($active.Count -gt 0 -or $todo.Count -gt 0) {
         $records = @(Get-GraphPages "v1.0/security/auditLog/queries/$($queries[$id])/records?`$top=1000")
         $hits = @($records | Where-Object {
             $d = $_.auditData
-            "$($d.AppId)" -eq $id -or "$($d.ClientAppId)" -eq $id -or "$($d.AppAccessContext.ClientAppId)" -eq $id
+            # The structured fields first; then the "[AppId=<id>]" tag that ActorInfoString and
+            # ClientInfoString carry for some clients, which names the actor's own app.
+            "$($d.AppId)" -eq $id -or "$($d.ClientAppId)" -eq $id -or "$($d.AppAccessContext.ClientAppId)" -eq $id -or
+            "$($d.ActorInfoString) $($d.ClientInfoString)" -match "\[AppId=$([regex]::Escape($id))\]"
         })
         Write-Host "$id : $($records.Count) records matched the keyword, $($hits.Count) name the app"
         $Results[$id] = @{ Hits = $hits; Truncated = [bool]$q.isRecordCountLimitExceeded; Failed = '' }
@@ -462,17 +477,10 @@ function Get-MailboxObjectId {
     $oid
 }
 
-$Report = foreach ($app in $Selected) {
-    $r = $Results[$app.AppId]
-    if (-not $r) { $r = @{ Hits = @(); Truncated = $false; Failed = 'not run' } }
-    # Delegated records (a signed-in user working through the app) carry the app id in the same
-    # fields as app-only ones; the one reliable difference is that only they have an Entra session
-    # id in AppAccessContext. A record with no AADSessionId (including one with no AppAccessContext
-    # block at all) counts as app-only, because the session id is the only delegated marker trusted.
-    $allHits = @($r.Hits)
-    $delegated = @($allHits | Where-Object { "$($_.auditData.AppAccessContext.AADSessionId)" -ne '' })
-    $hits = if ($IncludeDelegated) { $allHits } else { @($allHits | Where-Object { "$($_.auditData.AppAccessContext.AADSessionId)" -eq '' }) }
-    $ops = foreach ($g in ($hits | Group-Object { "$($_.operation)" } | Sort-Object Count -Descending)) {
+# One row per operation, with its mailboxes ordered by event count (name breaks ties).
+function Get-OpsFromRecords {
+    param([object[]]$Records)
+    $rows = foreach ($g in (@($Records) | Group-Object { "$($_.operation)" } | Sort-Object Count -Descending)) {
         $byMbx = @($g.Group | Group-Object { "$($_.auditData.MailboxOwnerUPN)".ToLowerInvariant() } | Sort-Object @{ Expression = 'Count'; Descending = $true }, Name)
         $stamps = @($g.Group | ForEach-Object { [datetime]$_.createdDateTime })
         @{
@@ -484,7 +492,40 @@ $Report = foreach ($app in $Selected) {
             LastSeen  = ($stamps | Measure-Object -Maximum).Maximum
         }
     }
-    $ops = @($ops)
+    @($rows)
+}
+
+$Report = foreach ($app in $Selected) {
+    $r = $Results[$app.AppId]
+    if (-not $r) { $r = @{ Hits = @(); Truncated = $false; Failed = 'not run' } }
+    # Delegated records (a signed-in user working through the app) carry the app id in the same
+    # fields as app-only ones. What separates them is AppAccessContext.AADSessionId: Microsoft's
+    # schema defines it as the Entra session of a sign-in the app performed on behalf of a user, a
+    # client-credentials token has no such session, and no published app-only record carries one
+    # (observed on 2025 and 2026 records, not documented as a rule). A record without it, including
+    # one with no AppAccessContext block, counts as app-only; Microsoft notes some aggregated and
+    # background records carry no session id at all, and counting those as the app's keeps a
+    # mailbox in scope rather than dropping it.
+    # The top-level SessionId is deliberately NOT a delegated marker. Some delegated clients
+    # (Outlook desktop) put their session there, but those are Microsoft first-party apps this
+    # report never lists, and what Exchange puts in that field on app-only EWS records is
+    # unmeasured. Treating it as delegated would risk the costly mistake: an app-only record
+    # classed as delegated drops a mailbox the app needs from its scope, and the cutover's
+    # one-mailbox check would not catch it.
+    $allHits = @($r.Hits)
+    $delegated = @($allHits | Where-Object { "$($_.auditData.AppAccessContext.AADSessionId)" -ne '' })
+    $hits = if ($IncludeDelegated) { $allHits } else { @($allHits | Where-Object { "$($_.auditData.AppAccessContext.AADSessionId)" -eq '' }) }
+    $ops = Get-OpsFromRecords $hits
+    # Excluded delegated records stay visible (their own rows under the table) so a misclassified
+    # record can be spotted; with -IncludeDelegated they are already merged into $ops.
+    $delegatedOps = if ($IncludeDelegated) { @() } else { Get-OpsFromRecords $delegated }
+    # The CSV ledger is built from every record, whatever the switch, with the access type on
+    # each row: the page applies the delegated split, the CSV shows what was split.
+    $ledger = foreach ($g in ($allHits | Group-Object { "$($_.operation)|$("$($_.auditData.MailboxOwnerUPN)".ToLowerInvariant())|$(if ("$($_.auditData.AppAccessContext.AADSessionId)" -ne '') { 'Delegated' } else { 'AppOnly' })" })) {
+        $parts = $g.Name -split '\|', 3
+        [pscustomobject]@{ Operation = $parts[0]; Mailbox = $parts[1]; Access = $parts[2]; Events = $g.Count; UsedForScope = ($parts[2] -eq 'AppOnly' -or [bool]$IncludeDelegated) }
+    }
+    $ledger = @($ledger | Sort-Object Operation, @{ Expression = 'Events'; Descending = $true }, Mailbox)
     $allMbx = @($hits | Group-Object { "$($_.auditData.MailboxOwnerUPN)".ToLowerInvariant() } | Sort-Object Count -Descending)
     $kinds = @($ops | ForEach-Object { $_.Kind } | Select-Object -Unique)
     $distinct = $allMbx.Count
@@ -542,8 +583,10 @@ $Report = foreach ($app in $Selected) {
     elseif ($distinct -eq 0) {
         $cmd += "# No mailbox activity in $Days days. Before scoping, ask whether the app is still in use: an idle app"
         $cmd += "# is a candidate for revoking its grants outright (the audit script's report handles that), not for a scope."
-        $cmd += "# If it is seasonal or new, rerun with a longer -Days (up to 180) before deciding. An app that only uses"
-        $cmd += "# EWS can also look idle here, because EWS records do not name the app; check its sign-in log first."
+        $cmd += "# If it is seasonal or new, rerun with a longer -Days (up to 180) before deciding. An app that uses EWS"
+        $cmd += "# with full_access_as_app may also look idle: the only published app-only EWS records (2024) name EWS"
+        $cmd += "# itself, not the app. Check the EWS usage report first (Microsoft 365 admin center: Reports, Usage,"
+        $cmd += "# Exchange, EWS usage; it lists EWS calls by application ID), or the app's service principal sign-ins."
         $cmd += "# Details: $PostUrl"
     }
     elseif ($distinct -gt $MaxScopeMailboxes) {
@@ -618,6 +661,8 @@ $Report = foreach ($app in $Selected) {
         ReusedAt   = $ReusedAt[$app.AppId]
         Distinct   = $distinct
         Ops        = $ops
+        DelegatedOps = $delegatedOps
+        Ledger     = $ledger
         GrantRows  = $grantRows
         Commands   = ($cmd -join "`n")
         FirstSeen  = if ($hits.Count) { ($ops | ForEach-Object { $_.FirstSeen } | Measure-Object -Minimum).Minimum } else { $null }
@@ -636,12 +681,12 @@ $fileTag = ($tenantTag -replace '[^\w\-]', '')      # file name: no dots
 $HtmlPath = Join-Path $OutDir "AppMailboxActivity_$fileTag`_$stamp.html"
 $CsvPath = Join-Path $OutDir "AppMailboxActivity_$fileTag`_$stamp.csv"
 
-# CSV: every app/operation/mailbox row, so nothing is lost to the page's limits.
+# CSV: every app/operation/mailbox/access row, so nothing is lost to the page's limits. Access says
+# whether the records were app-only or delegated; UsedForScope says whether the page and the
+# scope commands counted them (delegated rows only with -IncludeDelegated).
 $csvRows = foreach ($item in $Report) {
-    foreach ($op in $item.Ops) {
-        foreach ($m in $op.Mailboxes) {
-            [pscustomobject]@{ AppName = $item.App.Name; AppId = $item.App.AppId; Operation = $op.Operation; Mailbox = $m.Mailbox; Events = $m.Events }
-        }
+    foreach ($row in $item.Ledger) {
+        [pscustomobject]@{ AppName = $item.App.Name; AppId = $item.App.AppId; Access = $row.Access; Operation = $row.Operation; Mailbox = $row.Mailbox; Events = $row.Events; UsedForScope = $row.UsedForScope }
     }
 }
 @($csvRows) | Export-Csv -Path $CsvPath -NoTypeInformation -Encoding UTF8
@@ -653,6 +698,27 @@ $shapeBadge = @{
     'Broad'          = "<span class='status-badge unconstrained'>&#9888; Broad</span>"
     'Not analyzed'   = "<span class='status-badge error'>&#8252; Not analyzed</span>"
 }
+# One table row for an operation: top $MaxInline mailboxes inline, up to $MaxCollapsed behind a
+# disclosure, the rest in the CSV. -Delegated renders the muted, labelled variant for records a
+# signed-in user made through the app, which are shown but not counted toward the scope.
+function Get-OpRowHtml {
+    param($Op, [switch]$Delegated)
+    $n = $Op.Mailboxes.Count
+    $inline = (@($Op.Mailboxes | Select-Object -First $MaxInline | ForEach-Object { "$(HtmlEnc $_.Mailbox) <span class='email'>($($_.Events))</span>" }) -join '<br>')
+    $more = ''
+    if ($n -gt $MaxInline) {
+        $rest = @($Op.Mailboxes | Select-Object -First $MaxCollapsed | ForEach-Object { "$($_.Mailbox)  ($($_.Events))" }) -join "`n"
+        $tail = if ($n -gt $MaxCollapsed) { " <span class='cmd-meta'>first $MaxCollapsed shown; all $n in the CSV</span>" } else { '' }
+        $more = "<details class='cmd' style='margin-top:0.4rem'><summary>All $n mailboxes$tail</summary><pre class='commands'>$(HtmlEnc $rest)</pre></details>"
+    }
+    $kindBadge = switch ($Op.Kind) { 'send' { "<span class='badge warn'>send</span>" } 'read' { "<span class='badge info'>read</span>" } 'write' { "<span class='badge purp'>write</span>" } default { "<span class='badge neut'>other</span>" } }
+    $dates = "$($Op.FirstSeen.ToString('yyyy-MM-dd')) to $($Op.LastSeen.ToString('yyyy-MM-dd'))"
+    if ($Delegated) {
+        return "<tr class='delegated-row'><td><strong>$(HtmlEnc $Op.Operation)</strong>$kindBadge<span class='badge neut' title='A signed-in user working through the app (the record carries an Entra session id). Not counted toward the scope.'>delegated</span><br><span class='email'>$dates &middot; not in scope</span></td><td>$($Op.Events)</td><td>$n</td><td>$inline$more</td></tr>"
+    }
+    "<tr><td><strong>$(HtmlEnc $Op.Operation)</strong>$kindBadge<br><span class='email'>$dates</span></td><td>$($Op.Events)</td><td>$n</td><td>$inline$more</td></tr>"
+}
+
 $AppSections = foreach ($item in $Report) {
     $app = $item.App
     $links = @()
@@ -672,31 +738,21 @@ $AppSections = foreach ($item in $Report) {
     $flags = ''
     if ($item.Truncated) { $flags += " <span class='badge crit' title='The audit search stopped at its record limit'>truncated</span>" }
     if ($item.Delegated -gt 0) {
-        $flags += if ($IncludeDelegated) { " <span class='badge purp' title='Records with an Entra session id: a signed-in user working through the app. Included because -IncludeDelegated was set.'>$($item.Delegated) delegated, included</span>" }
-                  else { " <span class='badge purp' title='Records with an Entra session id: a signed-in user working through the app. Excluded from the lists and the scope; rerun with -IncludeDelegated to see them.'>$($item.Delegated) delegated, excluded</span>" }
+        $flags += if ($IncludeDelegated) { " <span class='badge purp' title='Records with an Entra session id: a signed-in user working through the app. Merged into the lists and the scope because -IncludeDelegated was set.'>$($item.Delegated) delegated, included</span>" }
+                  else { " <span class='badge purp' title='Records with an Entra session id: a signed-in user working through the app. Listed in their own rows under the table and left out of the scope; rerun with -IncludeDelegated to merge them.'>$($item.Delegated) delegated, excluded</span>" }
     }
     if ($app.Enabled -eq $false) { $flags += " <span class='badge neut'>sign-in disabled</span>" }
     if ($item.ReusedAt) { $flags += " <span class='badge neut' title='This app&#39;s audit search was submitted at $($item.ReusedAt.ToString('yyyy-MM-dd HH:mm')) and reused, so its window ends then: activity after that time is not included. Rerun with -NoReuse for a window that ends now.'>window ends $($item.ReusedAt.ToString('MMM d HH:mm'))</span>" }
-    $opsRows = if ($item.Ops.Count -eq 0) {
+    $opsRows = @()
+    if ($item.Ops.Count -eq 0) {
         $msg = if ($item.Failed) { "Search did not complete: $(HtmlEnc $item.Failed)" }
                elseif ($item.Delegated -gt 0 -and -not $IncludeDelegated) { "No app-only mailbox activity in the last $Days days. $($item.Delegated) delegated record(s) show signed-in users working through the app, so the app is in use; its application grants are what is idle." }
                else { "No mailbox activity attributed to this app in the last $Days days." }
-        "<tr><td colspan='4' class='empty-state'>$msg</td></tr>"
+        $opsRows += "<tr><td colspan='4' class='empty-state'>$msg</td></tr>"
     }
-    else {
-        foreach ($op in $item.Ops) {
-            $n = $op.Mailboxes.Count
-            $inline = (@($op.Mailboxes | Select-Object -First $MaxInline | ForEach-Object { "$(HtmlEnc $_.Mailbox) <span class='email'>($($_.Events))</span>" }) -join '<br>')
-            $more = ''
-            if ($n -gt $MaxInline) {
-                $rest = @($op.Mailboxes | Select-Object -First $MaxCollapsed | ForEach-Object { "$($_.Mailbox)  ($($_.Events))" }) -join "`n"
-                $tail = if ($n -gt $MaxCollapsed) { " <span class='cmd-meta'>first $MaxCollapsed shown; all $n in the CSV</span>" } else { '' }
-                $more = "<details class='cmd' style='margin-top:0.4rem'><summary>All $n mailboxes$tail</summary><pre class='commands'>$(HtmlEnc $rest)</pre></details>"
-            }
-            $kindBadge = switch ($op.Kind) { 'send' { "<span class='badge warn'>send</span>" } 'read' { "<span class='badge info'>read</span>" } 'write' { "<span class='badge purp'>write</span>" } default { "<span class='badge neut'>other</span>" } }
-            "<tr><td><strong>$(HtmlEnc $op.Operation)</strong>$kindBadge<br><span class='email'>$($op.FirstSeen.ToString('yyyy-MM-dd')) to $($op.LastSeen.ToString('yyyy-MM-dd'))</span></td><td>$($op.Events)</td><td>$n</td><td>$inline$more</td></tr>"
-        }
-    }
+    foreach ($op in $item.Ops) { $opsRows += Get-OpRowHtml $op }
+    # Delegated rows last, muted and labelled, so the split is visible and can be second-guessed.
+    foreach ($op in $item.DelegatedOps) { $opsRows += Get-OpRowHtml $op -Delegated }
     $lineCount = @($item.Commands -split "`n").Count
     @"
         <h2>$(HtmlEnc $app.Name) $($shapeBadge[$item.Shape])$flags</h2>
@@ -713,8 +769,8 @@ $AppSections = foreach ($item in $Report) {
 }
 
 $countBy = { param($s) @($Report | Where-Object { $_.Shape -eq $s }).Count }
-$DelegatedNote = if ($IncludeDelegated) { 'this run was made with -IncludeDelegated, so they are counted on the app''s heading AND kept in its lists, the CSV and its scope.' }
-                 else { 'they are counted on the app''s heading and left out of its lists, the CSV and its scope, because an RBAC scope constrains the app''s own access, not the user''s.' }
+$DelegatedNote = if ($IncludeDelegated) { 'this run was made with -IncludeDelegated, so they are merged into the app''s lists and its scope; the CSV still marks them Delegated.' }
+                 else { 'they are counted on the app''s heading, listed in muted rows marked <em>delegated</em> under its table, marked Delegated in the CSV, and left out of its scope, because an RBAC scope constrains the app''s own access, not the user''s.' }
 $Html = @"
 <!DOCTYPE html>
 <html lang="en">
@@ -813,6 +869,8 @@ $Html = @"
             font-size: 0.875rem;
         }
         tr:last-child td { border-bottom: none; }
+        /* Delegated records: shown for review, not counted toward the scope. */
+        tr.delegated-row td { background: var(--neut-bg); color: var(--ink-2); }
         .app-id { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 0.7rem; color: var(--ink-3); }
         a.plink { color: var(--link); font-size: 0.75rem; text-decoration: none; }
         a.plink:hover { text-decoration: underline; }
@@ -978,9 +1036,11 @@ $($AppSections -join "`n")
             Resource mailboxes are not covered by default mailbox auditing, so a room-booking app can look idle.<br><br>
             <strong>Caveats:</strong>
             Audit Standard keeps 180 days. Read counts are a floor: reads inside a short window are folded into one
-            MailItemsAccessed record. EWS is a blind spot: in the EWS records anyone has published, an app calling EWS
-            with full_access_as_app appears only as EWS's own first-party id, never as itself, so an EWS-only app can
-            look idle here; the Entra service principal sign-in log says whether it is active.
+            MailItemsAccessed record. EWS may be a blind spot: the only published app-only EWS records (early 2024)
+            name EWS's own first-party id, never the app. Microsoft added AppAccessContext to EWS records in November
+            2024 and a 2026 delegated EWS record names the app, but no newer app-only record has been published, so an
+            app using EWS with full_access_as_app may look idle here. The EWS usage report (Microsoft 365 admin center:
+            Reports, Usage, Exchange, EWS usage) lists EWS calls by application ID.
             A search that stopped at the service's per-search record limit is marked
             <em>truncated</em>; rerun that app with a shorter window. Tenants with Microsoft Graph activity logs in
             Log Analytics have a second, more complete view of sends and can cross-check.

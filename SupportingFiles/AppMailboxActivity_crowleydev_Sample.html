@@ -95,6 +95,8 @@
             font-size: 0.875rem;
         }
         tr:last-child td { border-bottom: none; }
+        /* Delegated records: shown for review, not counted toward the scope. */
+        tr.delegated-row td { background: var(--neut-bg); color: var(--ink-2); }
         .app-id { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 0.7rem; color: var(--ink-3); }
         a.plink { color: var(--link); font-size: 0.75rem; text-decoration: none; }
         a.plink:hover { text-decoration: underline; }
@@ -213,7 +215,7 @@
 <body>
     <div class="container">
         <h1>Exchange App Mailbox Activity</h1>
-        <p class="subtitle"><strong>crowleydev.onmicrosoft.com</strong> &middot; September 25, 2026 at 11:21:16 PM &middot; last 30 days of mailbox audit records</p>
+        <p class="subtitle"><strong>crowleydev.onmicrosoft.com</strong> &middot; September 28, 2026 at 1:24:24 PM &middot; last 30 days of mailbox audit records</p>
         <div class="migration-note">
             <h3>What this shows</h3>
             <p>For each app, the mailboxes it actually touched, grouped by the operation the audit log recorded
@@ -225,7 +227,7 @@
             the migration itself: <a href="https://mikecrowley.us/2026/07/10/exchange-app-access-policy-rbac-migration/">Migrating Exchange Apps to RBAC for Applications</a>.</p>
             <p>Source: the unified audit log via the Purview audit search API. The apps listed are the ones holding
             <em>application</em> permissions. Records that carry an Entra session id came from a signed-in user working
-            through the app (delegated access); they are counted on the app's heading and left out of its lists, the CSV and its scope, because an RBAC scope constrains the app's own access, not the user's. A record with no session id, including one with no
+            through the app (delegated access); they are counted on the app's heading, listed in muted rows marked <em>delegated</em> under its table, marked Delegated in the CSV, and left out of its scope, because an RBAC scope constrains the app's own access, not the user's. A record with no session id, including one with no
             AppAccessContext block at all, counts as the app's own. Every app/operation/mailbox row is in the companion
             CSV next to this file.</p>
         </div>
@@ -259,7 +261,7 @@ if (-not (Get-ServicePrincipal -Identity &#39;4f2a8c1e-7b3d-4e9a-b6c5-1d2e3f4a5b
 }
 
 # 2. Scope: the one mailbox observed (helpdesk@crowleydev.onmicrosoft.com)
-New-ManagementScope -Name &#39;Helpdesk Notifier-4f2a8c1e-Scope&#39; -RecipientRestrictionFilter &quot;ExternalDirectoryObjectId -eq &#39;c620371c-4653-4272-b253-0513000eeeaf&#39;&quot;
+New-ManagementScope -Name &#39;Helpdesk Notifier-4f2a8c1e-Scope&#39; -RecipientRestrictionFilter &quot;ExternalDirectoryObjectId -eq &#39;2a0f08f3-ae76-4e8c-bf8e-800e304b2095&#39;&quot;
 
 # 3. Role assignments: one per RBAC role the grants map to. Grants with no matching activity in the
 #    window are commented out - add them back only if the app needs them, or drop the grant instead.
@@ -278,11 +280,13 @@ Test-ServicePrincipalAuthorization -Identity &#39;4f2a8c1e-7b3d-4e9a-b6c5-1d2e3f
                 <tr><td colspan='4' class='empty-state'>No mailbox activity attributed to this app in the last 30 days.</td></tr>
             </tbody>
         </table>
-        <div style="margin:0.6rem 0 0 0"><details class='cmd'><summary>PowerShell <span class='cmd-meta'>6 lines</span><button type='button' class='copy-btn'>Copy</button></summary><pre class='commands'># ==== Legacy Fax Gateway (d4c3b2a1-f0e9-4d8c-b7a6-5f4e3d2c1b0a) - RBAC scope from observed activity, last 30 days ====
+        <div style="margin:0.6rem 0 0 0"><details class='cmd'><summary>PowerShell <span class='cmd-meta'>8 lines</span><button type='button' class='copy-btn'>Copy</button></summary><pre class='commands'># ==== Legacy Fax Gateway (d4c3b2a1-f0e9-4d8c-b7a6-5f4e3d2c1b0a) - RBAC scope from observed activity, last 30 days ====
 # No mailbox activity in 30 days. Before scoping, ask whether the app is still in use: an idle app
 # is a candidate for revoking its grants outright (the audit script&#39;s report handles that), not for a scope.
-# If it is seasonal or new, rerun with a longer -Days (up to 180) before deciding. An app that only uses
-# EWS can also look idle here, because EWS records do not name the app; check its sign-in log first.
+# If it is seasonal or new, rerun with a longer -Days (up to 180) before deciding. An app that uses EWS
+# with full_access_as_app may also look idle: the only published app-only EWS records (2024) name EWS
+# itself, not the app. Check the EWS usage report first (Microsoft 365 admin center: Reports, Usage,
+# Exchange, EWS usage; it lists EWS calls by application ID), or the app&#39;s service principal sign-ins.
 # Details: https://mikecrowley.us/2026/09/26/exchange-app-mailbox-activity/</pre></details></div>
         <h2>Mailbox Backup Appliance <span class='status-badge unconstrained'>&#9888; Broad</span> <span class='badge crit' title='The audit search stopped at its record limit'>truncated</span></h2>
         <p class="section-sub"><span class="app-id">c3d2e1f0-a9b8-4c7d-8e6f-5a4b3c2d1e0f</span> &nbsp; <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/c3d2e1f0-a9b8-4c7d-8e6f-5a4b3c2d1e0f' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/c3d4e5f6-a7b8-4c9d-8e1f-2a3b4c5d6e7f/appId/c3d2e1f0-a9b8-4c7d-8e6f-5a4b3c2d1e0f' target='_blank' rel='noopener'>Enterprise app &#8599;</a> <br>
@@ -1338,20 +1342,22 @@ New-ManagementRoleAssignment -App &#39;8e7d6c5b-4a39-4281-9f0e-1d2c3b4a5968&#39;
 
 # 4. Verify: expect InScope = True, then test the app itself
 Test-ServicePrincipalAuthorization -Identity &#39;8e7d6c5b-4a39-4281-9f0e-1d2c3b4a5968&#39; -Resource &#39;payroll@crowleydev.onmicrosoft.com&#39; | Format-Table</pre></details></div>
-        <h2>Room Booking Kiosk <span class='status-badge delete'>No activity</span></h2>
+        <h2>Room Booking Kiosk <span class='status-badge delete'>No activity</span> <span class='badge purp' title='Records with an Entra session id: a signed-in user working through the app. Listed in their own rows under the table and left out of the scope; rerun with -IncludeDelegated to merge them.'>23 delegated, excluded</span></h2>
         <p class="section-sub"><span class="app-id">e5d4c3b2-a1f0-4e9d-8c7b-6a5f4e3d2c1b</span> &nbsp; <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/e5d4c3b2-a1f0-4e9d-8c7b-6a5f4e3d2c1b' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/e5f6a7b8-c9d0-4e1f-8a3b-4c5d6e7f8a9b/appId/e5d4c3b2-a1f0-4e9d-8c7b-6a5f4e3d2c1b' target='_blank' rel='noopener'>Enterprise app &#8599;</a> <br>
         Entra grants: <span class='perm keep' title='No matching activity in the window'>Graph:Calendars.ReadWrite &#183; idle</span><span class='perm keep' title='No matching activity in the window'>Graph:Calendars.Read &#183; idle</span></p>
         <table>
             <thead><tr><th>Operation</th><th>Events</th><th>Mailboxes</th><th>Mailboxes by activity (top 10 inline)</th></tr></thead>
             <tbody>
-                <tr><td colspan='4' class='empty-state'>No mailbox activity attributed to this app in the last 30 days.</td></tr>
+                <tr><td colspan='4' class='empty-state'>No app-only mailbox activity in the last 30 days. 23 delegated record(s) show signed-in users working through the app, so the app is in use; its application grants are what is idle.</td></tr>
+<tr class='delegated-row'><td><strong>Create</strong><span class='badge purp'>write</span><span class='badge neut' title='A signed-in user working through the app (the record carries an Entra session id). Not counted toward the scope.'>delegated</span><br><span class='email'>2026-09-02 to 2026-09-24 &middot; not in scope</span></td><td>19</td><td>6</td><td>jordan.lee@crowleydev.onmicrosoft.com <span class='email'>(4)</span><br>alex.rivera@crowleydev.onmicrosoft.com <span class='email'>(3)</span><br>casey.nguyen@crowleydev.onmicrosoft.com <span class='email'>(3)</span><br>morgan.diaz@crowleydev.onmicrosoft.com <span class='email'>(3)</span><br>sam.patel@crowleydev.onmicrosoft.com <span class='email'>(3)</span><br>taylor.kim@crowleydev.onmicrosoft.com <span class='email'>(3)</span></td></tr>
+<tr class='delegated-row'><td><strong>Update</strong><span class='badge purp'>write</span><span class='badge neut' title='A signed-in user working through the app (the record carries an Entra session id). Not counted toward the scope.'>delegated</span><br><span class='email'>2026-09-06 to 2026-09-21 &middot; not in scope</span></td><td>4</td><td>4</td><td>casey.nguyen@crowleydev.onmicrosoft.com <span class='email'>(1)</span><br>morgan.diaz@crowleydev.onmicrosoft.com <span class='email'>(1)</span><br>sam.patel@crowleydev.onmicrosoft.com <span class='email'>(1)</span><br>taylor.kim@crowleydev.onmicrosoft.com <span class='email'>(1)</span></td></tr>
             </tbody>
         </table>
         <div style="margin:0.6rem 0 0 0"><details class='cmd'><summary>PowerShell <span class='cmd-meta'>6 lines</span><button type='button' class='copy-btn'>Copy</button></summary><pre class='commands'># ==== Room Booking Kiosk (e5d4c3b2-a1f0-4e9d-8c7b-6a5f4e3d2c1b) - RBAC scope from observed activity, last 30 days ====
-# No mailbox activity in 30 days. Before scoping, ask whether the app is still in use: an idle app
-# is a candidate for revoking its grants outright (the audit script&#39;s report handles that), not for a scope.
-# If it is seasonal or new, rerun with a longer -Days (up to 180) before deciding. An app that only uses
-# EWS can also look idle here, because EWS records do not name the app; check its sign-in log first.
+# No app-only mailbox activity in 30 days, but 23 delegated record(s) show signed-in users
+# working through the app. The app is in use; its APPLICATION grants are what is idle. Those are
+# candidates for revoking (the audit script&#39;s report handles that), not for a scope; the users&#39; access
+# runs on delegated permissions, which an RBAC for Applications scope does not constrain.
 # Details: https://mikecrowley.us/2026/09/26/exchange-app-mailbox-activity/</pre></details></div>
         <div class="footer">
             <strong>Reading the grants:</strong> a grant is marked <em>idle</em> when no operation of its kind (send,
@@ -1375,9 +1381,11 @@ Test-ServicePrincipalAuthorization -Identity &#39;8e7d6c5b-4a39-4281-9f0e-1d2c3b
             Resource mailboxes are not covered by default mailbox auditing, so a room-booking app can look idle.<br><br>
             <strong>Caveats:</strong>
             Audit Standard keeps 180 days. Read counts are a floor: reads inside a short window are folded into one
-            MailItemsAccessed record. EWS is a blind spot: in the EWS records anyone has published, an app calling EWS
-            with full_access_as_app appears only as EWS's own first-party id, never as itself, so an EWS-only app can
-            look idle here; the Entra service principal sign-in log says whether it is active.
+            MailItemsAccessed record. EWS may be a blind spot: the only published app-only EWS records (early 2024)
+            name EWS's own first-party id, never the app. Microsoft added AppAccessContext to EWS records in November
+            2024 and a 2026 delegated EWS record names the app, but no newer app-only record has been published, so an
+            app using EWS with full_access_as_app may look idle here. The EWS usage report (Microsoft 365 admin center:
+            Reports, Usage, Exchange, EWS usage) lists EWS calls by application ID.
             A search that stopped at the service's per-search record limit is marked
             <em>truncated</em>; rerun that app with a shorter window. Tenants with Microsoft Graph activity logs in
             Log Analytics have a second, more complete view of sends and can cross-check.
