@@ -1045,6 +1045,10 @@ $($AppSections -join "`n")
             still logs what is on its list, but Microsoft stops adding new default actions to it, so an owner set
             customized before Send and MailItemsAccessed joined the defaults (2024) lacks them: check
             <code>Get-Mailbox &lt;mailbox&gt; | Format-List DefaultAuditSet, AuditOwner, AuditDelegate, AuditAdmin</code>.
+            To fix one, restore Microsoft's defaults with
+            <code>Set-Mailbox &lt;mailbox&gt; -DefaultAuditSet Admin,Delegate,Owner</code> (it drops any extra actions
+            someone added, and new defaults then arrive on their own). Adding the two actions to the customized list
+            instead fails while it still holds the retired MessageBind.
             During that 2024 rollout Microsoft also told Audit Standard tenants to run
             <code>Set-Mailbox -AuditEnabled `$true</code> on every mailbox regardless of its current value, so a mailbox
             nobody reran it on can still be missing Send and MailItemsAccessed.
