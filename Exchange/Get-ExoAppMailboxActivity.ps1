@@ -60,7 +60,7 @@
 .EXAMPLE
     .\Get-ExoAppMailboxActivity.ps1 -TenantId contoso.com -All -Days 90 -UseDeviceCode
 .LINK
-    https://mikecrowley.us/2026/09/26/exchange-app-mailbox-activity/
+    https://mikecrowley.us/2026/09/28/exchange-app-mailbox-activity/
 .LINK
     https://mikecrowley.us/2026/07/10/exchange-app-access-policy-rbac-migration/
 .NOTES
@@ -99,7 +99,7 @@ param(
     [string]$OutDir = (Join-Path ([Environment]::GetFolderPath('Desktop')) 'AppAccessPolicyMigration')
 )
 
-$PostUrl = 'https://mikecrowley.us/2026/09/26/exchange-app-mailbox-activity/'                  # this script
+$PostUrl = 'https://mikecrowley.us/2026/09/28/exchange-app-mailbox-activity/'                  # this script
 $BlogUrl = 'https://mikecrowley.us/2026/07/10/exchange-app-access-policy-rbac-migration/'      # the migration
 $AuditScriptUrl = 'https://github.com/Mike-Crowley/Public-Scripts/blob/main/Exchange/Audit-ExoAppAccessPolicies.ps1'
 $clock = [System.Diagnostics.Stopwatch]::StartNew()

@@ -223,7 +223,7 @@
             to build the RBAC for Applications scope from real mailboxes instead of guesses. Each app's PowerShell
             block does exactly that. The audit of which apps are unconstrained, and the verified cutover that revokes the
             tenant-wide grant afterwards, live in <a href="https://github.com/Mike-Crowley/Public-Scripts/blob/main/Exchange/Audit-ExoAppAccessPolicies.ps1">Audit-ExoAppAccessPolicies.ps1</a>.
-            How this report works: <a href="https://mikecrowley.us/2026/09/26/exchange-app-mailbox-activity/">How to Identify Which Mailbox(es) an Entra App Is Using</a>;
+            How this report works: <a href="https://mikecrowley.us/2026/09/28/exchange-app-mailbox-activity/">How to Identify Which Mailbox(es) an Entra App Is Using</a>;
             the migration itself: <a href="https://mikecrowley.us/2026/07/10/exchange-app-access-policy-rbac-migration/">Migrating Exchange Apps to RBAC for Applications</a>.</p>
             <p>Source: the unified audit log via the Purview audit search API. The apps listed are the ones holding
             <em>application</em> permissions. Records that carry an Entra session id came from a signed-in user working
@@ -252,7 +252,7 @@
 # Observed: Send on 1 mailbox(es)
 # Steps 1-4 are additive. Verify, then revoke the tenant-wide grant with the audit script&#39;s generated
 # cutover: https://github.com/Mike-Crowley/Public-Scripts/blob/main/Exchange/Audit-ExoAppAccessPolicies.ps1
-# How this report works and its caveats: https://mikecrowley.us/2026/09/26/exchange-app-mailbox-activity/
+# How this report works and its caveats: https://mikecrowley.us/2026/09/28/exchange-app-mailbox-activity/
 # The migration itself (scopes, roles, cutover): https://mikecrowley.us/2026/07/10/exchange-app-access-policy-rbac-migration/
 
 # 1. Exchange pointer to the Entra service principal (idempotent)
@@ -287,7 +287,7 @@ Test-ServicePrincipalAuthorization -Identity &#39;4f2a8c1e-7b3d-4e9a-b6c5-1d2e3f
 # with full_access_as_app may also look idle: the only published app-only EWS records (2024) name EWS
 # itself, not the app. Check the EWS usage report first (Microsoft 365 admin center: Reports, Usage,
 # Exchange, EWS usage; it lists EWS calls by application ID), or the app&#39;s service principal sign-ins.
-# Details: https://mikecrowley.us/2026/09/26/exchange-app-mailbox-activity/</pre></details></div>
+# Details: https://mikecrowley.us/2026/09/28/exchange-app-mailbox-activity/</pre></details></div>
         <h2>Mailbox Backup Appliance <span class='status-badge unconstrained'>&#9888; Broad</span> <span class='badge crit' title='The audit search stopped at its record limit'>truncated</span></h2>
         <p class="section-sub"><span class="app-id">c3d2e1f0-a9b8-4c7d-8e6f-5a4b3c2d1e0f</span> &nbsp; <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/c3d2e1f0-a9b8-4c7d-8e6f-5a4b3c2d1e0f' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/c3d4e5f6-a7b8-4c9d-8e1f-2a3b4c5d6e7f/appId/c3d2e1f0-a9b8-4c7d-8e6f-5a4b3c2d1e0f' target='_blank' rel='noopener'>Enterprise app &#8599;</a> <br>
         Entra grants: <span class='perm migrate' title='Activity of this kind observed'>Graph:Mail.ReadWrite</span><span class='perm migrate' title='Activity of this kind observed'>EXO:full_access_as_app</span></p>
@@ -1301,7 +1301,7 @@ user331@crowleydev.onmicrosoft.com  (1)</pre></details></td></tr>
 # A scope built from a list this size is not a control. Decide about the app instead: is org-wide
 # reach its job (backup, security, journaling), or has it drifted? If a subset is legitimate, build
 # the group from a source of truth (department, license, OU), not from this list. Full list: CSV.
-# Details: https://mikecrowley.us/2026/09/26/exchange-app-mailbox-activity/</pre></details></div>
+# Details: https://mikecrowley.us/2026/09/28/exchange-app-mailbox-activity/</pre></details></div>
         <h2>Payroll Reminders <span class='status-badge ready'>&#10003; Scope candidate</span></h2>
         <p class="section-sub"><span class="app-id">8e7d6c5b-4a39-4281-9f0e-1d2c3b4a5968</span> &nbsp; <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/8e7d6c5b-4a39-4281-9f0e-1d2c3b4a5968' target='_blank' rel='noopener'>App registration &#8599;</a> <a class='plink' href='https://entra.microsoft.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e/appId/8e7d6c5b-4a39-4281-9f0e-1d2c3b4a5968' target='_blank' rel='noopener'>Enterprise app &#8599;</a> <br>
         Entra grants: <span class='perm migrate' title='Activity of this kind observed'>Graph:Mail.Send</span><span class='perm migrate' title='Activity of this kind observed'>Graph:Mail.ReadWrite</span><span class='perm migrate' title='Reads or writes were observed, but the record does not say whether they were mail, calendar, contacts or settings'>Graph:Calendars.ReadWrite &#183; unproven</span></p>
@@ -1318,7 +1318,7 @@ user331@crowleydev.onmicrosoft.com  (1)</pre></details></td></tr>
 # Observed: Send on 5 mailbox(es); MailItemsAccessed on 1 mailbox(es); Update on 1 mailbox(es); MoveToDeletedItems on 1 mailbox(es)
 # Steps 1-4 are additive. Verify, then revoke the tenant-wide grant with the audit script&#39;s generated
 # cutover: https://github.com/Mike-Crowley/Public-Scripts/blob/main/Exchange/Audit-ExoAppAccessPolicies.ps1
-# How this report works and its caveats: https://mikecrowley.us/2026/09/26/exchange-app-mailbox-activity/
+# How this report works and its caveats: https://mikecrowley.us/2026/09/28/exchange-app-mailbox-activity/
 # The migration itself (scopes, roles, cutover): https://mikecrowley.us/2026/07/10/exchange-app-access-policy-rbac-migration/
 
 # 1. Exchange pointer to the Entra service principal (idempotent)
@@ -1358,7 +1358,7 @@ Test-ServicePrincipalAuthorization -Identity &#39;8e7d6c5b-4a39-4281-9f0e-1d2c3b
 # working through the app. The app is in use; its APPLICATION grants are what is idle. Those are
 # candidates for revoking (the audit script&#39;s report handles that), not for a scope; the users&#39; access
 # runs on delegated permissions, which an RBAC for Applications scope does not constrain.
-# Details: https://mikecrowley.us/2026/09/26/exchange-app-mailbox-activity/</pre></details></div>
+# Details: https://mikecrowley.us/2026/09/28/exchange-app-mailbox-activity/</pre></details></div>
         <div class="footer">
             <strong>Reading the grants:</strong> a grant is marked <em>idle</em> when no operation of its kind (send,
             read, write) was observed in the window. Send is unambiguous. Reads and writes could be mail, calendar,
