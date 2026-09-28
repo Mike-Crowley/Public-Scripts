@@ -1,5 +1,6 @@
 #Requires -Version 5.1
 #Requires -Modules @{ ModuleName = 'Microsoft.Graph.Authentication'; ModuleVersion = '2.4.0' }
+
 <#
 .SYNOPSIS
     Reports which mailboxes each Exchange-enabled app actually touches, grouped by activity
@@ -39,6 +40,9 @@
     grants, the operations observed and the mailboxes under each, and a commands block that
     builds the management scope from those mailboxes. A companion CSV carries every
     app/operation/mailbox row for apps whose lists are too long for a page.
+.PARAMETER TenantId
+    The tenant to report on, as its id or a verified domain (contoso.com). The Graph sign-in
+    is pinned to it and scoped to this PowerShell process.
 .PARAMETER AppId
     One or more application (client) ids to analyze. Without -AppId or -All, every service
     principal holding Exchange application permissions is offered in Out-GridView.
@@ -55,6 +59,9 @@
     How long to wait for the audit searches. 0 (the default) scales with the number of apps:
     60 minutes or 20 plus 6 per app, whichever is larger. Searches still running at the
     deadline keep running server side and are reused by a later run.
+.PARAMETER OutDir
+    Where the HTML report and CSV go. Defaults to the AppAccessPolicyMigration folder on the
+    desktop, where the audit script writes its report.
 .EXAMPLE
     .\Get-ExoAppMailboxActivity.ps1 -TenantId contoso.com
     Enumerates the apps, opens the picker, reports the selection over the last 30 days.
@@ -80,13 +87,15 @@ param(
     # Searches in flight at once. Purview returned 429 at the 11th concurrent submit in a large
     # tenant; five leaves room for whatever else the tenant's admins are running.
     [ValidateRange(1, 10)][int]$MaxConcurrent = 5,
+    # Seconds between status checks on the running searches.
     [int]$PollSeconds = 30,
     # 0 = scale with the app count (see .PARAMETER TimeoutMinutes).
     [int]$TimeoutMinutes = 0,
     # At or below this many distinct mailboxes the app gets scope commands built from them.
     [int]$MaxScopeMailboxes = 25,
-    # Per operation: mailboxes shown inline, and in the collapsed full list. Beyond that, the CSV.
+    # Per operation: mailboxes shown inline.
     [int]$MaxInline = 10,
+    # Per operation: mailboxes in the collapsed full list. Beyond that, only the CSV has them.
     [int]$MaxCollapsed = 500,
     # Searches for the same app AND the same -Days window submitted by this script in the last day
     # are reused (they are still running or already done server side). A reused search's window
@@ -94,8 +103,10 @@ param(
     # report marks those apps. Set this to always submit fresh ones.
     [switch]$NoReuse,
     # Records with an AppAccessContext.AADSessionId came from a signed-in user's session through
-    # the app (delegated access). They are counted and excluded from the mailbox lists, because an
-    # RBAC scope constrains the app's own access, not a user's. Set this to keep them in.
+    # the app (delegated access). By default they are listed in their own muted rows under the
+    # app's table and left out of the scope, because an RBAC scope constrains the app's own access,
+    # not a user's. Set this to merge them into the app's lists and its scope. The CSV marks them
+    # Delegated either way.
     [switch]$IncludeDelegated,
     [string]$OutDir = (Join-Path ([Environment]::GetFolderPath('Desktop')) 'AppAccessPolicyMigration')
 )
