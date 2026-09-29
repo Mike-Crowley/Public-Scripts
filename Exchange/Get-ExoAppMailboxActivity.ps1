@@ -507,7 +507,9 @@ function Get-OpsFromRecords {
 # "the verified identity of the user or service principal", to TokenObjectId
 # (https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-authentication-track-linkable-identifiers).
 # An app-only token carries the app's own service principal; a delegated one carries the user.
-# Session ids do not separate them. Until 2026-09-29 this script took AppAccessContext.AADSessionId
+# Verified 2026-09-29: on a probe app's Graph and EWS app-only records, TokenObjectId equalled its
+# (by then soft-deleted) service principal's object id, and on the delegated control it was the
+# signed-in admin's. Session ids do not separate them. Until 2026-09-29 this script took AppAccessContext.AADSessionId
 # as the delegated marker, but a probe on 2026-09-28 found app-only EWS records (TokenType
 # V1AppOnly) that carry one, and Microsoft's own clients fill SessionId and AADSessionId
 # inconsistently. The same Entra page notes the identifiers "aren't available in the Exchange Online
