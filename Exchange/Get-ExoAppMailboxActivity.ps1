@@ -15,26 +15,20 @@
     service throttles past roughly ten per tenant), collected as each finishes. Works in any
     tenant with mailbox auditing on (the default); no Log Analytics required.
 
-    Where the app id sits in a mailbox audit record depends on the access path, not on the
-    record's age. For Graph access the app is in ClientAppId (and usually in
-    AppAccessContext.ClientAppId) while AppId holds Microsoft Graph's own id. In a delegated EWS
-    record from 2026 the app is in AppId, ClientAppId and AppAccessContext.ClientAppId, with EWS's
-    own id in AppAccessContext.APIId. Some records also name the app as "[AppId=...]" inside
-    ActorInfoString or ClientInfoString. A match in any of those places counts. Records that carry
-    an AppAccessContext.AADSessionId (the Entra session of a sign-in the app performed on behalf
-    of a user, per Microsoft's schema) came from a signed-in user working through the app; they
-    are listed separately and left out of the scope, since a management scope constrains
-    app-only access, not the user's.
+    Where the app id sits in a mailbox audit record depends on the access path. For Graph access
+    the app is in ClientAppId and AppAccessContext.ClientAppId while AppId holds Microsoft Graph's
+    own id. For EWS the app is in AppId, ClientAppId and AppAccessContext.ClientAppId, with EWS's
+    own id in AppAccessContext.APIId; a September 2026 test found that for app-only access
+    (full_access_as_app) as well as delegated. EWS records written before Microsoft's November 2024
+    change (MC909164) named only EWS itself, but no window this script can search reaches back that
+    far. Some records also name the app as "[AppId=...]" inside ActorInfoString or
+    ClientInfoString. A match in any of those places counts.
 
-    Known gap: whether app-only EWS records (full_access_as_app) name the app today is
-    unverified. The only published EWS record from a registered app comes from a February 2024
-    lab test whose published script signs in with client credentials. It names only EWS itself
-    (47629505-c2b6-4a80-adb1-9b3a3d233b7b). Microsoft added AppAccessContext to EWS records in
-    November 2024 (MC909164), and a 2026 delegated EWS record does name the app, but no newer
-    app-only record has been published. Until one is, an EWS app can look idle here. The EWS
-    usage report (Microsoft 365 admin center: Reports, Usage, Exchange, EWS usage) lists EWS
-    calls by application ID, which shows whether the app uses EWS at all, though not which
-    mailboxes.
+    Records whose token belonged to a user rather than to the app's own service principal (the
+    record's TokenObjectId) came from a signed-in user working through the app; they are listed
+    separately and left out of the scope, since a management scope constrains app-only access,
+    not the user's. Session ids do not tell the two apart: app-only EWS records carry
+    AppAccessContext.AADSessionId too.
 
     Output: an HTML report in the audit report's style, one section per app with its
     grants, the operations observed and the mailboxes under each, and a commands block that
@@ -102,8 +96,9 @@ param(
     # ends when it was submitted, so up to 24 hours of the newest activity can be missing; the
     # report marks those apps. Set this to always submit fresh ones.
     [switch]$NoReuse,
-    # Records with an AppAccessContext.AADSessionId came from a signed-in user's session through
-    # the app (delegated access). By default they are listed in their own muted rows under the
+    # Records whose token belonged to a user rather than the app (TokenObjectId is not the app's own
+    # service principal) came from a signed-in user working through the app (delegated access).
+    # By default they are listed in their own muted rows under the
     # app's table and left out of the scope, because an RBAC scope constrains the app's own access,
     # not a user's. Set this to merge them into the app's lists and its scope. The CSV marks them
     # Delegated either way.
@@ -507,36 +502,39 @@ function Get-OpsFromRecords {
     @($rows)
 }
 
+# Delegated records (a signed-in user working through the app) carry the app id in the same fields
+# as app-only ones. What separates them is who held the token: Exchange writes the token's oid claim,
+# "the verified identity of the user or service principal", to TokenObjectId
+# (https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-authentication-track-linkable-identifiers).
+# An app-only token carries the app's own service principal; a delegated one carries the user.
+# Session ids do not separate them. Until 2026-09-29 this script took AppAccessContext.AADSessionId
+# as the delegated marker, but a probe on 2026-09-28 found app-only EWS records (TokenType
+# V1AppOnly) that carry one, and Microsoft's own clients fill SessionId and AADSessionId
+# inconsistently. The same Entra page notes the identifiers "aren't available in the Exchange Online
+# audit logs on some aggregated log entries, or logs generated from background processes": a record
+# without TokenObjectId, or an app with no service principal in this tenant, counts as app-only. An
+# app-only record classed as delegated drops a mailbox the app needs from its scope, which the
+# cutover's one-mailbox check would not catch, so every doubt falls to app-only.
+function Test-DelegatedRecord {
+    param($Record, [string]$SpObjectId)
+    $holder = "$($Record.auditData.TokenObjectId)"
+    [bool]($holder -and $SpObjectId -and $holder -ne $SpObjectId)
+}
+
 $Report = foreach ($app in $Selected) {
     $r = $Results[$app.AppId]
     if (-not $r) { $r = @{ Hits = @(); Truncated = $false; Failed = 'not run' } }
-    # Delegated records (a signed-in user working through the app) carry the app id in the same
-    # fields as app-only ones. What separates them is the user's Entra session. Entra generates the
-    # session id (sid) only "when a user does interactive authentication" and maps it to
-    # "SessionID / AADSessionId within App Access Context object" in Exchange audit records
-    # (https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-authentication-track-linkable-identifiers).
-    # A client-credentials (app-only) token has no user session, and no published record of an app
-    # acting on its own carries AADSessionId (nobody has published an app-only Send record yet).
-    # The same page notes the identifiers "aren't available in the Exchange Online audit logs on
-    # some aggregated log entries, or logs generated from background processes", so some delegated
-    # records lack the marker too. A record without it, including one with no AppAccessContext
-    # block, counts as app-only: a missing marker keeps the mailbox in scope rather than dropping it.
-    # The top-level SessionId carries the same sid but is not used as a marker yet. The delegated
-    # records reported to carry it without AADSessionId come from a Microsoft first-party client
-    # (Outlook desktop) that this report never lists, so it would add little, and any marker has to
-    # be confirmed absent from app-only records against real ones first: an app-only record classed
-    # as delegated drops a mailbox the app needs from its scope, and the cutover's one-mailbox check
-    # would not catch it.
+    $appSpId = "$($app.SpObjectId)"
     $allHits = @($r.Hits)
-    $delegated = @($allHits | Where-Object { "$($_.auditData.AppAccessContext.AADSessionId)" -ne '' })
-    $hits = if ($IncludeDelegated) { $allHits } else { @($allHits | Where-Object { "$($_.auditData.AppAccessContext.AADSessionId)" -eq '' }) }
+    $delegated = @($allHits | Where-Object { Test-DelegatedRecord $_ $appSpId })
+    $hits = if ($IncludeDelegated) { $allHits } else { @($allHits | Where-Object { -not (Test-DelegatedRecord $_ $appSpId) }) }
     $ops = Get-OpsFromRecords $hits
     # Excluded delegated records stay visible (their own rows under the table) so a misclassified
     # record can be spotted; with -IncludeDelegated they are already merged into $ops.
     $delegatedOps = if ($IncludeDelegated) { @() } else { Get-OpsFromRecords $delegated }
     # The CSV ledger is built from every record, whatever the switch, with the access type on
     # each row: the page applies the delegated split, the CSV shows what was split.
-    $ledger = foreach ($g in ($allHits | Group-Object { "$($_.operation)|$("$($_.auditData.MailboxOwnerUPN)".ToLowerInvariant())|$(if ("$($_.auditData.AppAccessContext.AADSessionId)" -ne '') { 'Delegated' } else { 'AppOnly' })" })) {
+    $ledger = foreach ($g in ($allHits | Group-Object { "$($_.operation)|$("$($_.auditData.MailboxOwnerUPN)".ToLowerInvariant())|$(if (Test-DelegatedRecord $_ $appSpId) { 'Delegated' } else { 'AppOnly' })" })) {
         $parts = $g.Name -split '\|', 3
         [pscustomobject]@{ Operation = $parts[0]; Mailbox = $parts[1]; Access = $parts[2]; Events = $g.Count; UsedForScope = ($parts[2] -eq 'AppOnly' -or [bool]$IncludeDelegated) }
     }
@@ -598,10 +596,9 @@ $Report = foreach ($app in $Selected) {
     elseif ($distinct -eq 0) {
         $cmd += "# No mailbox activity in $Days days. Before scoping, ask whether the app is still in use: an idle app"
         $cmd += "# is a candidate for revoking its grants outright (the audit script's report handles that), not for a scope."
-        $cmd += "# If it is seasonal or new, rerun with a longer -Days (up to 180) before deciding. An app that uses EWS"
-        $cmd += "# with full_access_as_app may also look idle: the only published app-only EWS records (2024) name EWS"
-        $cmd += "# itself, not the app. Check the EWS usage report first (Microsoft 365 admin center: Reports, Usage,"
-        $cmd += "# Exchange, EWS usage; it lists EWS calls by application ID), or the app's service principal sign-ins."
+        $cmd += "# If it is seasonal or new, rerun with a longer -Days (up to 180) before deciding. It can also look"
+        $cmd += "# idle when the mailboxes it uses do not audit MailItemsAccessed and Send: a mailbox audit list"
+        $cmd += "# customized years ago lacks both (the report footer shows how to check and fix that)."
         $cmd += "# Details: $PostUrl"
     }
     elseif ($distinct -gt $MaxScopeMailboxes) {
@@ -729,7 +726,7 @@ function Get-OpRowHtml {
     $kindBadge = switch ($Op.Kind) { 'send' { "<span class='badge warn'>send</span>" } 'read' { "<span class='badge info'>read</span>" } 'write' { "<span class='badge purp'>write</span>" } default { "<span class='badge neut'>other</span>" } }
     $dates = "$($Op.FirstSeen.ToString('yyyy-MM-dd')) to $($Op.LastSeen.ToString('yyyy-MM-dd'))"
     if ($Delegated) {
-        return "<tr class='delegated-row'><td><strong>$(HtmlEnc $Op.Operation)</strong>$kindBadge<span class='badge neut' title='A signed-in user working through the app (the record carries an Entra session id). Not counted toward the scope.'>delegated</span><br><span class='email'>$dates &middot; not in scope</span></td><td>$($Op.Events)</td><td>$n</td><td>$inline$more</td></tr>"
+        return "<tr class='delegated-row'><td><strong>$(HtmlEnc $Op.Operation)</strong>$kindBadge<span class='badge neut' title='A signed-in user working through the app (the token belonged to a user, not to the app itself). Not counted toward the scope.'>delegated</span><br><span class='email'>$dates &middot; not in scope</span></td><td>$($Op.Events)</td><td>$n</td><td>$inline$more</td></tr>"
     }
     "<tr><td><strong>$(HtmlEnc $Op.Operation)</strong>$kindBadge<br><span class='email'>$dates</span></td><td>$($Op.Events)</td><td>$n</td><td>$inline$more</td></tr>"
 }
@@ -753,8 +750,8 @@ $AppSections = foreach ($item in $Report) {
     $flags = ''
     if ($item.Truncated) { $flags += " <span class='badge crit' title='The audit search stopped at its record limit'>truncated</span>" }
     if ($item.Delegated -gt 0) {
-        $flags += if ($IncludeDelegated) { " <span class='badge purp' title='Records with an Entra session id: a signed-in user working through the app. Merged into the lists and the scope because -IncludeDelegated was set.'>$($item.Delegated) delegated, included</span>" }
-                  else { " <span class='badge purp' title='Records with an Entra session id: a signed-in user working through the app. Listed in their own rows under the table and left out of the scope; rerun with -IncludeDelegated to merge them.'>$($item.Delegated) delegated, excluded</span>" }
+        $flags += if ($IncludeDelegated) { " <span class='badge purp' title='Records whose token belonged to a user rather than the app: a signed-in user working through the app. Merged into the lists and the scope because -IncludeDelegated was set.'>$($item.Delegated) delegated, included</span>" }
+                  else { " <span class='badge purp' title='Records whose token belonged to a user rather than the app: a signed-in user working through the app. Listed in their own rows under the table and left out of the scope; rerun with -IncludeDelegated to merge them.'>$($item.Delegated) delegated, excluded</span>" }
     }
     if ($app.Enabled -eq $false) { $flags += " <span class='badge neut'>sign-in disabled</span>" }
     if ($item.ReusedAt) { $flags += " <span class='badge neut' title='This app&#39;s audit search was submitted at $($item.ReusedAt.ToString('yyyy-MM-dd HH:mm')) and reused, so its window ends then: activity after that time is not included. Rerun with -NoReuse for a window that ends now.'>window ends $($item.ReusedAt.ToString('MMM d HH:mm'))</span>" }
@@ -1015,10 +1012,10 @@ $Html = @"
             How this report works: <a href="$PostUrl">How to Identify Which Mailbox(es) an Entra App Is Using</a>;
             the migration itself: <a href="$BlogUrl">Migrating Exchange Apps to RBAC for Applications</a>.</p>
             <p>Source: the unified audit log via the Purview audit search API. The apps listed are the ones holding
-            <em>application</em> permissions. Records that carry an Entra session id came from a signed-in user working
-            through the app (delegated access); $DelegatedNote A record with no session id, including one with no
-            AppAccessContext block at all, counts as the app's own. Every app/operation/mailbox row is in the companion
-            CSV next to this file.</p>
+            <em>application</em> permissions. Records whose token belonged to a user rather than to the app's own service
+            principal (the record's TokenObjectId) came from a signed-in user working through the app (delegated
+            access); $DelegatedNote A record with no TokenObjectId counts as the app's own. Every app/operation/mailbox
+            row is in the companion CSV next to this file.</p>
         </div>
         <div class="summary">
             <div class="stat"><div class="stat-value">$($Report.Count)</div><div class="stat-label">Apps analyzed</div></div>
@@ -1055,11 +1052,9 @@ $($AppSections -join "`n")
             Resource mailboxes are not covered by default mailbox auditing, so a room-booking app can look idle.<br><br>
             <strong>Caveats:</strong>
             Audit Standard keeps 180 days. Read counts are a floor: reads inside a short window are folded into one
-            MailItemsAccessed record. EWS may be a blind spot: the only published app-only EWS records (early 2024)
-            name EWS's own first-party id, never the app. Microsoft added AppAccessContext to EWS records in November
-            2024 and a 2026 delegated EWS record names the app, but no newer app-only record has been published, so an
-            app using EWS with full_access_as_app may look idle here. The EWS usage report (Microsoft 365 admin center:
-            Reports, Usage, Exchange, EWS usage) lists EWS calls by application ID.
+            MailItemsAccessed record. EWS records written since Microsoft's November 2024 change name the app: a
+            September 2026 test found an app-only EWS app in AppId, ClientAppId and AppAccessContext.ClientAppId. Older
+            ones named only EWS itself, but no window this report can search (180 days at most) reaches back that far.
             A search that stopped at the service's per-search record limit is marked
             <em>truncated</em>; rerun that app with a shorter window. Tenants with Microsoft Graph activity logs in
             Log Analytics have a second, more complete view of sends and can cross-check.
