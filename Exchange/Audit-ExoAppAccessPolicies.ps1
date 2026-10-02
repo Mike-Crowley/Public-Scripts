@@ -1,5 +1,7 @@
 # Microsoft.Graph.Authentication 2.4.0 (Aug 2023) introduced Connect-MgGraph -NoWelcome; older
 # builds fail parameter binding on the $graphConnect splat, so pin the minimum here.
+# Connect-MgGraph -LoginHint arrived in 2.39.0 (Aug 2026); it is added only when the installed module
+# has it, so the floor stays at 2.4.0.
 # Graph is listed FIRST on purpose: #Requires imports in list order, and in Windows PowerShell 5.1
 # importing ExchangeOnlineManagement first loads its own System.Threading.Tasks.Extensions, after
 # which Microsoft.Graph.Authentication 2.34+ fails to load (TypeLoadException: 'GetTokenAsync' does
@@ -43,13 +45,40 @@
     default interactive browser prompt (maps to Connect-MgGraph -UseDeviceCode and
     Connect-ExchangeOnline -Device). Useful for headless/remote sessions - but note that
     some tenants restrict device-code sign-in via Conditional Access.
+.PARAMETER UserPrincipalName
+    Account to pre-fill in both sign-ins. On Windows the Microsoft Graph sign-in goes through
+    the Web Account Manager (WAM), which without a hint shows an account picker and then a
+    second dialog for the chosen account; with the hint it opens on that account, or signs in
+    silently when the account is already in Windows. The same value pre-fills the Exchange
+    Online browser sign-in. A hint, not a lock: another account can still be picked. Ignored
+    with -UseDeviceCode (device-code flow takes no hint). Needs Microsoft.Graph.Authentication
+    2.39.0 or later for the Graph side; older modules simply get no hint there.
+.PARAMETER TenantId
+    Tenant id (GUID) or verified domain to pin the Microsoft Graph sign-in to. Without it the
+    sign-in lands in the account's home tenant, which is usually what you want; pin it when the
+    account is a guest in the tenant being audited. The Exchange Online sign-in always lands in
+    the account's home tenant, and the script stops if the two sides turn out to be different
+    directories.
 
 .EXAMPLE
     .\Audit-ExoAppAccessPolicies.ps1
 
-    Signs in to Microsoft Graph and Exchange Online interactively (browser prompt),
-    audits all Application Access Policies and Exchange app permissions, and saves an
-    HTML report plus a companion migration .ps1 to the desktop.
+    Signs in to Microsoft Graph and Exchange Online interactively (Windows account picker for
+    Graph, browser for Exchange Online), audits all Application Access Policies and Exchange
+    app permissions, and saves an HTML report plus a companion migration .ps1 to the desktop.
+
+.EXAMPLE
+    .\Audit-ExoAppAccessPolicies.ps1 -UserPrincipalName admin@contoso.onmicrosoft.com
+
+    Same audit with both sign-ins pre-filled for the admin account: one dialog for Graph (or
+    none, if Windows already holds that account) and a browser sign-in for Exchange Online
+    that opens on the account.
+
+.EXAMPLE
+    .\Audit-ExoAppAccessPolicies.ps1 -UserPrincipalName admin@contoso.onmicrosoft.com -TenantId contoso.onmicrosoft.com
+
+    Same as above, with the Graph sign-in pinned to the Contoso tenant. The script verifies
+    after the Exchange Online sign-in that both sessions belong to the same tenant.
 
 .EXAMPLE
     .\Audit-ExoAppAccessPolicies.ps1 -UseDeviceCode
@@ -105,7 +134,14 @@
 param(
     # Device-code sign-in for headless/remote sessions. Interactive browser auth is the
     # default because a growing number of tenants restrict device-code flow.
-    [switch]$UseDeviceCode
+    [switch]$UseDeviceCode,
+
+    # Pre-fills both sign-ins. A hint, not a lock: another account can still be picked.
+    [string]$UserPrincipalName,
+
+    # Pins the Graph sign-in to a tenant (GUID or verified domain). Only needed when the account
+    # is a guest in the tenant being audited; otherwise the home tenant is the right one.
+    [string]$TenantId
 )
 
 # A process-scoped Graph context outlives the script, so a reused window would otherwise inherit
@@ -117,6 +153,15 @@ if ($UseDeviceCode) {
     $graphConnect['UseDeviceCode'] = $true
     $exoConnect['Device'] = $true
 }
+if ($TenantId) {
+    $graphConnect['TenantId'] = $TenantId
+}
+# Without a hint the Windows broker shows an account picker and then a second dialog for the chosen
+# account; with one it opens on that account or signs in silently if Windows already holds it. The
+# parameter is capability-checked because the #Requires floor (2.4.0) predates -LoginHint (2.39.0).
+if ($UserPrincipalName -and -not $UseDeviceCode -and (Get-Command Connect-MgGraph).Parameters.ContainsKey('LoginHint')) {
+    $graphConnect['LoginHint'] = $UserPrincipalName
+}
 
 # Graph signs in first, and on Windows Connect-MgGraph uses the Windows broker (WAM) by
 # default, which starts the native msalruntime. ExchangeOnlineManagement 3.7+ signs in through
@@ -126,9 +171,10 @@ if ($UseDeviceCode) {
 # still takes the broker path (observed on 3.10.1), so -DisableWAM has to be on the FIRST
 # Connect-ExchangeOnline call. Traced in msgraph-sdk-powershell issue 3394. The ladder is:
 #   browser auth (-DisableWAM) -> device code.
-# Reversing the order (Exchange first) fails differently on current releases (WithLogging
-# MissingMethodException in Connect-MgGraph); Graph PR 3789 (merged, not yet released as of
-# 2.40.0) is expected to fix that direction.
+# Reversing the order (Exchange first) fails differently on Graph 2.40.0 and earlier (WithLogging
+# MissingMethodException in Connect-MgGraph); Graph 2.41.0 (Sep 2026, PR 3789) isolates Graph's
+# dependencies and is expected to fix that direction, but the Graph-first broker crash above is a
+# native collision that the isolation does not touch, so the -DisableWAM ladder stays.
 $ExoHasDisableWam = (Get-Command Connect-ExchangeOnline).Parameters.ContainsKey('DisableWAM')
 if (-not $UseDeviceCode -and $ExoHasDisableWam) {
     $exoConnect['DisableWAM'] = $true
@@ -164,12 +210,15 @@ catch {
     throw "Microsoft Graph query failed. Verify consent for Application.Read.All and Directory.Read.All. Error: $_"
 }
 $TenantName = ($Org.value[0].displayName -replace '[^\w\-]', '')
+# Replaces the -TenantId parameter (which may be a domain name) with the directory's id, which is
+# what the report and the migration commands need.
 $TenantId = "$($Org.value[0].id)"
 
 # Browser auth cannot reuse the broker's sign-in, but a login hint pre-fills the account and lets a
 # browser that already holds a session for it pass silently. A hint, not a lock: another account
-# can still be picked.
+# can still be picked. The account Graph actually used wins over the parameter.
 $graphAccount = "$((Get-MgContext).Account)"
+if (-not $graphAccount) { $graphAccount = $UserPrincipalName }
 if (-not $UseDeviceCode -and $graphAccount) { $exoConnect['UserPrincipalName'] = $graphAccount }
 
 Write-Host "Sign-in 2 of 2: Exchange Online ($($Org.value[0].displayName))" -ForegroundColor Cyan
@@ -201,6 +250,22 @@ if (-not $ExoConnected) {
     else {
         throw ('Connect-ExchangeOnline hit the WAM broker crash, and the device-code fallback (-Device) requires ' +
                'PowerShell 7. Rerun the script in a fresh PowerShell 7 console.')
+    }
+}
+
+# Graph may be pinned to another directory with -TenantId, but the Exchange Online sign-in lands in
+# the account's home tenant (a guest admin has no way to pick the tenant here). Mixing the two would
+# pair one directory's apps with the other's policies and generate cutover commands for the wrong
+# tenant, so compare the two before auditing anything. Get-ConnectionInformation exists in
+# ExchangeOnlineManagement 3.0+; older modules get no check. The connection with the highest Id is
+# the one this script just opened, even when the window already held others.
+if (Get-Command Get-ConnectionInformation -ErrorAction SilentlyContinue) {
+    $exoConn = Get-ConnectionInformation | Sort-Object Id | Select-Object -Last 1
+    if ($exoConn -and "$($exoConn.TenantID)" -and "$($exoConn.TenantID)" -ne $TenantId) {
+        Disconnect-ExchangeOnline -ConnectionId $exoConn.ConnectionId -Confirm:$false
+        throw ("Exchange Online signed in to tenant $($exoConn.TenantID) as $($exoConn.UserPrincipalName), but Microsoft Graph " +
+               "is in tenant $TenantId. Both sign-ins must be in the directory being audited: use an account that lives " +
+               'there, or drop -TenantId.')
     }
 }
 
