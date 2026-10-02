@@ -248,7 +248,7 @@
                 <tr><td><strong>Send</strong><span class='badge warn'>send</span><br><span class='email'>2026-08-31 to 2026-09-26</span></td><td>612</td><td>1</td><td>helpdesk@crowleydev.onmicrosoft.com <span class='email'>(612)</span></td></tr>
             </tbody>
         </table>
-        <div style="margin:0.6rem 0 0 0"><details class='cmd'><summary>PowerShell <span class='cmd-meta'>23 lines</span><button type='button' class='copy-btn'>Copy</button></summary><pre class='commands'># ==== Helpdesk Notifier (4f2a8c1e-7b3d-4e9a-b6c5-1d2e3f4a5b6c) - RBAC scope from observed activity, last 30 days ====
+        <div style="margin:0.6rem 0 0 0"><details class='cmd'><summary>PowerShell <span class='cmd-meta'>27 lines</span><button type='button' class='copy-btn'>Copy</button></summary><pre class='commands'># ==== Helpdesk Notifier (4f2a8c1e-7b3d-4e9a-b6c5-1d2e3f4a5b6c) - RBAC scope from observed activity, last 30 days ====
 # Observed: Send on 1 mailbox(es)
 # Steps 1-4 are additive. Verify, then revoke the tenant-wide grant with the audit script&#39;s generated
 # cutover: https://github.com/Mike-Crowley/Public-Scripts/blob/main/Exchange/Audit-ExoAppAccessPolicies.ps1
@@ -260,14 +260,18 @@ if (-not (Get-ServicePrincipal -Identity &#39;4f2a8c1e-7b3d-4e9a-b6c5-1d2e3f4a5b
     New-ServicePrincipal -AppId &#39;4f2a8c1e-7b3d-4e9a-b6c5-1d2e3f4a5b6c&#39; -ObjectId &#39;a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d&#39; -DisplayName &#39;Helpdesk Notifier&#39;
 }
 
-# 2. Scope: the one mailbox observed (helpdesk@crowleydev.onmicrosoft.com)
-New-ManagementScope -Name &#39;Helpdesk Notifier-4f2a8c1e-Scope&#39; -RecipientRestrictionFilter &quot;ExternalDirectoryObjectId -eq &#39;2a0f08f3-ae76-4e8c-bf8e-800e304b2095&#39;&quot;
+# 2. Scope: the one mailbox observed (helpdesk@crowleydev.onmicrosoft.com). An existing scope with the same filter is reused;
+#    Exchange refuses to create a duplicate, and another app may already be scoped to this mailbox.
+$filter = &quot;ExternalDirectoryObjectId -eq &#39;2a0f08f3-ae76-4e8c-bf8e-800e304b2095&#39;&quot;
+$scope = (Get-ManagementScope | Where-Object { $_.RecipientFilter -eq $filter -and -not $_.Exclusive } | Select-Object -First 1).Name
+if (-not $scope) { $scope = (New-ManagementScope -Name &#39;Helpdesk Notifier-4f2a8c1e-Scope&#39; -RecipientRestrictionFilter $filter).Name }
+&quot;Scope: $scope&quot;
 
 # 3. Role assignments: one per RBAC role the grants map to. Grants with no matching activity in the
 #    window are commented out - add them back only if the app needs them, or drop the grant instead.
 #    &quot;unproven&quot; means reads or writes were seen but the record cannot say they were calendar, contacts
 #    or settings rather than mail; keep the role if the app needs it, drop the grant if its job is mail.
-New-ManagementRoleAssignment -App &#39;4f2a8c1e-7b3d-4e9a-b6c5-1d2e3f4a5b6c&#39; -Role &#39;Application Mail.Send&#39; -CustomResourceScope &#39;Helpdesk Notifier-4f2a8c1e-Scope&#39;
+New-ManagementRoleAssignment -App &#39;4f2a8c1e-7b3d-4e9a-b6c5-1d2e3f4a5b6c&#39; -Role &#39;Application Mail.Send&#39; -CustomResourceScope $scope
 
 # 4. Verify: expect InScope = True, then test the app itself
 Test-ServicePrincipalAuthorization -Identity &#39;4f2a8c1e-7b3d-4e9a-b6c5-1d2e3f4a5b6c&#39; -Resource &#39;helpdesk@crowleydev.onmicrosoft.com&#39; | Format-Table</pre></details></div>
@@ -1313,7 +1317,7 @@ user331@crowleydev.onmicrosoft.com  (1)</pre></details></td></tr>
 <tr><td><strong>MoveToDeletedItems</strong><span class='badge purp'>write</span><br><span class='email'>2026-09-11 to 2026-09-13</span></td><td>3</td><td>1</td><td>payroll@crowleydev.onmicrosoft.com <span class='email'>(3)</span></td></tr>
             </tbody>
         </table>
-        <div style="margin:0.6rem 0 0 0"><details class='cmd'><summary>PowerShell <span class='cmd-meta'>28 lines</span><button type='button' class='copy-btn'>Copy</button></summary><pre class='commands'># ==== Payroll Reminders (8e7d6c5b-4a39-4281-9f0e-1d2c3b4a5968) - RBAC scope from observed activity, last 30 days ====
+        <div style="margin:0.6rem 0 0 0"><details class='cmd'><summary>PowerShell <span class='cmd-meta'>34 lines</span><button type='button' class='copy-btn'>Copy</button></summary><pre class='commands'># ==== Payroll Reminders (8e7d6c5b-4a39-4281-9f0e-1d2c3b4a5968) - RBAC scope from observed activity, last 30 days ====
 # Observed: Send on 5 mailbox(es); MailItemsAccessed on 1 mailbox(es); Update on 1 mailbox(es); MoveToDeletedItems on 1 mailbox(es)
 # Steps 1-4 are additive. Verify, then revoke the tenant-wide grant with the audit script&#39;s generated
 # cutover: https://github.com/Mike-Crowley/Public-Scripts/blob/main/Exchange/Audit-ExoAppAccessPolicies.ps1
@@ -1326,18 +1330,24 @@ if (-not (Get-ServicePrincipal -Identity &#39;8e7d6c5b-4a39-4281-9f0e-1d2c3b4a59
 }
 
 # 2. Scope: a mail-enabled security group holding the 5 mailboxes observed (DIRECT members only;
-#    membership is the control from here on, so own it like one)
-New-DistributionGroup -Name &#39;Payroll Reminders 8e7d6c5b Mailboxes&#39; -Alias &#39;PayrollReminders8e7d6c5bMailboxes&#39; -Type Security -Members &#39;payroll@crowleydev.onmicrosoft.com&#39;, &#39;jordan.lee@crowleydev.onmicrosoft.com&#39;, &#39;alex.rivera@crowleydev.onmicrosoft.com&#39;, &#39;casey.nguyen@crowleydev.onmicrosoft.com&#39;, &#39;sam.patel@crowleydev.onmicrosoft.com&#39;
+#    membership is the control from here on, so own it like one). Rerunning reuses the group and the
+#    scope if they already exist; an existing group keeps its members, so update those by hand.
+if (-not (Get-DistributionGroup -Identity &#39;Payroll Reminders 8e7d6c5b Mailboxes&#39; -ErrorAction SilentlyContinue)) {
+    New-DistributionGroup -Name &#39;Payroll Reminders 8e7d6c5b Mailboxes&#39; -Alias &#39;PayrollReminders8e7d6c5bMailboxes&#39; -Type Security -Members &#39;payroll@crowleydev.onmicrosoft.com&#39;, &#39;jordan.lee@crowleydev.onmicrosoft.com&#39;, &#39;alex.rivera@crowleydev.onmicrosoft.com&#39;, &#39;casey.nguyen@crowleydev.onmicrosoft.com&#39;, &#39;sam.patel@crowleydev.onmicrosoft.com&#39;
+}
 $dn = (Get-DistributionGroup -Identity &#39;Payroll Reminders 8e7d6c5b Mailboxes&#39;).DistinguishedName
-New-ManagementScope -Name &#39;Payroll Reminders-8e7d6c5b-Scope&#39; -RecipientRestrictionFilter &quot;MemberOfGroup -eq &#39;$dn&#39;&quot;
+$filter = &quot;MemberOfGroup -eq &#39;$dn&#39;&quot;
+$scope = (Get-ManagementScope | Where-Object { $_.RecipientFilter -eq $filter -and -not $_.Exclusive } | Select-Object -First 1).Name
+if (-not $scope) { $scope = (New-ManagementScope -Name &#39;Payroll Reminders-8e7d6c5b-Scope&#39; -RecipientRestrictionFilter $filter).Name }
+&quot;Scope: $scope&quot;
 
 # 3. Role assignments: one per RBAC role the grants map to. Grants with no matching activity in the
 #    window are commented out - add them back only if the app needs them, or drop the grant instead.
 #    &quot;unproven&quot; means reads or writes were seen but the record cannot say they were calendar, contacts
 #    or settings rather than mail; keep the role if the app needs it, drop the grant if its job is mail.
-New-ManagementRoleAssignment -App &#39;8e7d6c5b-4a39-4281-9f0e-1d2c3b4a5968&#39; -Role &#39;Application Mail.Send&#39; -CustomResourceScope &#39;Payroll Reminders-8e7d6c5b-Scope&#39;
-New-ManagementRoleAssignment -App &#39;8e7d6c5b-4a39-4281-9f0e-1d2c3b4a5968&#39; -Role &#39;Application Mail.ReadWrite&#39; -CustomResourceScope &#39;Payroll Reminders-8e7d6c5b-Scope&#39;
-New-ManagementRoleAssignment -App &#39;8e7d6c5b-4a39-4281-9f0e-1d2c3b4a5968&#39; -Role &#39;Application Calendars.ReadWrite&#39; -CustomResourceScope &#39;Payroll Reminders-8e7d6c5b-Scope&#39;   # Graph:Calendars.ReadWrite: unproven
+New-ManagementRoleAssignment -App &#39;8e7d6c5b-4a39-4281-9f0e-1d2c3b4a5968&#39; -Role &#39;Application Mail.Send&#39; -CustomResourceScope $scope
+New-ManagementRoleAssignment -App &#39;8e7d6c5b-4a39-4281-9f0e-1d2c3b4a5968&#39; -Role &#39;Application Mail.ReadWrite&#39; -CustomResourceScope $scope
+New-ManagementRoleAssignment -App &#39;8e7d6c5b-4a39-4281-9f0e-1d2c3b4a5968&#39; -Role &#39;Application Calendars.ReadWrite&#39; -CustomResourceScope $scope   # Graph:Calendars.ReadWrite: unproven
 
 # 4. Verify: expect InScope = True, then test the app itself
 Test-ServicePrincipalAuthorization -Identity &#39;8e7d6c5b-4a39-4281-9f0e-1d2c3b4a5968&#39; -Resource &#39;payroll@crowleydev.onmicrosoft.com&#39; | Format-Table</pre></details></div>

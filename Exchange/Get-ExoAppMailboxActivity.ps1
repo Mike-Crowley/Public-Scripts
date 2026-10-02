@@ -624,19 +624,38 @@ $Report = foreach ($app in $Selected) {
         $cmd += "    New-ServicePrincipal -AppId '$($app.AppId)' -ObjectId '$spOid' -DisplayName '$(EscSq $app.Name)'"
         $cmd += '}'
         $cmd += ''
+        # Step 2 is idempotent like step 1. Exchange refuses a second management scope whose filter
+        # matches an existing one ("has the same RecipientRoot, RecipientFilter ... property values"),
+        # and that happens in real tenants: another app scoped to the same mailbox already created
+        # one. So the generated code looks the filter up first and reuses the scope it finds (never
+        # an exclusive one, which has different semantics), and steps 3 and 4 take the name from
+        # $scope instead of a literal. Exchange stores these two filter shapes exactly as submitted,
+        # so string equality on RecipientFilter is a reliable match.
+        $scopeLookup = @(
+            "`$scope = (Get-ManagementScope | Where-Object { `$_.RecipientFilter -eq `$filter -and -not `$_.Exclusive } | Select-Object -First 1).Name"
+            "if (-not `$scope) { `$scope = (New-ManagementScope -Name '$(EscSq $scopeName)' -RecipientRestrictionFilter `$filter).Name }"
+            '"Scope: $scope"'
+        )
         if ($distinct -eq 1) {
             $oid = Get-MailboxObjectId $upns[0]
-            $cmd += "# 2. Scope: the one mailbox observed ($($upns[0]))"
-            $cmd += "New-ManagementScope -Name '$(EscSq $scopeName)' -RecipientRestrictionFilter `"ExternalDirectoryObjectId -eq '$(if ($oid) { $oid } else { '<object id of ' + $upns[0] + '>' })'`""
+            $oidText = if ($oid) { $oid } else { '<object id of ' + $upns[0] + '>' }
+            $cmd += "# 2. Scope: the one mailbox observed ($($upns[0])). An existing scope with the same filter is reused;"
+            $cmd += '#    Exchange refuses to create a duplicate, and another app may already be scoped to this mailbox.'
+            $cmd += "`$filter = `"ExternalDirectoryObjectId -eq '$oidText'`""
+            $cmd += $scopeLookup
         }
         else {
             $groupName = "$safe $tag Mailboxes"
             $alias = ($safe -replace '[^\w]', '') + $tag + 'Mailboxes'
             $cmd += "# 2. Scope: a mail-enabled security group holding the $($upns.Count) mailboxes observed (DIRECT members only;"
-            $cmd += '#    membership is the control from here on, so own it like one)'
-            $cmd += "New-DistributionGroup -Name '$(EscSq $groupName)' -Alias '$alias' -Type Security -Members $(($upns | ForEach-Object { "'$(EscSq $_)'" }) -join ', ')"
+            $cmd += '#    membership is the control from here on, so own it like one). Rerunning reuses the group and the'
+            $cmd += '#    scope if they already exist; an existing group keeps its members, so update those by hand.'
+            $cmd += "if (-not (Get-DistributionGroup -Identity '$(EscSq $groupName)' -ErrorAction SilentlyContinue)) {"
+            $cmd += "    New-DistributionGroup -Name '$(EscSq $groupName)' -Alias '$alias' -Type Security -Members $(($upns | ForEach-Object { "'$(EscSq $_)'" }) -join ', ')"
+            $cmd += '}'
             $cmd += "`$dn = (Get-DistributionGroup -Identity '$(EscSq $groupName)').DistinguishedName"
-            $cmd += "New-ManagementScope -Name '$(EscSq $scopeName)' -RecipientRestrictionFilter `"MemberOfGroup -eq '`$dn'`""
+            $cmd += "`$filter = `"MemberOfGroup -eq '`$dn'`""
+            $cmd += $scopeLookup
         }
         $cmd += ''
         $cmd += '# 3. Role assignments: one per RBAC role the grants map to. Grants with no matching activity in the'
@@ -647,7 +666,7 @@ $Report = foreach ($app in $Selected) {
         foreach ($gr in $grantRows) {
             if (-not $gr.Role -or $seenRoles.ContainsKey($gr.Role)) { continue }
             $seenRoles[$gr.Role] = $true
-            $line = "New-ManagementRoleAssignment -App '$($app.AppId)' -Role '$($gr.Role)' -CustomResourceScope '$(EscSq $scopeName)'"
+            $line = "New-ManagementRoleAssignment -App '$($app.AppId)' -Role '$($gr.Role)' -CustomResourceScope `$scope"
             $cmd += switch ($gr.Status) {
                 'used' { $line }
                 'unproven' { "$line   # $($gr.Perm): unproven" }
