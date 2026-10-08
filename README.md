@@ -114,7 +114,7 @@ Most scripts have companion blog posts with deeper context at [mikecrowley.us](h
 
 + [Get-OktaSmsFactors.ps1](./Okta/Get-OktaSmsFactors.ps1)
 
-  + Query the Okta Factors API to report on users with SMS-based MFA factors. Useful for SMS deprecation planning and MFA migration audits. Supports both direct Okta user enumeration and pre-filtered CSV input for large tenants. Handles API rate limiting automatically.
+  + Query the Okta Factors API to report on users with SMS-based MFA factors (number, factor id, and whether more than one is enrolled). Useful for SMS deprecation planning and MFA migration audits. Scope the run to Okta group members (`-GroupId`), to credential provider types (`-ProviderType`, which skips accounts that federation created just in time), or to a CSV of user ids or logins such as the export of the "MFA Enrollment by User" report; otherwise it enumerates every active user. Reuses one HTTPS session across calls and handles API rate limiting automatically.
 
 ## Exchange
 
