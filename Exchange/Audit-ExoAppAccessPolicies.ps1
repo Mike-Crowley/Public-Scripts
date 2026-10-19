@@ -165,18 +165,24 @@ if ($UserPrincipalName -and -not $UseDeviceCode -and (Get-Command Connect-MgGrap
 
 # Graph signs in first, and on Windows Connect-MgGraph uses the Windows broker (WAM) by
 # default, which starts the native msalruntime. ExchangeOnlineManagement 3.7+ signs in through
-# the broker too, and its own copy of MSAL then finds that runtime already started, so its
-# RuntimeBroker constructor throws a NullReferenceException. That happens in every host, not
-# just windowless ones, and once a broker attempt has run in this session a -DisableWAM retry
-# still takes the broker path (observed on 3.10.1), so -DisableWAM has to be on the FIRST
-# Connect-ExchangeOnline call. Traced in msgraph-sdk-powershell issue 3394. The ladder is:
+# the broker too, and on Graph 2.40.0 and earlier its own copy of MSAL then finds that runtime
+# already started, so its RuntimeBroker constructor throws a NullReferenceException. That happens
+# in every host, not just windowless ones, and once a broker attempt has run in this session a
+# -DisableWAM retry still takes the broker path (observed on 3.10.1), so -DisableWAM has to be on
+# the FIRST Connect-ExchangeOnline call. Traced in msgraph-sdk-powershell issue 3394. The ladder:
 #   browser auth (-DisableWAM) -> device code.
-# Reversing the order (Exchange first) fails differently on Graph 2.40.0 and earlier (WithLogging
-# MissingMethodException in Connect-MgGraph); Graph 2.41.0 (Sep 2026, PR 3789) isolates Graph's
-# dependencies and is expected to fix that direction, but the Graph-first broker crash above is a
-# native collision that the isolation does not touch, so the -DisableWAM ladder stays.
+# Reversing the order (Exchange first) failed on Graph 2.40.0 and earlier (WithLogging
+# MissingMethodException in Connect-MgGraph). Graph 2.41.0 (Sep 2026, PR 3789) isolates Graph's
+# dependencies, and a nine-scenario re-test on 2.41.2 with EXO 3.10.1 (2026-10-19) signed in
+# through the broker in both orders: Exchange-first as predicted, Graph-first unexpectedly. The
+# native binding is unchanged (EXO still reaches Graph's msalruntime by bare name); that runtime
+# now accepts the second startup, and why is not traced. So -DisableWAM is forced only while the
+# loaded Graph module predates the isolation. On 2.41+ the broker path is left alone, and the
+# WAM-crash catch below still degrades to device code if a future version skew brings it back.
+# Evidence: https://github.com/Mike-Crowley/graph-exo-loadorder
 $ExoHasDisableWam = (Get-Command Connect-ExchangeOnline).Parameters.ContainsKey('DisableWAM')
-if (-not $UseDeviceCode -and $ExoHasDisableWam) {
+$GraphIsolated = @(Get-Module Microsoft.Graph.Authentication)[0].Version -ge [version]'2.41.0'
+if (-not $UseDeviceCode -and $ExoHasDisableWam -and -not $GraphIsolated) {
     $exoConnect['DisableWAM'] = $true
 }
 
@@ -233,7 +239,8 @@ catch {
 }
 if (-not $ExoConnected) {
     if ($PSVersionTable.PSEdition -eq 'Core') {
-        Write-Warning ('Exchange Online sign-in hit the WAM broker crash even with -DisableWAM - falling back to ' +
+        $wamNote = if ($exoConnect.ContainsKey('DisableWAM')) { ' even with -DisableWAM' } else { '' }
+        Write-Warning ("Exchange Online sign-in hit the WAM broker crash$wamNote - falling back to " +
             'device-code sign-in. If Conditional Access blocks device code, rerun in a fresh PowerShell 7 console ' +
             '(a broker attempt earlier in this session poisons later ones).')
         $null = $exoConnect.Remove('DisableWAM')
