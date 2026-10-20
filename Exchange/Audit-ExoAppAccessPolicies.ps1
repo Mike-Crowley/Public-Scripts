@@ -689,14 +689,15 @@ $Report = foreach ($Policy in $Policies) {
     if ($RbacRoles.Count -gt 0 -and $LiveRbacRoles.Count -gt 0 -and $MigrationStatus -in @('Ready', 'Review')) {
         # Tenant-wide grants remain AND RBAC assignments exist - likely a partial cutover.
         $Issues += 'RBAC Live'
-        $MigrationBlockers += "Live RBAC assignments already exist ($($LiveRbacScopes -join ', ')) while tenant-wide grants remain. If a previous cutover was interrupted, rerun this block's cutover to finish revoking and remove the policy."
+        $MigrationBlockers += "Live RBAC assignments already exist ($($LiveRbacScopes -join ', ')) while tenant-wide grants remain. If a previous cutover was interrupted, rerun this block: Steps 1-4 add any role not yet live on this policy's own scope (an assignment on a different scope does not count, since that scope may not cover every member of the policy's group), then the cutover finishes revoking and removes the policy."
     }
     if ($LiveRbacUnscoped.Count -gt 0 -and $MigrationStatus -in @('Ready', 'Review')) {
         # An org-wide assignment (ScopeType = Organization) has the same reach as the
         # tenant-wide Entra grant, so revoking the grant constrains nothing, and removing the
         # policy WIDENS access from the policy's target to every mailbox. The generated
         # cutover gate cannot catch this on its own: InScope is True for every mailbox under
-        # an Organization scope, and Step 3 skips a role that already has any assignment.
+        # an Organization scope, and Step 3 only adds a scoped assignment beside the org-wide
+        # one; it never removes the org-wide one.
         $Issues += 'RBAC Unscoped'
         $MigrationStatus = 'Review'
         $MigrationBlockers += "Live RBAC assignment(s) with NO resource scope (ScopeType = Organization): $($LiveRbacUnscoped -join ', '). These grant org-wide access, so the cutover would not constrain the app. Re-scope them first (Set-ManagementRoleAssignment -CustomResourceScope) or remove them, then rerun the audit."
@@ -994,12 +995,30 @@ $Report = foreach ($Policy in $Policies) {
         $MigrationCommands += "    Write-Warning `"Scope '$scopeName' already exists with a DIFFERENT filter: `$(`$scope.RecipientFilter) - role assignments skipped; resolve the conflict first.`""
         $MigrationCommands += "}"
         $MigrationCommands += ""
-        $MigrationCommands += "# Step 3: RBAC role assignments (idempotent - skips roles already assigned; skipped"
-        $MigrationCommands += "# entirely on a scope-name conflict)"
+        # The skip test is per role AND per scope. Matching on role name alone skipped a role that
+        # was live on some other scope (a hand-built one over a different group, say), so this
+        # scope never got the assignment, the cutover's single-mailbox test still passed through
+        # that other scope, and every policy member the other group did not hold lost access at
+        # cutover. Exchange RBAC carries one recipient scope per assignment and documents a
+        # further assignment of the same role as the way to add a scope (Understanding
+        # management role assignments > Management scopes). Microsoft shows no two-scope example
+        # for an app, so this was tested in a tenant on 2026-10-20: Exchange Online accepted a
+        # second 'Application Mail.ReadWrite' assignment on another scope for the same service
+        # principal, Test-ServicePrincipalAuthorization then listed one row per scope, and a
+        # second default-named assignment got a '-1' suffix instead of a name clash. The cutover
+        # gate below still requires this scope, so a refusal would stop the block before it
+        # revokes anything.
+        $MigrationCommands += "# Step 3: RBAC role assignments (idempotent - skips a role only when it is already live on"
+        $MigrationCommands += "# THIS scope; a role live on a different scope gets a further assignment here, because the"
+        $MigrationCommands += "# app's reach is the union of its assignments and that other scope may not cover every"
+        $MigrationCommands += "# member of the policy's group; skipped entirely on a scope-name conflict)"
         $MigrationCommands += "if (-not `$scopeConflict) {"
-        $MigrationCommands += "    `$liveRoles = @(Test-ServicePrincipalAuthorization -Identity '$AppId' -ErrorAction SilentlyContinue | ForEach-Object { `$_.RoleName })"
+        $MigrationCommands += "    `$liveAuth = @(Test-ServicePrincipalAuthorization -Identity '$AppId' -ErrorAction SilentlyContinue)"
+        $MigrationCommands += "    `$liveOnScope = @(`$liveAuth | Where-Object { `"`$(`$_.AllowedResourceScope)`" -eq '$scopeName' } | ForEach-Object { `$_.RoleName })"
+        $MigrationCommands += "    `$liveElsewhere = @(`$liveAuth | Where-Object { `"`$(`$_.AllowedResourceScope)`" -ne '$scopeName' } | ForEach-Object { `"`$(`$_.RoleName) @ `$(`$_.AllowedResourceScope)`" })"
+        $MigrationCommands += "    if (`$liveElsewhere.Count -gt 0) { Write-Host `"$(EscDq $AppDisplayName): assignment(s) already live on another scope (`$(`$liveElsewhere -join ', ')) are left in place; roles not yet live on '$scopeName' are assigned there below so every member of the policy's group is covered.`" }"
         foreach ($role in $RbacRoles) {
-            $MigrationCommands += "    if (`$liveRoles -notcontains '$role') { New-ManagementRoleAssignment -App '$AppId' -Role '$role' -CustomResourceScope '$scopeName' }"
+            $MigrationCommands += "    if (`$liveOnScope -notcontains '$role') { New-ManagementRoleAssignment -App '$AppId' -Role '$role' -CustomResourceScope '$scopeName' }"
         }
         $MigrationCommands += "}"
         if ($HasEws) { $MigrationCommands += $EwsRetirementWarning }
@@ -1016,8 +1035,10 @@ $Report = foreach ($Policy in $Policies) {
         $MigrationCommands += ""
         $NeedsFlattenGate = ($Issues -contains 'Nested Groups') -or ($Issues -contains 'Members Unverified')
         $rolesList = ($RbacRoles | ForEach-Object { "'$(EscSq $_)'" }) -join ', '
-        $MigrationCommands += "# ---- Step 5-6: CUTOVER. Verifies EVERY migrated role is live and InScope, revokes the"
-        $MigrationCommands += "# tenant-wide grants (each one checked), then removes the now-inert legacy policy."
+        $MigrationCommands += "# ---- Step 5-6: CUTOVER. Verifies EVERY migrated role is live and InScope on '$scopeName'"
+        $MigrationCommands += "# (an assignment on another scope does not count: it may not cover every member of the"
+        $MigrationCommands += "# policy's group), revokes the tenant-wide grants (each one checked), then removes the"
+        $MigrationCommands += "# now-inert legacy policy."
         $MigrationCommands += "# Entra + RBAC grants are a union - scoping only takes effect after the tenant-wide grant"
         $MigrationCommands += "# is revoked. Nothing here runs unverified: the policy is removed ONLY after RBAC is"
         $MigrationCommands += "# confirmed InScope AND every revocation succeeded. Remove is explicit (-Confirm:`$false)"
@@ -1033,13 +1054,16 @@ $Report = foreach ($Policy in $Policies) {
         # InScope is a STRING ('True' / 'False' / 'Not Run'), never a [bool], so it has to be compared
         # as text. Testing it for truthiness passed every role that merely existed, in scope or not,
         # which let the cutover revoke grants for an app whose RBAC scope did not cover the mailbox.
+        # The row must also belong to THIS scope: a test mailbox that sits in the policy's group and
+        # in some other scope's group is InScope through that other scope, which says nothing about
+        # the policy members the other group lacks.
         $MigrationCommands += "# InScope is text ('True' / 'False' / 'Not Run'), not a boolean - compare it, never test it for truthiness."
-        $MigrationCommands += "`$missingRoles = @(`$expectedRoles | Where-Object { `$role = `$_; -not (`$auth | Where-Object { `$_.RoleName -eq `$role -and `"`$(`$_.InScope)`" -eq 'True' }) })"
+        $MigrationCommands += "`$missingRoles = @(`$expectedRoles | Where-Object { `$role = `$_; -not (`$auth | Where-Object { `$_.RoleName -eq `$role -and `"`$(`$_.InScope)`" -eq 'True' -and `"`$(`$_.AllowedResourceScope)`" -eq '$scopeName' }) })"
         if ($NeedsFlattenGate) {
             $MigrationCommands += "`$nestedGroupsHandled = `$false   # set to `$true after adding nested-group members DIRECTLY to the group"
         }
         $MigrationCommands += "if (`$missingRoles.Count -gt 0) {"
-        $MigrationCommands += "    Write-Warning `"$(EscDq $AppDisplayName): roles not verified InScope for `$cutoverTestMailbox (missing: `$(`$missingRoles -join ', ')) - cutover skipped. Run steps 1-4; if they succeeded, try a different in-scope mailbox.`""
+        $MigrationCommands += "    Write-Warning `"$(EscDq $AppDisplayName): roles not verified InScope on '$scopeName' for `$cutoverTestMailbox (missing: `$(`$missingRoles -join ', ')) - cutover skipped. Run steps 1-4; if they succeeded, try a different in-scope mailbox. A role live only on another scope does not count here; if Step 3 could not add it on '$scopeName', re-point that assignment (Set-ManagementRoleAssignment -CustomResourceScope '$scopeName') or make its group hold every member of the policy's group.`""
         $MigrationCommands += "} elseif (@((Get-MgContext).Scopes) -notcontains 'AppRoleAssignment.ReadWrite.All') {"
         $MigrationCommands += "    Write-Warning 'Graph session lacks AppRoleAssignment.ReadWrite.All - run: Connect-MgGraph -Scopes AppRoleAssignment.ReadWrite.All'"
         if ($NeedsFlattenGate) {
